@@ -1,4 +1,4 @@
-import searchIcon from "./assets/search-icon.svg";
+import searchIcon from "../assets/search-icon.svg";
 
 import { Dropdown, Space } from "antd";
 import { DownOutlined, SmileOutlined } from "@ant-design/icons";
