@@ -2,7 +2,7 @@ import { useAppStore } from "../store";
 import searchIcon from "../assets/search-icon.svg";
 
 import { Dropdown, Space, Avatar } from "antd";
-import { DownOutlined, PlusOutlined, UserOutlined } from "@ant-design/icons";
+import { DownOutlined, PlusOutlined } from "@ant-design/icons";
 
 const items = [
   {
