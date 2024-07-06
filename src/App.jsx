@@ -1,24 +1,27 @@
 import "./App.css";
 
-import ReactFlow from "reactflow";
-
 import "reactflow/dist/style.css";
 
 import { Header } from "./components/Header";
-
-const initialNodes = [
-  { id: "1", position: { x: 0, y: 0 }, data: { label: "1" } },
-  { id: "2", position: { x: 0, y: 100 }, data: { label: "2" } },
-];
-const initialEdges = [{ id: "e1-2", source: "1", target: "2" }];
+import { useAppStore } from "./store";
+import { ReactFlow } from "reactflow";
 
 function App() {
+  const people = useAppStore((store) => store.people);
+  const initialNodes = people.map((person, i) => {
+    return {
+      id: i.toString(),
+      position: { x: i * 100, y: i * 100 },
+      data: { label: person.name },
+    };
+  });
+
   return (
     <div className="app-container">
       <Header />
       <div className="main">
         <div className="reactflow-container">
-          <ReactFlow nodes={initialNodes} edges={initialEdges} />
+          <ReactFlow nodes={initialNodes} edges={[]} />
         </div>
       </div>
     </div>
