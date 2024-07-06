@@ -1,4 +1,4 @@
-import { useAppStore } from "../storejs";
+import { useAppStore } from "../store";
 import searchIcon from "../assets/search-icon.svg";
 
 import { Dropdown, Space, Avatar } from "antd";
