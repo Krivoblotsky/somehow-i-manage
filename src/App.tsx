@@ -12,10 +12,14 @@ const initialNodes = [
 ];
 const initialEdges = [{ id: "e1-2", source: "1", target: "2" }];
 
+const currentUser = {
+  name: "John Doe",
+}
+
 function App() {
   return (
     <div className="app-container">
-      <Header />
+      <Header currentUser={currentUser} />
       <div className="main">
         <div className="reactflow-container">
           <ReactFlow nodes={initialNodes} edges={initialEdges} />
