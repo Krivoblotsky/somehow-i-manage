@@ -2,7 +2,7 @@ import { useAppStore } from "../store";
 import searchIcon from "../assets/search-icon.svg";
 
 import { Dropdown, Space, Avatar } from "antd";
-import { DownOutlined, PlusOutlined, UserOutlined } from "@ant-design/icons";
+import { DownOutlined, PlusOutlined } from "@ant-design/icons";
 
 const items = [
   {
@@ -66,6 +66,7 @@ export function Header() {
               <Avatar
                 style={{ backgroundColor: person.outlineColor }}
                 size="large"
+                src={person.avatarUrl}
               >
                 {getInitials(person.name)}
               </Avatar>
@@ -79,7 +80,7 @@ export function Header() {
               className="profile-menu-trigger"
             >
               <Space className={"profile-menu-space"}>
-                <Avatar icon={<UserOutlined />} />
+                <Avatar src={currentUser.avatarUrl} />
                 {currentUser.name}
                 <DownOutlined />
               </Space>
