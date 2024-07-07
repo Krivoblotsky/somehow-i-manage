@@ -64,7 +64,8 @@ export function Header() {
           <div className="nav-item person-item" key={i}>
             <a href="#" title={person.name}>
               <Avatar
-                style={{ backgroundColor: person.outlineColor }}
+                className="avatar"
+                style={{ backgroundColor: person.outlineColor, borderColor: person.outlineColor }}
                 size="large"
                 src={person.avatarUrl}
               >

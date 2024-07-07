@@ -41,14 +41,19 @@
   cursor: pointer;
 }
 
+.header .nav-item .avatar {
+  border: 3px solid;
+}
+
 .header .profile-menu-trigger:hover {
   filter: brightness(0.9)
 }
 
 .header .profile-menu-space {
   background-color: #3e3e3e;
-  padding: 5px 10px;
+  padding: 5px 10px 5px 5px;
   border-radius: 30px;
+  font-weight: bold;
 }
 
 .search-input {
