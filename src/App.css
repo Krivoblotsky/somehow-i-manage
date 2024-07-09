@@ -5,6 +5,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  min-height: 5vh
 }
 
 .header a {
@@ -15,7 +16,7 @@
 
 .reactflow-container {
   width: 100vw;
-  height: 100vh;
+  height: 95vh;
 }
 
 .header .app-title {
@@ -80,4 +81,37 @@
 
 .search-input input::placeholder {
   color: #939393;
+}
+
+.item-node {
+  background: white;
+  color: black;
+  padding: 7px 11px;
+  position: relative;
+  height: 100%;
+  border-radius: 15px;
+}
+
+.item-node .item-header {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.item-node .item-title {
+  margin-top: 0;
+  font-size: 1em;
+}
+
+.item-node textarea {
+  display: block;
+  margin-top: 10px;
+  border: none;
+  width: 100%;
+  resize: none;
+  font-size: .9em;
+  min-height: 100px;
+  height: 80%;
 }

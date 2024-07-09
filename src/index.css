@@ -28,6 +28,7 @@ ol[role='list'] {
 body {
   min-height: 100vh;
   line-height: 1.5;
+  margin: 0;
 }
 
 /* Set shorter line heights on headings and interactive elements */
@@ -60,11 +61,6 @@ input, button,
 textarea, select {
   font-family: inherit;
   font-size: inherit;
-}
-
-/* Make sure textareas without a rows attribute are not tiny */
-textarea:not([rows]) {
-  min-height: 10em;
 }
 
 /* Anything that has been anchored to should have extra scroll margin */

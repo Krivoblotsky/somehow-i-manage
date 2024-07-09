@@ -4,6 +4,8 @@ import searchIcon from "../assets/search-icon.svg";
 import { Dropdown, Space, Avatar } from "antd";
 import { DownOutlined, PlusOutlined } from "@ant-design/icons";
 
+import { getInitials } from "../utils.js";
+
 const items = [
   {
     key: "1",
@@ -31,14 +33,6 @@ const items = [
   },
 ];
 
-function getInitials(fullName) {
-  const nameParts = fullName.trim().split(" ");
-  const initials = nameParts
-    .map((part) => part.charAt(0).toUpperCase())
-    .join("");
-  return initials;
-}
-
 export function Header() {
   const currentUser = useAppStore((store) => store.currentUser);
   const people = useAppStore((store) => store.people);
@@ -60,7 +54,7 @@ export function Header() {
           </a>
         </div>
 
-        {people.map((person, i) => (
+        {Object.values(people).map((person, i) => (
           <div className="nav-item person-item" key={i}>
             <a href="#" title={person.name}>
               <Avatar
