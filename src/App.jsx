@@ -168,6 +168,9 @@ function FloatingEdge({ id, source, target, markerEnd, style }) {
     return null;
   }
 
+  // Get the outlineColor from the source node's data if available
+  const outlineColor = sourceNode.data?.person?.outlineColor || '#222';
+
   const { sx, sy, tx, ty, sourcePos, targetPos } = getEdgeParams(
     sourceNode,
     targetNode,
@@ -188,7 +191,7 @@ function FloatingEdge({ id, source, target, markerEnd, style }) {
       className="react-flow__edge-path"
       d={edgePath}
       markerEnd={markerEnd}
-      style={style}
+      style={{ stroke: outlineColor, strokeWidth: 5, ...style }}
     />
   );
 }
@@ -203,6 +206,9 @@ function FloatingConnectionLine({
   if (!fromNode) {
     return null;
   }
+
+  // Get the outlineColor from the fromNode's data if available
+  const outlineColor = fromNode.data?.person?.outlineColor || '#222';
 
   const targetNode = {
     id: "connection-target",
@@ -225,8 +231,8 @@ function FloatingConnectionLine({
     <g>
       <path
         fill="none"
-        stroke="#222"
-        strokeWidth={1.5}
+        stroke={outlineColor}
+        strokeWidth={5}
         className="animated"
         d={edgePath}
       />
@@ -235,8 +241,8 @@ function FloatingConnectionLine({
         cy={toY}
         fill="#fff"
         r={3}
-        stroke="#222"
-        strokeWidth={1.5}
+        stroke={outlineColor}
+        strokeWidth={5}
       />
     </g>
   );
