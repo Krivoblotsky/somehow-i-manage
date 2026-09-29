@@ -1,0 +1,31 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+.main {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  padding: 16px 32px 64px;
+}
+.aside {
+  width: 400px;
+  flex: none;
+  margin: 0 24px 24px 0;
+  min-height: 0;
+}
+@media (max-width: 960px) {
+  .aside {
+    position: absolute;
+    inset: 0 0 0 auto;
+    width: min(400px, 100%);
+    margin: 0;
+  }
+}

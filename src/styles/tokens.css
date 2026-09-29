@@ -1,0 +1,43 @@
+:root {
+  color-scheme: dark;
+
+  /* surfaces */
+  --bg: #1c1c1e;
+  --chrome: #2a2a2c;
+  --chrome-2: #3e3e40;
+  --chrome-3: #4a4a4c;
+  --card: #ffffff;
+  --completed-card: #5a5a5c;
+
+  /* text */
+  --text: #ffffff;
+  --text-muted: #9a9a9a;
+  --text-subtle: #8e8e93;
+  --card-text: #111111;
+  --card-muted: #8e8e93;
+  --completed-text: #c7c7cc;
+
+  /* semantic */
+  --success: #34c759;
+  --danger: #e5484d;
+  --action: #2f6f6f;
+  --divider: #e8e8e8;
+  --pill: #e5e5ea;
+  --border: #d1d1d6;
+
+  /* people (see docs/DESIGN.md §6) */
+  --person-0: #3c63ea;
+  --person-1: #3debd6;
+  --person-2: #eb3ea6;
+  --person-3: #f5dddd;
+  --person-4: #fbb13c;
+  --person-5: #ffb4a2;
+
+  --radius-card: 12px;
+  --radius-panel: 16px;
+
+  /* Fixel Display (MacPaw, SIL OFL) when installed locally; system font otherwise. */
+  --font:
+    'Fixel Display', 'Fixel Text', -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui,
+    'Segoe UI', Roboto, sans-serif;
+}

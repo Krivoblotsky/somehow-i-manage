@@ -1,0 +1,165 @@
+import { useLiveQuery } from 'dexie-react-hooks';
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { db } from '../data/db';
+import { deleteItem, setItemCompleted, setItemKind, updateItem } from '../data/repository';
+import { formatDateTime } from '../model/format';
+import { personColor } from '../model/palette';
+import type { Item, ItemKind, Person } from '../model/types';
+import { useUI } from '../state/ui';
+import { Avatar } from './Avatar';
+import { BodyEditor } from './BodyEditor';
+import { FlagIcon } from './icons';
+import styles from './ItemPanel.module.css';
+import ui from './ui.module.css';
+
+/** The right-hand detail panel for a task or a note. */
+export function ItemPanel({ itemId }: { itemId: string }) {
+  const item = useLiveQuery(() => db.items.get(itemId), [itemId]);
+  const person = useLiveQuery<Person | undefined>(
+    async () => (item ? db.people.get(item.personId) : undefined),
+    [item?.personId],
+  );
+  if (!item || !person) return null;
+  // Keyed by id so title/body state and the editor reset when another item is opened.
+  return <ItemEditor key={item.id} item={item} person={person} />;
+}
+
+type TextPatch = Partial<Pick<Item, 'title' | 'body'>>;
+const SAVE_DELAY_MS = 400;
+
+function ItemEditor({ item, person }: { item: Item; person: Person }) {
+  const selectItem = useUI((s) => s.selectItem);
+  const [title, setTitle] = useState(item.title);
+  const pending = useRef<TextPatch>({});
+  const timer = useRef<number | undefined>(undefined);
+
+  const flush = useCallback(async () => {
+    window.clearTimeout(timer.current);
+    const patch = pending.current;
+    pending.current = {};
+    if (Object.keys(patch).length > 0) await updateItem(item.id, patch);
+  }, [item.id]);
+
+  const queueSave = useCallback(
+    (patch: TextPatch) => {
+      pending.current = { ...pending.current, ...patch };
+      window.clearTimeout(timer.current);
+      timer.current = window.setTimeout(() => void flush(), SAVE_DELAY_MS);
+    },
+    [flush],
+  );
+
+  // Save whatever is still pending when the panel closes or another item opens.
+  useEffect(() => () => void flush(), [flush]);
+
+  const isTask = item.kind === 'task';
+
+  async function changeKind(kind: ItemKind) {
+    if (kind !== item.kind) await setItemKind(item.id, kind);
+  }
+
+  async function remove() {
+    if (window.confirm(`Delete “${title.trim() || 'Untitled'}”? This cannot be undone.`)) {
+      window.clearTimeout(timer.current);
+      pending.current = {};
+      await deleteItem(item.id);
+      selectItem(null);
+    }
+  }
+
+  return (
+    <section
+      className={styles.panel}
+      aria-label={isTask ? 'Task details' : 'Note details'}
+      style={{ '--accent': personColor(person.colorIndex) } as CSSProperties}
+    >
+      <div className={styles.date}>{formatDateTime(item.createdAt)}</div>
+
+      <div className={styles.topRow}>
+        <Avatar person={person} size={24} ring={2} gapColor="#fff" />
+        <div className={styles.spacer} />
+        {isTask && (
+          <>
+            <button
+              type="button"
+              className={[ui.pill, ui.pillButton, item.isFlagged && ui.pillActiveWarn]
+                .filter(Boolean)
+                .join(' ')}
+              aria-pressed={item.isFlagged}
+              onClick={() => void updateItem(item.id, { isFlagged: !item.isFlagged })}
+            >
+              <FlagIcon /> urgent
+            </button>
+            <button
+              type="button"
+              className={[ui.pill, ui.pillButton, item.isCompleted && ui.pillActive]
+                .filter(Boolean)
+                .join(' ')}
+              aria-pressed={item.isCompleted}
+              onClick={() => void setItemCompleted(item.id, !item.isCompleted)}
+            >
+              completed
+              <span className={item.isCompleted ? `${ui.pillDot} ${ui.pillDotOn}` : ui.pillDot} />
+            </button>
+          </>
+        )}
+      </div>
+
+      <input
+        className={styles.title}
+        value={title}
+        placeholder="Untitled"
+        aria-label="Title"
+        autoFocus={item.title === ''}
+        onChange={(e) => {
+          setTitle(e.target.value);
+          queueSave({ title: e.target.value });
+        }}
+        onBlur={() => void flush()}
+      />
+      <div className={styles.with}>with {person.name}</div>
+
+      <div className={styles.body}>
+        <BodyEditor
+          initialValue={item.body}
+          onChange={(html) => queueSave({ body: html })}
+          placeholder={isTask ? 'Details, context, next steps…' : 'Write your note…'}
+        />
+      </div>
+
+      <div className={styles.footer}>
+        <div className={styles.segment} role="group" aria-label="Kind">
+          <button
+            type="button"
+            className={isTask ? styles.segOn : styles.seg}
+            aria-pressed={isTask}
+            onClick={() => void changeKind('task')}
+          >
+            Task
+          </button>
+          <button
+            type="button"
+            className={isTask ? styles.seg : styles.segOn}
+            aria-pressed={!isTask}
+            onClick={() => void changeKind('note')}
+          >
+            Note
+          </button>
+        </div>
+        <button type="button" className={ui.btnDanger} onClick={() => void remove()}>
+          Delete
+        </button>
+      </div>
+
+      <button
+        type="button"
+        className={styles.close}
+        aria-label="Close"
+        title="Close (Esc)"
+        onClick={() => selectItem(null)}
+      >
+        ×
+      </button>
+    </section>
+  );
+}

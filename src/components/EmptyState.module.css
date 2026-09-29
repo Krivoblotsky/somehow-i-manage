@@ -1,0 +1,21 @@
+.empty {
+  max-width: 520px;
+  margin: 12vh auto 0;
+  text-align: center;
+}
+.big {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+.text {
+  color: var(--text-muted);
+  font-size: 15px;
+  margin: 16px 0 28px;
+}
+.actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}

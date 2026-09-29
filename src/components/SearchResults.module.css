@@ -1,0 +1,42 @@
+.results {
+  max-width: 760px;
+  margin: 0 auto;
+}
+.summary {
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 8px 4px 4px;
+}
+.group {
+  margin-top: 24px;
+}
+.groupTitle {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+.hit {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--text);
+}
+.hit:hover {
+  background: var(--chrome);
+}
+.hitTitle {
+  font-weight: 600;
+}
+.muted {
+  color: var(--text-subtle);
+  font-size: 12px;
+  margin-left: auto;
+  white-space: nowrap;
+}

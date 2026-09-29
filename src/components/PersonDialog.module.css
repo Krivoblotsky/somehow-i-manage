@@ -1,0 +1,49 @@
+.preview {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 4px 0 18px;
+}
+.previewName {
+  font-size: 16px;
+  font-weight: 700;
+}
+.previewRole {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.swatches {
+  display: flex;
+  gap: 10px;
+  padding: 2px;
+}
+.swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  transition: transform 100ms;
+}
+.swatch:hover {
+  transform: scale(1.1);
+}
+.swatchOn {
+  box-shadow:
+    0 0 0 2px var(--chrome),
+    0 0 0 4px #fff;
+}
+.file {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+.file input {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.link {
+  color: var(--text-muted);
+  text-decoration: underline;
+  font-size: 12px;
+}

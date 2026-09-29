@@ -1,0 +1,79 @@
+.btn,
+.btnPrimary,
+.btnDanger {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.btn {
+  background: var(--chrome-2);
+  color: #fff;
+}
+.btn:hover {
+  background: var(--chrome-3);
+}
+.btnPrimary {
+  background: var(--action);
+  color: #fff;
+}
+.btnPrimary:hover {
+  filter: brightness(1.12);
+}
+.btnPrimary:disabled,
+.btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+  filter: none;
+}
+.btnDanger {
+  background: var(--danger);
+  color: #fff;
+}
+.btnDanger:hover {
+  filter: brightness(1.08);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--pill);
+  color: #3a3a3c;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.pillButton {
+  cursor: pointer;
+}
+.pillButton:hover {
+  filter: brightness(0.95);
+}
+.pillActive {
+  background: #d7f5df;
+  color: #1f7a3a;
+}
+.pillActiveWarn {
+  background: #ffe8b3;
+  color: #8a5a00;
+}
+.pillDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  display: inline-block;
+}
+.pillDotOn {
+  background: var(--success);
+  border-color: var(--success);
+}

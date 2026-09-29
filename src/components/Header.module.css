@@ -1,0 +1,132 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 20px 32px 12px;
+}
+.brand {
+  min-width: 0;
+}
+.title {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.tools {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 240px;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--chrome);
+  color: var(--text-subtle);
+}
+.search:focus-within {
+  box-shadow: 0 0 0 2px var(--person-0);
+}
+.search input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: var(--text);
+}
+.search input::placeholder {
+  color: var(--text-subtle);
+}
+.search input::-webkit-search-cancel-button {
+  filter: invert(1) brightness(0.8);
+}
+.round {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--chrome-2);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+}
+.round:hover {
+  background: var(--chrome-3);
+}
+.people {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: 40vw;
+  overflow-x: auto;
+  padding: 10px;
+  scrollbar-width: none;
+}
+.people::-webkit-scrollbar {
+  display: none;
+}
+.personBtn {
+  position: relative;
+  border-radius: 50%;
+  opacity: 0.8;
+  transition:
+    transform 120ms,
+    opacity 120ms;
+  flex: none;
+}
+.personBtn:hover {
+  opacity: 1;
+  transform: translateY(-1px);
+}
+.personBtnActive {
+  opacity: 1;
+  outline: 2px solid rgba(255, 255, 255, 0.9);
+  outline-offset: 7px;
+}
+.menu {
+  min-width: 240px;
+  padding: 6px;
+  border-radius: 12px;
+  background: var(--chrome);
+  border: 1px solid var(--chrome-2);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  color: #fff;
+  z-index: 20;
+}
+.menuItem {
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  outline: 0;
+  cursor: default;
+  user-select: none;
+}
+.menuItem[data-highlighted] {
+  background: var(--person-0);
+}
+.menuDanger {
+  color: #ff8a8a;
+}
+.menuDanger[data-highlighted] {
+  background: var(--danger);
+  color: #fff;
+}
+.menuSep {
+  height: 1px;
+  background: var(--chrome-2);
+  margin: 6px 4px;
+}

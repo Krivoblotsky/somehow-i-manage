@@ -1,30 +1,50 @@
-# React + TypeScript + Vite
+# Personal (working title)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+People-centric task manager for managers: **work with people, not tasks.**
 
-Currently, two official plugins are available:
+A person is the root object; tasks and notes hang off people. Local-first web app
+(React + TypeScript + Vite, IndexedDB via Dexie), designed to grow a People Map (mind-map
+canvas) and cloud sync.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Docs
 
-## Expanding the ESLint configuration
+- [`docs/PRODUCT.md`](docs/PRODUCT.md) — problem, audience, MVP scope, success criteria
+- [`docs/DESIGN.md`](docs/DESIGN.md) — measured spec of the Figma frames
+- [`docs/PLAN.md`](docs/PLAN.md) — post-mortem of the 2024 attempt, milestones, decisions, data model
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+Design: <https://www.figma.com/design/c1d7ZcNNBiKKnDT2RpKuze/Personal>
 
-- Configure the top-level `parserOptions` property like this:
+## Develop
 
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
+Node 24 (see `.nvmrc`); Node 22+ works.
+
+```bash
+npm install
+npm run dev        # http://localhost:5173
 ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+| Script              | What it does                               |
+| ------------------- | ------------------------------------------ |
+| `npm run dev`       | Vite dev server with HMR                   |
+| `npm test`          | Vitest (jsdom + fake-indexeddb)            |
+| `npm run lint`      | ESLint (typescript-eslint, react-hooks)    |
+| `npm run typecheck` | `tsc -b`                                   |
+| `npm run build`     | type-check + production build into `dist/` |
+| `npm run format`    | Prettier                                   |
+
+CI (`.github/workflows/ci.yml`) runs lint, typecheck, tests and build on every push and PR.
+
+## Code map
+
+```
+src/
+  model/      types, palette, derived values (stats, initials), formatting — pure, tested
+  data/       Dexie database, repository (all reads/writes), bulk-paste parser, sample data, Markdown export
+  state/      transient UI state (zustand): selection, search, open dialog
+  components/ Header (people strip, search, menu), PersonView (dossier), ItemPanel (editor),
+              PersonDialog, BulkAddDialog, SearchResults, EmptyState, Avatar, BodyEditor (TipTap)
+  styles/     design tokens from docs/DESIGN.md, global reset
+```
+
+All data lives in the browser's IndexedDB (database `personal`). Export everything as Markdown
+from the ⋯ menu.
