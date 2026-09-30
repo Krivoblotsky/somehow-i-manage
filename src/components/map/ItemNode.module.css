@@ -81,6 +81,31 @@
 .titleText {
   overflow-wrap: anywhere;
 }
+.titleInput {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.25;
+}
+.titleInput::placeholder {
+  color: var(--card-muted);
+  font-weight: 500;
+}
+.editing,
+.editing:hover {
+  box-shadow:
+    0 0 0 3px var(--accent),
+    0 8px 24px rgba(0, 0, 0, 0.35);
+  cursor: text;
+}
 .flag {
   color: #e0a100;
   flex: none;

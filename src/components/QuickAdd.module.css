@@ -1,0 +1,70 @@
+.wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: var(--radius-card);
+  background: var(--chrome);
+  color: var(--text);
+  transition: background 120ms;
+}
+.wrap:focus-within {
+  background: var(--chrome-2);
+}
+.plus {
+  color: var(--text-subtle);
+  font-size: 20px;
+  line-height: 1;
+  flex: none;
+}
+.input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: inherit;
+  font-size: 14px;
+}
+.input::placeholder {
+  color: var(--text-subtle);
+}
+.hint {
+  flex: none;
+  font-size: 11px;
+  color: var(--text-subtle);
+  white-space: nowrap;
+}
+.hint kbd {
+  font: inherit;
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid var(--chrome-3);
+  color: var(--text-muted);
+}
+
+/* on white panels */
+.light {
+  background: #f2f2f7;
+  color: var(--card-text);
+}
+.light:focus-within {
+  background: #e9e9ee;
+}
+.light .plus,
+.light .hint,
+.light .input::placeholder {
+  color: var(--card-muted);
+}
+.light .hint kbd {
+  border-color: #d1d1d6;
+  color: #6e6e73;
+}
+@media (max-width: 720px) {
+  .hint {
+    display: none;
+  }
+}

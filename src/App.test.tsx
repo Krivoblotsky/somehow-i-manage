@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { StrictMode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import { db } from './data/db';
@@ -87,6 +88,78 @@ describe('App (list view) — person contacts', () => {
   });
 });
 
+describe('App — item context menu in the list', () => {
+  it('right-click offers Delete and Move to another person', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByText(/add your first person/i);
+    await user.click(screen.getByRole('button', { name: /load sample data/i }));
+    await screen.findByRole('heading', { name: 'Vira' });
+
+    fireEvent.contextMenu(screen.getByText('Business Trip'));
+    await user.click(await screen.findByRole('menuitem', { name: 'Delete' }));
+    expect(await screen.findByRole('status')).toHaveTextContent('Deleted “Business Trip”');
+    expect(screen.queryByText('Business Trip')).not.toBeInTheDocument();
+
+    fireEvent.contextMenu(screen.getByText('Salary Review'));
+    await user.click(await screen.findByRole('menuitem', { name: 'Move to…' }));
+    // A plain click: user-event would first "travel" the pointer from the trigger into the
+    // submenu, and without real geometry in jsdom Radix reads that as leaving the menu.
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Nata' }));
+    expect(await screen.findByText('Moved “Salary Review” to Nata')).toBeInTheDocument();
+    const moved = (await db.items.toArray()).find((i) => i.title === 'Salary Review');
+    const nata = (await db.people.toArray()).find((p) => p.name === 'Nata');
+    expect(moved?.personId).toBe(nata?.id);
+  });
+});
+
+describe('App — quick add and palette', () => {
+  it('adds tasks and notes from the inline field without opening the editor', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByText(/add your first person/i);
+    await user.click(screen.getByRole('button', { name: /load sample data/i }));
+    await screen.findByRole('heading', { name: 'Vira' });
+    const before = await db.items.count();
+
+    const field = screen.getByLabelText('Add a task with Vira');
+    await user.type(field, 'Prepare the deck{Enter}');
+    expect(await screen.findByText('Prepare the deck')).toBeInTheDocument();
+    expect(field).toHaveValue('');
+    expect(screen.queryByRole('region', { name: 'Task details' })).not.toBeInTheDocument();
+
+    await user.type(field, 'Likes async work{Shift>}{Enter}{/Shift}');
+    expect(await screen.findByText('Likes async work')).toBeInTheDocument();
+    const added = (await db.items.toArray()).filter((i) => i.title === 'Likes async work');
+    expect(added[0]?.kind).toBe('note');
+    expect(await db.items.count()).toBe(before + 2);
+  });
+
+  it('jumps to a person and adds a task through the palette', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByText(/add your first person/i);
+    await user.click(screen.getByRole('button', { name: /load sample data/i }));
+    await screen.findByRole('heading', { name: 'Vira' });
+
+    useUI.getState().openDialog({ type: 'palette' });
+    const input = await screen.findByRole('textbox', { name: 'Command palette' });
+    await user.type(input, 'Nata{Enter}');
+    expect(await screen.findByRole('heading', { name: 'Nata' })).toBeInTheDocument();
+
+    useUI.getState().openDialog({ type: 'palette' });
+    await user.type(
+      await screen.findByLabelText('Command palette'),
+      'Vira: Book the offsite{Enter}',
+    );
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'Added task “Book the offsite” with Vira',
+    );
+    const created = (await db.items.toArray()).find((i) => i.title === 'Book the offsite');
+    expect(created?.kind).toBe('task');
+  });
+});
+
 describe('App — backup restore', () => {
   it('merges a backup file chosen in the restore dialog', async () => {
     const user = userEvent.setup();
@@ -167,6 +240,62 @@ describe('App (map view)', () => {
     fireEvent.click(within(map).getByText('Salary Review'));
     const panel = await screen.findByRole('region', { name: 'Task details' });
     expect(within(panel).getByLabelText('Title')).toHaveValue('Salary Review');
+  });
+
+  it('creates a card from a hub and edits its title in place, without opening the panel', async () => {
+    useUI.setState({ view: 'map' });
+    const user = userEvent.setup();
+    // StrictMode rehearses mount → unmount → mount; the editor must not treat that as leaving.
+    render(
+      <StrictMode>
+        <App />
+      </StrictMode>,
+    );
+    await screen.findByText(/add your first person/i);
+    await user.click(screen.getByRole('button', { name: /load sample data/i }));
+    const map = await screen.findByTestId('people-map');
+    await within(map).findByText('Anton');
+
+    fireEvent.click(within(map).getByRole('button', { name: 'New task with Anton' }));
+    const input = await within(map).findByRole('textbox', { name: 'Task title' });
+    await user.type(input, 'Talk about the promo{Enter}');
+
+    expect(await within(map).findByText('Talk about the promo')).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Task details' })).not.toBeInTheDocument();
+    const created = (await db.items.toArray()).find((i) => i.title === 'Talk about the promo');
+    expect(created?.kind).toBe('task');
+
+    // Escape on an empty new card removes it again
+    const before = await db.items.count();
+    fireEvent.click(within(map).getByRole('button', { name: 'New task with Anton' }));
+    const second = await within(map).findByRole('textbox', { name: 'Task title' });
+    await user.type(second, '{Escape}');
+    await new Promise((r) => setTimeout(r, 50));
+    expect(await db.items.count()).toBe(before);
+  });
+
+  it('renaming a card on the map updates the same item open in the panel', async () => {
+    useUI.setState({ view: 'map' });
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByText(/add your first person/i);
+    await user.click(screen.getByRole('button', { name: /load sample data/i }));
+    const map = await screen.findByTestId('people-map');
+    const card = await within(map).findByText('Salary Review');
+
+    fireEvent.click(card);
+    const panel = await screen.findByRole('region', { name: 'Task details' });
+    expect(within(panel).getByLabelText('Title')).toHaveValue('Salary Review');
+
+    fireEvent.doubleClick(card);
+    const input = await within(map).findByRole('textbox', { name: 'Task title' });
+    await user.clear(input);
+    await user.type(input, 'Salary Review 2{Enter}');
+
+    expect(await within(map).findByText('Salary Review 2')).toBeInTheDocument();
+    await vi.waitFor(() =>
+      expect(within(panel).getByLabelText('Title')).toHaveValue('Salary Review 2'),
+    );
   });
 
   it('switches to the list view from the header', async () => {

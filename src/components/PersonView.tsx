@@ -10,6 +10,8 @@ import { deleteItemWithUndo } from '../state/actions';
 import { useUI } from '../state/ui';
 import { Avatar } from './Avatar';
 import { ContactLinks } from './ContactLinks';
+import { ItemContextMenu } from './ItemContextMenu';
+import { QuickAdd } from './QuickAdd';
 import { FlagIcon, NoteIcon, TrashIcon } from './icons';
 import styles from './PersonView.module.css';
 import ui from './ui.module.css';
@@ -98,7 +100,11 @@ export function PersonView({ personId }: { personId: string }) {
         </div>
       </div>
 
-      <Section title="Tasks" count={openTasks.length} empty="No open tasks. Add one with + Task.">
+      <div className={styles.quickAdd}>
+        <QuickAdd personId={personId} personName={person.name} />
+      </div>
+
+      <Section title="Tasks" count={openTasks.length} empty="No open tasks. Type one above.">
         {openTasks.map(row)}
       </Section>
       <Section title="Notes" count={notes.length} empty="No notes yet.">
@@ -174,59 +180,61 @@ function Row({
     .join(' ');
 
   return (
-    <div
-      className={className}
-      onClick={onSelect}
-      role="button"
-      tabIndex={0}
-      aria-pressed={selected}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onSelect();
-        }
-      }}
-    >
-      <div className={styles.rowBody}>
-        <div className={styles.rowTitle}>
-          {item.isFlagged && !item.isCompleted && (
-            <span className={styles.flag} title="Urgent" aria-label="Urgent">
-              <FlagIcon />
-            </span>
-          )}
-          {item.title || <span className={styles.untitled}>Untitled</span>}
+    <ItemContextMenu item={item}>
+      <div
+        className={className}
+        onClick={onSelect}
+        role="button"
+        tabIndex={0}
+        aria-pressed={selected}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onSelect();
+          }
+        }}
+      >
+        <div className={styles.rowBody}>
+          <div className={styles.rowTitle}>
+            {item.isFlagged && !item.isCompleted && (
+              <span className={styles.flag} title="Urgent" aria-label="Urgent">
+                <FlagIcon />
+              </span>
+            )}
+            {item.title || <span className={styles.untitled}>Untitled</span>}
+          </div>
+          <div className={styles.rowDate}>{formatDateTime(shownDate)}</div>
+          {preview && <div className={styles.rowPreview}>{preview}</div>}
         </div>
-        <div className={styles.rowDate}>{formatDateTime(shownDate)}</div>
-        {preview && <div className={styles.rowPreview}>{preview}</div>}
+        {isTask && item.isCompleted && (
+          <button
+            type="button"
+            className={styles.trash}
+            aria-label="Delete completed task"
+            title="Delete (undo available)"
+            onClick={(e) => {
+              e.stopPropagation();
+              void deleteItemWithUndo(item);
+            }}
+          >
+            <TrashIcon />
+          </button>
+        )}
+        {isTask ? (
+          <button
+            type="button"
+            className={item.isCompleted ? `${styles.check} ${styles.checkDone}` : styles.check}
+            aria-label={item.isCompleted ? 'Mark as not completed' : 'Mark as completed'}
+            aria-pressed={item.isCompleted}
+            onClick={(e) => {
+              e.stopPropagation();
+              void setItemCompleted(item.id, !item.isCompleted);
+            }}
+          />
+        ) : (
+          <NoteIcon className={styles.noteMark} />
+        )}
       </div>
-      {isTask && item.isCompleted && (
-        <button
-          type="button"
-          className={styles.trash}
-          aria-label="Delete completed task"
-          title="Delete (undo available)"
-          onClick={(e) => {
-            e.stopPropagation();
-            void deleteItemWithUndo(item);
-          }}
-        >
-          <TrashIcon />
-        </button>
-      )}
-      {isTask ? (
-        <button
-          type="button"
-          className={item.isCompleted ? `${styles.check} ${styles.checkDone}` : styles.check}
-          aria-label={item.isCompleted ? 'Mark as not completed' : 'Mark as completed'}
-          aria-pressed={item.isCompleted}
-          onClick={(e) => {
-            e.stopPropagation();
-            void setItemCompleted(item.id, !item.isCompleted);
-          }}
-        />
-      ) : (
-        <NoteIcon className={styles.noteMark} />
-      )}
-    </div>
+    </ItemContextMenu>
   );
 }

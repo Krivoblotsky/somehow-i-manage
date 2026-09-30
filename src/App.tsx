@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useRef } from 'react';
 import styles from './App.module.css';
 import { BulkAddDialog } from './components/BulkAddDialog';
+import { CommandPalette } from './components/CommandPalette';
 import { EmptyState } from './components/EmptyState';
 import { Header } from './components/Header';
 import { ItemPanel } from './components/ItemPanel';
@@ -45,7 +46,16 @@ export default function App() {
       const inDialog = e.target instanceof Element && e.target.closest('[role="dialog"]') !== null;
       const ui = useUI.getState();
       const mod = e.metaKey || e.ctrlKey;
-      if (e.key === 'Escape' && !inDialog && ui.dialog === null) {
+      if (mod && e.key.toLowerCase() === 'k') {
+        // ⌘K toggles the palette; other dialogs stay untouched
+        if (ui.dialog === null) {
+          e.preventDefault();
+          ui.openDialog({ type: 'palette' });
+        } else if (ui.dialog.type === 'palette') {
+          e.preventDefault();
+          ui.closeDialog();
+        }
+      } else if (e.key === 'Escape' && !inDialog && ui.dialog === null) {
         if (ui.selectedItemId) ui.selectItem(null);
         else if (ui.personPanelOpen) ui.closePanel();
       } else if (mod && e.shiftKey && e.key.toLowerCase() === 'n') {
@@ -97,6 +107,7 @@ export default function App() {
       <PersonDialog />
       <BulkAddDialog />
       <RestoreDialog />
+      <CommandPalette />
       <Toast />
     </div>
   );

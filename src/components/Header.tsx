@@ -1,10 +1,9 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { backupFilename, createBackup, serializeBackup } from '../data/backup';
 import { db } from '../data/db';
-import { allToMarkdown } from '../data/export';
 import { clearAllData } from '../data/repository';
 import { loadSampleData } from '../data/seed';
+import { backupToFile, exportMarkdownToFile } from '../state/actions';
 import { useUI, type ViewMode } from '../state/ui';
 import { Avatar } from './Avatar';
 import styles from './Header.module.css';
@@ -21,19 +20,6 @@ export function Header() {
   const selectPerson = useUI((s) => s.selectPerson);
   const focusPerson = useUI((s) => s.focusPerson);
   const openDialog = useUI((s) => s.openDialog);
-
-  async function exportAll() {
-    const [allPeople, items] = await Promise.all([
-      db.people.orderBy('sortOrder').toArray(),
-      db.items.toArray(),
-    ]);
-    const stamp = new Date().toISOString().slice(0, 10);
-    downloadText(`personal-${stamp}.md`, allToMarkdown(allPeople, items));
-  }
-
-  async function backup() {
-    downloadText(backupFilename(), serializeBackup(await createBackup()), 'application/json');
-  }
 
   async function deleteAll() {
     if (window.confirm('Delete ALL people and items? This cannot be undone.')) {
@@ -67,6 +53,18 @@ export function Header() {
             onChange={(e) => setSearch(e.target.value)}
             aria-label="Search people, tasks and notes"
           />
+          <button
+            type="button"
+            className={styles.kbd}
+            onClick={(e) => {
+              e.preventDefault();
+              openDialog({ type: 'palette' });
+            }}
+            title="Command palette (⌘K)"
+            aria-label="Open command palette"
+          >
+            ⌘K
+          </button>
         </label>
 
         <button
@@ -110,11 +108,11 @@ export function Header() {
               <DropdownMenu.Item className={menu.item} onSelect={() => void loadSampleData()}>
                 Load sample data
               </DropdownMenu.Item>
-              <DropdownMenu.Item className={menu.item} onSelect={() => void exportAll()}>
+              <DropdownMenu.Item className={menu.item} onSelect={() => void exportMarkdownToFile()}>
                 Export everything as Markdown
               </DropdownMenu.Item>
               <DropdownMenu.Separator className={menu.separator} />
-              <DropdownMenu.Item className={menu.item} onSelect={() => void backup()}>
+              <DropdownMenu.Item className={menu.item} onSelect={() => void backupToFile()}>
                 Back up to file…
               </DropdownMenu.Item>
               <DropdownMenu.Item
@@ -154,14 +152,4 @@ function ViewToggle({ view, onChange }: { view: ViewMode; onChange: (view: ViewM
       ))}
     </div>
   );
-}
-
-function downloadText(filename: string, text: string, type = 'text/markdown') {
-  const blob = new Blob([text], { type: `${type};charset=utf-8` });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

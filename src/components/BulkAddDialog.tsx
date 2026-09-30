@@ -60,7 +60,7 @@ function BulkForm({ personId, onDone }: { personId: string; onDone: () => void }
   return (
     <form onSubmit={(e) => void submit(e)}>
       <Dialog.Title className={dlg.title}>
-        Paste a list{person ? ` for ${person.name}` : ''}
+        {person ? `Paste things to do with ${person.name}` : 'Paste a list'}
       </Dialog.Title>
       <Dialog.Description className={dlg.description}>
         One item per line — paste straight from Apple Notes. “- [x]” or “✅” marks a task as

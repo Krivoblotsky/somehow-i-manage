@@ -39,6 +39,9 @@
   flex-wrap: wrap;
   margin-top: 16px;
 }
+.quickAdd {
+  margin-top: 14px;
+}
 .list {
   flex: 1;
   min-height: 0;

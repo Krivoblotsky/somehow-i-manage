@@ -42,6 +42,13 @@ function ItemEditor({ item, person }: { item: Item; person: Person }) {
   const selectItem = useUI((s) => s.selectItem);
   const selectPerson = useUI((s) => s.selectPerson);
   const [title, setTitle] = useState(item.title);
+  const [synced, setSynced] = useState(item.title);
+  if (item.title !== synced) {
+    // The saved title changed underneath us: our own save landing, or an edit made elsewhere
+    // (renaming the card on the map). Follow it unless there is an unsaved draft here.
+    setSynced(item.title);
+    if (title === synced) setTitle(item.title);
+  }
   const pending = useRef<TextPatch>({});
   const timer = useRef<number | undefined>(undefined);
 

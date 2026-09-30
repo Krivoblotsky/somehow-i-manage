@@ -49,3 +49,13 @@
   white-space: nowrap;
   max-width: 260px;
 }
+.subTrigger::after {
+  content: '›';
+  margin-left: auto;
+  color: var(--text-subtle);
+  font-size: 15px;
+  line-height: 1;
+}
+.subTrigger[data-state='open'] {
+  background: var(--chrome-2);
+}

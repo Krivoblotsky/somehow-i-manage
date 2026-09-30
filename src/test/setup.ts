@@ -59,3 +59,6 @@ Object.defineProperties(globalThis.HTMLElement.prototype, {
 });
 (globalThis.SVGElement.prototype as unknown as { getBBox: () => DOMRect }).getBBox = () =>
   ({ x: 0, y: 0, width: 0, height: 0 }) as DOMRect;
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = () => {};
+}

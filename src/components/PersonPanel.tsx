@@ -10,6 +10,8 @@ import { deleteItemWithUndo } from '../state/actions';
 import { useUI } from '../state/ui';
 import { Avatar } from './Avatar';
 import { ContactLinks } from './ContactLinks';
+import { ItemContextMenu } from './ItemContextMenu';
+import { QuickAdd } from './QuickAdd';
 import { FlagIcon, NoteIcon, TrashIcon } from './icons';
 import styles from './PersonPanel.module.css';
 import ui from './ui.module.css';
@@ -98,8 +100,12 @@ export function PersonPanel({ personId }: { personId: string }) {
         </button>
       </div>
 
+      <div className={styles.quickAdd}>
+        <QuickAdd personId={personId} personName={person.name} tone="light" />
+      </div>
+
       <div className={styles.list}>
-        <Section title="Tasks" count={openTasks.length} empty="No open tasks.">
+        <Section title="Tasks" count={openTasks.length} empty="No open tasks. Type one above.">
           {openTasks.map(row)}
         </Section>
         <Section title="Notes" count={notes.length} empty="No notes yet.">
@@ -167,47 +173,49 @@ function Row({
   const preview = stripHtml(item.body);
   const shownDate = done && item.completedAt ? item.completedAt : item.updatedAt;
   return (
-    <div
-      className={selected ? `${styles.row} ${styles.rowSelected}` : styles.row}
-      onClick={onSelect}
-      role="button"
-      tabIndex={0}
-      aria-pressed={selected}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onSelect();
-        }
-      }}
-    >
-      <div className={styles.rowMain}>
-        <div className={styles.rowTitle}>
-          {item.isFlagged && !done && <FlagIcon className={styles.flag} />}
-          {item.title || <span className={styles.untitled}>Untitled</span>}
+    <ItemContextMenu item={item}>
+      <div
+        className={selected ? `${styles.row} ${styles.rowSelected}` : styles.row}
+        onClick={onSelect}
+        role="button"
+        tabIndex={0}
+        aria-pressed={selected}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onSelect();
+          }
+        }}
+      >
+        <div className={styles.rowMain}>
+          <div className={styles.rowTitle}>
+            {item.isFlagged && !done && <FlagIcon className={styles.flag} />}
+            {item.title || <span className={styles.untitled}>Untitled</span>}
+          </div>
+          <div className={styles.rowDate}>{formatDateTime(shownDate)}</div>
+          {preview && <div className={styles.rowPreview}>{preview}</div>}
         </div>
-        <div className={styles.rowDate}>{formatDateTime(shownDate)}</div>
-        {preview && <div className={styles.rowPreview}>{preview}</div>}
+        {done && (
+          <div className={styles.rowSide}>
+            <span className={ui.pill}>
+              completed <span className={`${ui.pillDot} ${ui.pillDotOn}`} />
+            </span>
+            <button
+              type="button"
+              className={styles.trash}
+              aria-label="Delete completed task"
+              title="Delete (undo available)"
+              onClick={(e) => {
+                e.stopPropagation();
+                void deleteItemWithUndo(item);
+              }}
+            >
+              <TrashIcon />
+            </button>
+          </div>
+        )}
+        {!isTask && <NoteIcon className={styles.rowSide} size={14} />}
       </div>
-      {done && (
-        <div className={styles.rowSide}>
-          <span className={ui.pill}>
-            completed <span className={`${ui.pillDot} ${ui.pillDotOn}`} />
-          </span>
-          <button
-            type="button"
-            className={styles.trash}
-            aria-label="Delete completed task"
-            title="Delete (undo available)"
-            onClick={(e) => {
-              e.stopPropagation();
-              void deleteItemWithUndo(item);
-            }}
-          >
-            <TrashIcon />
-          </button>
-        </div>
-      )}
-      {!isTask && <NoteIcon className={styles.rowSide} size={14} />}
-    </div>
+    </ItemContextMenu>
   );
 }

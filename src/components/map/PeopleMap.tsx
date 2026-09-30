@@ -19,8 +19,6 @@ import {
   deletePerson,
   moveItem,
   resetMapLayout,
-  setItemCompleted,
-  setItemKind,
   setItemMapPosition,
   setPersonMapPosition,
 } from '../../data/repository';
@@ -33,8 +31,8 @@ import {
 } from '../../map/graph';
 import { CARD, PERSON_NODE } from '../../map/layout';
 import type { Item, ItemKind, Person } from '../../model/types';
-import { deleteItemWithUndo } from '../../state/actions';
 import { useUI } from '../../state/ui';
+import { ItemMenuItems } from '../ItemContextMenu';
 import menu from '../menu.module.css';
 import { FloatingEdge } from './FloatingEdge';
 import { ItemNode } from './ItemNode';
@@ -236,10 +234,6 @@ function Canvas({ people, items }: PeopleMapProps) {
     }
   }
 
-  async function removeItem(item: Item) {
-    await deleteItemWithUndo(item);
-  }
-
   return (
     <ContextMenu.Root
       onOpenChange={(open) => {
@@ -292,13 +286,7 @@ function Canvas({ people, items }: PeopleMapProps) {
               onDelete={() => void removePerson(menuTarget.person)}
             />
           )}
-          {menuTarget?.kind === 'item' && (
-            <ItemMenu
-              item={menuTarget.item}
-              onOpen={() => selectItem(menuTarget.item.id, menuTarget.item.personId)}
-              onDelete={() => void removeItem(menuTarget.item)}
-            />
-          )}
+          {menuTarget?.kind === 'item' && <ItemMenuItems item={menuTarget.item} />}
           {(menuTarget === null || menuTarget.kind === 'pane') && (
             <>
               <ContextMenu.Item
@@ -355,44 +343,6 @@ function PersonMenu({
       <ContextMenu.Separator className={menu.separator} />
       <ContextMenu.Item className={`${menu.item} ${menu.danger}`} onSelect={onDelete}>
         Delete person…
-      </ContextMenu.Item>
-    </>
-  );
-}
-
-function ItemMenu({
-  item,
-  onOpen,
-  onDelete,
-}: {
-  item: Item;
-  onOpen: () => void;
-  onDelete: () => void;
-}) {
-  const isTask = item.kind === 'task';
-  return (
-    <>
-      <ContextMenu.Label className={menu.label}>{item.title || 'Untitled'}</ContextMenu.Label>
-      <ContextMenu.Item className={menu.item} onSelect={onOpen}>
-        Open
-      </ContextMenu.Item>
-      {isTask && (
-        <ContextMenu.Item
-          className={menu.item}
-          onSelect={() => void setItemCompleted(item.id, !item.isCompleted)}
-        >
-          {item.isCompleted ? 'Mark as not completed' : 'Mark as completed'}
-        </ContextMenu.Item>
-      )}
-      <ContextMenu.Item
-        className={menu.item}
-        onSelect={() => void setItemKind(item.id, isTask ? 'note' : 'task')}
-      >
-        {isTask ? 'Turn into a note' : 'Turn into a task'}
-      </ContextMenu.Item>
-      <ContextMenu.Separator className={menu.separator} />
-      <ContextMenu.Item className={`${menu.item} ${menu.danger}`} onSelect={onDelete}>
-        Delete…
       </ContextMenu.Item>
     </>
   );

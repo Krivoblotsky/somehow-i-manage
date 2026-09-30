@@ -208,8 +208,8 @@ function PersonForm({ initial, onDone }: { initial?: Person; onDone: () => void 
       <Dialog.Title className={dlg.title}>{initial ? 'Edit person' : 'New person'}</Dialog.Title>
       <Dialog.Description className={dlg.description}>
         {initial
-          ? 'Name, photo, colour and ways to reach them. Their tasks and notes stay as they are.'
-          : 'Someone you work with. Tasks and notes will hang off their name.'}
+          ? 'Name, photo, colour and ways to reach them. Your tasks and notes with them stay as they are.'
+          : 'Someone you work with. Your tasks and notes with them will gather around their name.'}
       </Dialog.Description>
 
       <div className={styles.preview}>

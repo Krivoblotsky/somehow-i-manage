@@ -56,3 +56,6 @@ export interface Item {
   createdAt: number;
   updatedAt: number;
 }
+
+/** The two main views. Kept here so pure model code can refer to it. */
+export type ViewModeLike = 'map' | 'list';

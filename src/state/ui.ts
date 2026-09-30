@@ -5,6 +5,7 @@ export type DialogState =
   | { type: 'person'; personId?: string }
   | { type: 'bulk'; personId: string }
   | { type: 'restore' }
+  | { type: 'palette' }
   | null;
 
 export type ViewMode = 'map' | 'list';
@@ -19,6 +20,11 @@ interface UIState {
   focusRequest: { personId: string; nonce: number } | null;
   search: string;
   dialog: DialogState;
+  /** Card whose title is being edited in place on the map. isNew: created moments ago, empty. */
+  editingItem: { id: string; isNew: boolean } | null;
+  startEditing: (id: string, isNew: boolean) => void;
+  /** Ends in-place editing. With an id, only if that card is still the one being edited. */
+  stopEditing: (id?: string) => void;
   setView: (view: ViewMode) => void;
   selectPerson: (id: string | null) => void;
   selectItem: (id: string | null, personId?: string) => void;
@@ -40,6 +46,10 @@ export const useUI = create<UIState>()(
       focusRequest: null,
       search: '',
       dialog: null,
+      editingItem: null,
+      startEditing: (id, isNew) => set({ editingItem: { id, isNew } }),
+      stopEditing: (id) =>
+        set((s) => (id !== undefined && s.editingItem?.id !== id ? {} : { editingItem: null })),
       setView: (view) => set({ view }),
       selectPerson: (id) =>
         set({ selectedPersonId: id, selectedItemId: null, personPanelOpen: id !== null }),

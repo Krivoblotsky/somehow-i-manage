@@ -9,14 +9,15 @@ import styles from './PersonNode.module.css';
 /** A person on the map: ringed avatar, name, and a "+" that adds a task. */
 export function PersonNode({ data }: NodeProps<PersonNodeType>) {
   const { person, color, isSelected, isDropTarget } = data;
-  const selectItem = useUI((s) => s.selectItem);
+  const startEditing = useUI((s) => s.startEditing);
   const [pulsing, setPulsing] = useState(false);
 
+  // A new branch grows out of the hub and its title is editable right on the card.
   async function addTask(e: ReactMouseEvent) {
     e.stopPropagation();
     setPulsing(true);
     const item = await createItem({ personId: person.id, kind: 'task' });
-    selectItem(item.id, person.id);
+    startEditing(item.id, true);
   }
 
   return (
@@ -40,8 +41,8 @@ export function PersonNode({ data }: NodeProps<PersonNodeType>) {
         <button
           type="button"
           className={`nodrag nopan ${styles.add}`}
-          title={`New task for ${person.name}`}
-          aria-label={`New task for ${person.name}`}
+          title={`New task with ${person.name}`}
+          aria-label={`New task with ${person.name}`}
           onClick={(e) => void addTask(e)}
         >
           +
