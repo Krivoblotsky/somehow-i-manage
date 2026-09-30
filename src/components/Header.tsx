@@ -1,5 +1,6 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { useLiveQuery } from 'dexie-react-hooks';
+import { backupFilename, createBackup, serializeBackup } from '../data/backup';
 import { db } from '../data/db';
 import { allToMarkdown } from '../data/export';
 import { clearAllData } from '../data/repository';
@@ -28,6 +29,10 @@ export function Header() {
     ]);
     const stamp = new Date().toISOString().slice(0, 10);
     downloadText(`personal-${stamp}.md`, allToMarkdown(allPeople, items));
+  }
+
+  async function backup() {
+    downloadText(backupFilename(), serializeBackup(await createBackup()), 'application/json');
   }
 
   async function deleteAll() {
@@ -109,6 +114,16 @@ export function Header() {
                 Export everything as Markdown
               </DropdownMenu.Item>
               <DropdownMenu.Separator className={menu.separator} />
+              <DropdownMenu.Item className={menu.item} onSelect={() => void backup()}>
+                Back up to file…
+              </DropdownMenu.Item>
+              <DropdownMenu.Item
+                className={menu.item}
+                onSelect={() => openDialog({ type: 'restore' })}
+              >
+                Restore from file…
+              </DropdownMenu.Item>
+              <DropdownMenu.Separator className={menu.separator} />
               <DropdownMenu.Item
                 className={`${menu.item} ${menu.danger}`}
                 onSelect={() => void deleteAll()}
@@ -141,8 +156,8 @@ function ViewToggle({ view, onChange }: { view: ViewMode; onChange: (view: ViewM
   );
 }
 
-function downloadText(filename: string, text: string) {
-  const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' });
+function downloadText(filename: string, text: string, type = 'text/markdown') {
+  const blob = new Blob([text], { type: `${type};charset=utf-8` });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;

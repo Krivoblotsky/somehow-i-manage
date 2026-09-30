@@ -87,6 +87,45 @@ describe('App (list view) — person contacts', () => {
   });
 });
 
+describe('App — backup restore', () => {
+  it('merges a backup file chosen in the restore dialog', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByText(/add your first person/i);
+    useUI.getState().openDialog({ type: 'restore' });
+
+    const backup = {
+      app: 'somehow-i-manage',
+      version: 1,
+      exportedAt: '2026-09-30T10:00:00.000Z',
+      people: [{ id: 'p1', name: 'Vira', colorIndex: 0, sortOrder: 0, createdAt: 1, updatedAt: 1 }],
+      items: [
+        {
+          id: 'i1',
+          personId: 'p1',
+          kind: 'task',
+          title: 'Ship it',
+          body: '',
+          isCompleted: false,
+          isFlagged: false,
+          sortOrder: 0,
+          createdAt: 1,
+          updatedAt: 1,
+        },
+      ],
+    };
+    const file = new File([JSON.stringify(backup)], 'backup.json', { type: 'application/json' });
+    await user.upload(await screen.findByLabelText('Backup file'), file);
+
+    expect(await screen.findByText('backup.json', { exact: false })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Merge into my data' }));
+
+    expect(await screen.findByRole('heading', { name: 'Vira' })).toBeInTheDocument();
+    expect(await db.items.count()).toBe(1);
+    expect(screen.getByRole('status')).toHaveTextContent('Restored 1 people and 1 items');
+  });
+});
+
 describe('App (list view) — completed items', () => {
   it('deletes a completed task from the list and brings it back with Undo', async () => {
     const user = userEvent.setup();

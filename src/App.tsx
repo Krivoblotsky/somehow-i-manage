@@ -9,6 +9,7 @@ import { PeopleMap } from './components/map/PeopleMap';
 import { PersonDialog } from './components/PersonDialog';
 import { PersonPanel } from './components/PersonPanel';
 import { PersonView } from './components/PersonView';
+import { RestoreDialog } from './components/RestoreDialog';
 import { SearchResults } from './components/SearchResults';
 import { Toast } from './components/Toast';
 import { db } from './data/db';
@@ -27,6 +28,8 @@ export default function App() {
   // Data from before positions were stored gets placed once, on startup.
   useEffect(() => {
     void ensureMapPositions();
+    // Ask the browser not to evict our IndexedDB under storage pressure. Best effort.
+    void navigator.storage?.persist?.().catch(() => undefined);
   }, []);
 
   // Latest people list for the keyboard handler, which is registered once.
@@ -93,6 +96,7 @@ export default function App() {
       </div>
       <PersonDialog />
       <BulkAddDialog />
+      <RestoreDialog />
       <Toast />
     </div>
   );

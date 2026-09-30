@@ -2,7 +2,10 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 export type DialogState =
-  { type: 'person'; personId?: string } | { type: 'bulk'; personId: string } | null;
+  | { type: 'person'; personId?: string }
+  | { type: 'bulk'; personId: string }
+  | { type: 'restore' }
+  | null;
 
 export type ViewMode = 'map' | 'list';
 

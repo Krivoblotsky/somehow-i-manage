@@ -50,5 +50,21 @@ src/
   styles/     design tokens from docs/DESIGN.md, global reset
 ```
 
-All data lives in the browser's IndexedDB (database `personal`). Export everything as Markdown
-from the ⋯ menu.
+## Your data
+
+Everything lives in the browser's IndexedDB (database `personal`) on the device you use. From the
+⋯ menu you can **Back up to file** (a JSON file with people, items, positions and avatars),
+**Restore from file** (merge or replace), and **Export everything as Markdown**. Make a backup
+before clearing site data or switching machines; sync is a later milestone.
+
+## Install as an app
+
+The build is a PWA: open the deployed site in Chrome, Edge or Safari and use “Install” / “Add to
+Dock”. It keeps working offline; new versions apply on the next launch.
+
+## Deploy
+
+`.github/workflows/deploy.yml` builds and publishes to GitHub Pages on every push to `main`.
+Enable Pages in the repository settings with **Source: GitHub Actions**. The workflow sets
+`BASE_PATH=/<repo>/`; for a `<user>.github.io` repository set it to `/`. Any static host works
+too: build with `npm run build` and serve `dist/`.

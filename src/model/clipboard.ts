@@ -13,7 +13,7 @@ export async function copyToClipboard(text: string): Promise<boolean> {
   area.style.opacity = '0';
   document.body.appendChild(area);
   area.select();
-  let ok = false;
+  let ok: boolean;
   try {
     ok = document.execCommand('copy');
   } catch {

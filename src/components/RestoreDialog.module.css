@@ -1,0 +1,21 @@
+.file {
+  display: block;
+  color: var(--text-muted);
+  font-size: 13px;
+  margin: 4px 0 14px;
+}
+.summary {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--bg);
+  border: 1px solid var(--chrome-2);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.error {
+  color: #ff8a8a;
+  font-size: 13px;
+}
+.muted {
+  color: var(--text-subtle);
+}
