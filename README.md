@@ -1,4 +1,4 @@
-# Personal (working title)
+# Somehow I Manage
 
 People-centric task manager for managers: **work with people, not tasks.**
 

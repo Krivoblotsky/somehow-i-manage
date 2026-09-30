@@ -1,5 +1,8 @@
 # Build plan
 
+Product name: **Somehow I Manage** (decided 2026-09-30, see PRODUCT.md § Name). The repo folder
+is still `personalapp`; rename it when the GitHub repository is created.
+
 ## What happened in 2024 (post-mortem)
 
 Repo `~/Work/Home/personalapp` (remote github.com/romankolpak/personalapp), 17 commits between

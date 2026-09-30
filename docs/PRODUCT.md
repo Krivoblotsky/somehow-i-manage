@@ -1,4 +1,4 @@
-# Product spec — "Personal" (working title)
+# Product spec — Somehow I Manage
 
 *Work with people, not tasks.*
 
@@ -63,5 +63,11 @@ subscription, StoreKit 2). Same free + Pro model already planned for DNS Client.
 
 ## Name
 
-"Personal" is the working title from the Figma file and the 2024 repo. It is generic and hard to
-find in the App Store; pick a real name before the first TestFlight build.
+**Somehow I Manage** — decided 2026-09-30. Michael Scott's unfinished autobiography from *The
+Office*; a people-first manager tool named after the most people-first manager on TV. Tagline stays
+"Work with people, not tasks". Domains: somehowimanage.app/.dev/.io/.team/.co were free on
+2026-09-30; somehowimanage.com is registered by someone else (since 2012, expires 2026-11-12).
+Known exposure: NBC sells the phrase on merch and publishes the licensed game "The Office: Somehow We
+Manage"; no trademark registration for either phrase was found in a web search, USPTO not checked.
+Internal storage names (`personal` IndexedDB database, `personal.ui` key) keep the old name on
+purpose so existing data survives.

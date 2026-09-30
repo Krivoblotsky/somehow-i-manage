@@ -10,6 +10,7 @@ export class PersonalDB extends Dexie {
   declare people: EntityTable<Person, 'id'>;
   declare items: EntityTable<Item, 'id'>;
 
+  // The database keeps its original name so data from before the rename survives.
   constructor(name = 'personal') {
     super(name);
     this.version(1).stores({

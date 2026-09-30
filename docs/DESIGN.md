@@ -1,4 +1,4 @@
-# Design spec — "Personal" (from Figma)
+# Design spec — Somehow I Manage (from Figma)
 
 Source: https://www.figma.com/design/c1d7ZcNNBiKKnDT2RpKuze/Personal
 Frames (Page 1): `1:2` Task Details (original), `97:2` Task Details (duplicate, same content), `1:157` Person Details.
@@ -39,7 +39,7 @@ docked on the right. The only difference between frames is what the panel shows.
 
 | Element | Spec |
 |---|---|
-| App title | "Personal.app", 18 pt bold, white; subtitle "Work with people, not tasks", 12 pt, `#9A9A9A` |
+| App title | "Personal.app" in the frames, now **Somehow I Manage**; 18 pt bold, white; subtitle "Work with people, not tasks", 12 pt, `#9A9A9A` |
 | Search | pill 240 × 40, fill `#2A2A2C`, magnifier icon + placeholder "Search…" `#8E8E93` |
 | Add person | 40 pt circle, fill `#3E3E40`, white "+" |
 | People avatars | 40 pt circles, 3 pt ring in the person's colour, in creation order; click → Person Details |

@@ -46,7 +46,7 @@ export function Header() {
   return (
     <header className={styles.header}>
       <div className={styles.brand}>
-        <div className={styles.title}>Personal.app</div>
+        <div className={styles.title}>Somehow I Manage</div>
         <div className={styles.subtitle}>Work with people, not tasks</div>
       </div>
 

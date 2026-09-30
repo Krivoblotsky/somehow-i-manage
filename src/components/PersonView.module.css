@@ -5,12 +5,13 @@
 .head {
   display: flex;
   align-items: center;
-  gap: 18px;
+  flex-wrap: wrap;
+  gap: 12px 18px;
   padding: 8px 4px 4px;
 }
 .headText {
   min-width: 0;
-  flex: 1;
+  flex: 1 1 220px;
 }
 .name {
   margin: 0;
@@ -31,6 +32,7 @@
   gap: 8px;
   flex-wrap: wrap;
   justify-content: flex-end;
+  margin-left: auto;
 }
 
 .section {
