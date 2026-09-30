@@ -18,6 +18,12 @@ export interface MapPosition {
   y: number;
 }
 
+/** One finished 1:1. Kept on the person so history travels with backups and, later, sync. */
+export interface Meeting {
+  startedAt: number;
+  endedAt: number;
+}
+
 /** The root object of the app. Everything hangs off a person. */
 export interface Person {
   id: string;
@@ -32,6 +38,8 @@ export interface Person {
   contacts?: Contact[];
   /** Top-left of the person's node on the map; undefined = automatic layout. */
   mapPosition?: MapPosition;
+  /** Past 1:1s with this person, in the order they happened. */
+  meetings?: Meeting[];
   sortOrder: number;
   createdAt: number;
   updatedAt: number;
@@ -50,6 +58,8 @@ export interface Item {
   /** "urgent" in the design. */
   isFlagged: boolean;
   dueDate?: number;
+  /** When this was last covered in a 1:1. */
+  discussedAt?: number;
   /** Position relative to the owner's node on the map; undefined = automatic ring layout. */
   mapPosition?: MapPosition;
   sortOrder: number;
@@ -57,5 +67,5 @@ export interface Item {
   updatedAt: number;
 }
 
-/** The two main views. Kept here so pure model code can refer to it. */
-export type ViewModeLike = 'map' | 'list';
+/** The main views, plus the 1:1 screen. Kept here so pure model code can refer to it. */
+export type ViewModeLike = 'map' | 'list' | 'meeting';

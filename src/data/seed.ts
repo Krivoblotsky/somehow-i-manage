@@ -45,13 +45,13 @@ export async function loadSampleData(database: PersonalDB = defaultDb): Promise<
     }
     await createItem({ personId: nata.id, title: 'Buy Tickets', isCompleted: true }, database);
 
-    await createItem(
+    const mipp = await createItem(
       { personId: vira.id, title: 'Launch MIPP', body: MIPP_BODY, isCompleted: true },
       database,
     );
-    await createItem({ personId: vira.id, title: 'Salary Review' }, database);
-    await createItem({ personId: vira.id, title: 'Business Trip' }, database);
-    await createItem(
+    const salary = await createItem({ personId: vira.id, title: 'Salary Review' }, database);
+    const trip = await createItem({ personId: vira.id, title: 'Business Trip' }, database);
+    const jobDescription = await createItem(
       { personId: vira.id, title: 'Complete Job Description', isCompleted: true },
       database,
     );
@@ -65,6 +65,21 @@ export async function loadSampleData(database: PersonalDB = defaultDb): Promise<
       },
       database,
     );
+
+    // Vira had a 1:1 twelve days ago: her older items predate it, two tasks got done since,
+    // and one was covered back then. That gives the 1:1 screen a real recap to show.
+    const day = 24 * 60 * 60 * 1000;
+    const lastOneOnOne = Date.now() - 12 * day;
+    await database.people.update(vira.id, {
+      meetings: [{ startedAt: lastOneOnOne, endedAt: lastOneOnOne + 35 * 60 * 1000 }],
+    });
+    for (const item of [mipp, salary, trip, jobDescription]) {
+      await database.items.update(item.id, {
+        createdAt: lastOneOnOne - 8 * day,
+        updatedAt: lastOneOnOne - 8 * day,
+      });
+    }
+    await database.items.update(salary.id, { discussedAt: lastOneOnOne + 10 * 60 * 1000 });
 
     // Demo people look best on balanced rings, like the design frames.
     await relayoutPerson(vira.id, database);

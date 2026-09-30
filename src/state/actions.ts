@@ -1,7 +1,8 @@
 import { backupFilename, createBackup, serializeBackup } from '../data/backup';
 import { db } from '../data/db';
 import { allToMarkdown } from '../data/export';
-import { deleteItem, restoreItem } from '../data/repository';
+import { deleteItem, recordMeeting, restoreItem } from '../data/repository';
+import { buildMeetingView, lastMeeting, summarizeMeeting } from '../model/oneOnOne';
 import type { Item } from '../model/types';
 import { useToast } from './toast';
 import { useUI } from './ui';
@@ -43,4 +44,32 @@ export async function exportMarkdownToFile(): Promise<void> {
   ]);
   const stamp = new Date().toISOString().slice(0, 10);
   downloadText(`somehow-i-manage-${stamp}.md`, allToMarkdown(people, items));
+}
+
+/** Opens the 1:1 screen for a person. A 1:1 still running with someone else ends (and is recorded) first. */
+export async function startOneOnOne(personId: string): Promise<void> {
+  const ui = useUI.getState();
+  if (ui.meeting?.personId === personId) {
+    ui.setView('meeting');
+    return;
+  }
+  if (ui.meeting) await finishOneOnOne();
+  useUI.getState().startMeeting(personId, Date.now());
+}
+
+/** Ends the running 1:1: records it on the person and sums up what happened in a toast. */
+export async function finishOneOnOne(): Promise<void> {
+  const meeting = useUI.getState().meeting;
+  if (!meeting) return;
+  const endedAt = Date.now();
+  const [person, items] = await Promise.all([
+    db.people.get(meeting.personId),
+    db.items.where('personId').equals(meeting.personId).toArray(),
+  ]);
+  await recordMeeting(meeting.personId, { startedAt: meeting.startedAt, endedAt });
+  useUI.getState().endMeeting();
+  if (person) {
+    const { counts } = buildMeetingView(items, meeting.startedAt, lastMeeting(person));
+    useToast.getState().show(`1:1 with ${person.name} ended · ${summarizeMeeting(counts)}`);
+  }
 }

@@ -1,6 +1,7 @@
 import { CONTACT_LABEL, contactDisplay } from '../model/contacts';
 import { stripHtml } from '../model/derive';
 import { formatDateTime } from '../model/format';
+import { lastMeeting } from '../model/oneOnOne';
 import type { Item, Person } from '../model/types';
 
 /** A person's dossier as Markdown — the escape hatch out of the app. */
@@ -9,6 +10,8 @@ export function personToMarkdown(person: Person, items: Item[]): string {
   if (person.role) lines.push(`_${person.role}_`);
   for (const c of person.contacts ?? [])
     lines.push(`- ${CONTACT_LABEL[c.kind]}: ${contactDisplay(c)}`);
+  const last = lastMeeting(person);
+  if (last) lines.push(`- Last 1:1: ${formatDateTime(last.endedAt)}`);
   lines.push('');
 
   const tasks = items

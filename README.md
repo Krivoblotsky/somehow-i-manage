@@ -42,10 +42,10 @@ src/
   model/      types, palette, derived values (stats, initials), formatting — pure, tested
   data/       Dexie database, repository (all reads/writes), bulk-paste parser, sample data, Markdown export
   map/        People Map geometry: ring layout, cluster grid, edge endpoints, graph builder — pure, tested
-  state/      transient UI state (zustand): view (map/list), selection, search, open dialog
+  state/      transient UI state (zustand): view (map/list/1:1), selection, search, open dialog, the running 1:1
   components/ Header (view toggle, people strip, search, menu), PersonView (dossier list),
               PersonPanel (person details), ItemPanel (editor), PersonDialog, BulkAddDialog,
-              SearchResults, EmptyState, Avatar, BodyEditor (TipTap)
+              OneOnOne (the 1:1 screen), SearchResults, EmptyState, Avatar, BodyEditor (TipTap)
   components/map/ PeopleMap (React Flow canvas + context menus), PersonNode, ItemNode, FloatingEdge
   styles/     design tokens from docs/DESIGN.md, global reset
 ```

@@ -4,6 +4,7 @@ export type PaletteAction =
   | { type: 'person'; personId: string }
   | { type: 'item'; itemId: string; personId: string }
   | { type: 'add'; personId: string; kind: ItemKind; title: string }
+  | { type: 'meeting'; personId: string }
   | { type: 'command'; command: PaletteCommand };
 
 export type PaletteCommand = 'new-person' | 'view-map' | 'view-list' | 'backup' | 'restore';
@@ -141,8 +142,26 @@ export function buildResults(
     }
   }
 
+  // "Start 1:1 with …" for whoever matched; for everyone when the query is about 1:1s.
+  if (q !== '') {
+    const aboutMeetings = /^(1:1|1-1|one[ -]on[ -]one|meet)/.test(q);
+    const targets = aboutMeetings
+      ? people.slice(0, MAX_PEOPLE)
+      : peopleHits.slice(0, 3).map((x) => x.p);
+    for (const p of targets) {
+      results.push({
+        id: `meeting-${p.id}`,
+        group: 'commands',
+        label: `Start 1:1 with ${p.name}`,
+        personId: p.id,
+        action: { type: 'meeting', personId: p.id },
+      });
+    }
+  }
+
   for (const c of COMMANDS) {
-    if (c.view && c.view !== view) continue;
+    // On the 1:1 screen both view switches make sense.
+    if (c.view && view !== 'meeting' && c.view !== view) continue;
     if (q !== '' && rank(c.label, q) === -1 && !c.keywords.includes(q)) continue;
     results.push({
       id: `command-${c.command}`,

@@ -31,6 +31,7 @@ import {
 } from '../../map/graph';
 import { CARD, PERSON_NODE } from '../../map/layout';
 import type { Item, ItemKind, Person } from '../../model/types';
+import { startOneOnOne } from '../../state/actions';
 import { useUI } from '../../state/ui';
 import { ItemMenuItems } from '../ItemContextMenu';
 import menu from '../menu.module.css';
@@ -280,6 +281,7 @@ function Canvas({ people, items }: PeopleMapProps) {
           {menuTarget?.kind === 'person' && (
             <PersonMenu
               person={menuTarget.person}
+              onMeet={() => void startOneOnOne(menuTarget.person.id)}
               onAdd={(kind) => void addItem(menuTarget.person.id, kind)}
               onPaste={() => openDialog({ type: 'bulk', personId: menuTarget.person.id })}
               onEdit={() => openDialog({ type: 'person', personId: menuTarget.person.id })}
@@ -314,12 +316,14 @@ function Canvas({ people, items }: PeopleMapProps) {
 
 function PersonMenu({
   person,
+  onMeet,
   onAdd,
   onPaste,
   onEdit,
   onDelete,
 }: {
   person: Person;
+  onMeet: () => void;
   onAdd: (kind: ItemKind) => void;
   onPaste: () => void;
   onEdit: () => void;
@@ -328,6 +332,9 @@ function PersonMenu({
   return (
     <>
       <ContextMenu.Label className={menu.label}>{person.name}</ContextMenu.Label>
+      <ContextMenu.Item className={menu.item} onSelect={onMeet}>
+        Start 1:1
+      </ContextMenu.Item>
       <ContextMenu.Item className={menu.item} onSelect={() => onAdd('task')}>
         New task
       </ContextMenu.Item>

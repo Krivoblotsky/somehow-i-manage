@@ -1,6 +1,7 @@
 .btn,
 .btnPrimary,
-.btnDanger {
+.btnDanger,
+.btnAccent {
   height: 34px;
   padding: 0 14px;
   border-radius: 8px;
@@ -81,7 +82,8 @@
 /* small buttons for white panels */
 .chip,
 .chipPrimary,
-.chipDanger {
+.chipDanger,
+.chipAccent {
   height: 28px;
   padding: 0 10px;
   border-radius: 8px;
@@ -112,4 +114,15 @@
 }
 .chipDanger:hover {
   background: #fbd9db;
+}
+
+/* the person's own colour — "Start 1:1" */
+.btnAccent,
+.chipAccent {
+  background: var(--accent, var(--action));
+  color: var(--accent-text, #fff);
+}
+.btnAccent:hover,
+.chipAccent:hover {
+  filter: brightness(1.08);
 }

@@ -6,6 +6,7 @@ import { CommandPalette } from './components/CommandPalette';
 import { EmptyState } from './components/EmptyState';
 import { Header } from './components/Header';
 import { ItemPanel } from './components/ItemPanel';
+import { OneOnOne } from './components/OneOnOne';
 import { PeopleMap } from './components/map/PeopleMap';
 import { PersonDialog } from './components/PersonDialog';
 import { PersonPanel } from './components/PersonPanel';
@@ -25,6 +26,7 @@ export default function App() {
   const selectedItemId = useUI((s) => s.selectedItemId);
   const personPanelOpen = useUI((s) => s.personPanelOpen);
   const search = useUI((s) => s.search);
+  const meeting = useUI((s) => s.meeting);
 
   // Data from before positions were stored gets placed once, on startup.
   useEffect(() => {
@@ -78,8 +80,16 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
+  // A 1:1 with someone who no longer exists cannot continue.
+  useEffect(() => {
+    if (meeting && people && !people.some((p) => p.id === meeting.personId)) {
+      useUI.getState().endMeeting();
+    }
+  }, [meeting, people]);
+
   if (!people || !items) return null;
 
+  const runningMeeting = meeting && people.some((p) => p.id === meeting.personId) ? meeting : null;
   const activePersonId = people.some((p) => p.id === selectedPersonId)
     ? selectedPersonId
     : (people[0]?.id ?? null);
@@ -89,11 +99,14 @@ export default function App() {
   let main;
   if (showSearch) main = <SearchResults query={search} />;
   else if (people.length === 0) main = <EmptyState />;
+  else if (view === 'meeting' && runningMeeting) main = <OneOnOne meeting={runningMeeting} />;
   else if (view === 'map') main = <PeopleMap people={people} items={items} />;
   else if (activePersonId) main = <PersonView personId={activePersonId} />;
 
   let aside = null;
-  if (selectedItemId) aside = <ItemPanel itemId={selectedItemId} />;
+  // Only for an item that still exists: an empty panel wrapper would sit over the main area.
+  if (selectedItemId && items.some((i) => i.id === selectedItemId))
+    aside = <ItemPanel itemId={selectedItemId} />;
   else if (view === 'map' && personPanelOpen && activePersonId)
     aside = <PersonPanel personId={activePersonId} />;
 

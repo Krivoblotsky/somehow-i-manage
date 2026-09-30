@@ -10,7 +10,7 @@ import {
   type PaletteResult,
 } from '../model/commandPalette';
 import { personColor } from '../model/palette';
-import { backupToFile } from '../state/actions';
+import { backupToFile, startOneOnOne } from '../state/actions';
 import { useToast } from '../state/toast';
 import { useUI } from '../state/ui';
 import styles from './CommandPalette.module.css';
@@ -101,6 +101,10 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
           });
         break;
       }
+      case 'meeting':
+        onDone();
+        void startOneOnOne(action.personId);
+        return;
       case 'command':
         switch (action.command) {
           case 'new-person':

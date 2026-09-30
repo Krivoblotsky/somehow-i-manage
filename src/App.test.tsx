@@ -33,7 +33,7 @@ describe('App (list view)', () => {
     await user.click(screen.getByRole('button', { name: /load sample data/i }));
 
     expect(await screen.findByRole('heading', { name: 'Vira' })).toBeInTheDocument();
-    expect(screen.getByText('3 tasks, 1 urgent, 2 done, 1 note')).toBeInTheDocument();
+    expect(screen.getByText(/3 tasks, 1 urgent, 2 done, 1 note/)).toBeInTheDocument();
     // header avatars for all three people
     const people = screen.getByLabelText('People');
     expect(within(people).getAllByRole('button')).toHaveLength(3);
@@ -62,7 +62,7 @@ describe('App (list view)', () => {
 
     await user.click(screen.getAllByRole('button', { name: 'Mark as completed' })[0]);
 
-    expect(await screen.findByText('2 tasks, 3 done, 1 note')).toBeInTheDocument();
+    expect(await screen.findByText(/2 tasks, 3 done, 1 note/)).toBeInTheDocument();
   });
 });
 
@@ -308,5 +308,89 @@ describe('App (map view)', () => {
 
     await user.click(screen.getByRole('button', { name: 'List' }));
     expect(await screen.findByRole('heading', { name: 'Vira' })).toBeInTheDocument();
+  });
+});
+
+describe('App — 1:1 mode', () => {
+  async function discussOrder(agenda: HTMLElement) {
+    return within(agenda)
+      .getAllByRole('button', { name: /discussed: /i })
+      .map((b) => b.getAttribute('aria-label')?.split(': ')[1]);
+  }
+
+  it('runs a 1:1: agenda, discussed marks, capture, recap, and records it on the person', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByText(/add your first person/i);
+    await user.click(screen.getByRole('button', { name: /load sample data/i }));
+    await screen.findByRole('heading', { name: 'Vira' });
+    expect(screen.getByText(/Last 1:1 12 days ago/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Start 1:1' }));
+    const meeting = await screen.findByTestId('one-on-one');
+    const agenda = within(meeting).getByRole('region', { name: 'Agenda' });
+    // urgent task first, then the other open tasks, then the note
+    expect(await discussOrder(agenda)).toEqual([
+      'Promotion',
+      'Salary Review',
+      'Business Trip',
+      'Retro takeaways',
+    ]);
+    // two of them appeared since the last 1:1
+    expect(within(agenda).getAllByText('new')).toHaveLength(2);
+    // and two tasks got done since then
+    const since = within(meeting).getByRole('region', { name: 'Since last 1:1' });
+    expect(within(since).getByText('Launch MIPP')).toBeInTheDocument();
+    expect(within(since).getByText('Complete Job Description')).toBeInTheDocument();
+
+    // marking something as discussed sinks it to the bottom
+    await user.click(
+      within(agenda).getByRole('button', { name: 'Mark as discussed: Business Trip' }),
+    );
+    await vi.waitFor(async () =>
+      expect(await discussOrder(agenda)).toEqual([
+        'Promotion',
+        'Salary Review',
+        'Retro takeaways',
+        'Business Trip',
+      ]),
+    );
+
+    // ticking a task keeps it on the agenda, greyed
+    const salary = within(agenda)
+      .getByText('Salary Review')
+      .closest<HTMLElement>('[role="button"]');
+    if (!salary) throw new Error('no card');
+    await user.click(within(salary).getByRole('button', { name: 'Mark as completed' }));
+    await vi.waitFor(() =>
+      expect(
+        within(salary).getByRole('button', { name: 'Mark as not completed' }),
+      ).toBeInTheDocument(),
+    );
+    expect(within(agenda).getByText('Salary Review')).toBeInTheDocument();
+
+    // whatever comes up is captured next to the box, not in the agenda
+    const capture = within(meeting).getByRole('region', { name: 'Capture' });
+    await user.type(
+      within(capture).getByLabelText('Add a task with Vira'),
+      'Follow up on budget{Enter}',
+    );
+    expect(await within(capture).findByText('Follow up on budget')).toBeInTheDocument();
+    expect(within(agenda).queryByText('Follow up on budget')).not.toBeInTheDocument();
+
+    // looking at the map does not end it; the header pill brings you back
+    await user.click(screen.getByRole('button', { name: 'Map' }));
+    await user.click(await screen.findByRole('button', { name: /1:1 with Vira/ }));
+    await screen.findByTestId('one-on-one');
+
+    // ending records it on the person and sums up
+    await user.click(screen.getByRole('button', { name: 'End 1:1' }));
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      '1:1 with Vira ended · 1 discussed, 1 done, 1 added',
+    );
+    const vira = (await db.people.toArray()).find((p) => p.name === 'Vira');
+    expect(vira?.meetings).toHaveLength(2);
+    expect(screen.queryByTestId('one-on-one')).not.toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Start 1:1' })).toBeInTheDocument();
   });
 });

@@ -8,9 +8,11 @@ import {
   deletePerson,
   ensureMapPositions,
   moveItem,
+  recordMeeting,
   relayoutPerson,
   resetMapLayout,
   restoreItem,
+  setItemDiscussed,
   setItemKind,
   toggleItemCompleted,
 } from './repository';
@@ -193,5 +195,26 @@ describe('map positions', () => {
     expect((await db.people.get(a.id))?.mapPosition).toBeDefined();
     expect((await db.items.get(legacy.id))?.mapPosition).toBeDefined();
     expect((await db.items.get(keep.id))?.mapPosition).toEqual(keep.mapPosition);
+  });
+});
+
+describe('1:1 meetings', () => {
+  it('records meetings in order and marks items as discussed without editing them', async () => {
+    const p = await createPerson({ name: 'Vira' }, db);
+    await recordMeeting(p.id, { startedAt: 1, endedAt: 2 }, db);
+    await recordMeeting(p.id, { startedAt: 3, endedAt: 4 }, db);
+    expect((await db.people.get(p.id))?.meetings).toEqual([
+      { startedAt: 1, endedAt: 2 },
+      { startedAt: 3, endedAt: 4 },
+    ]);
+
+    const item = await createItem({ personId: p.id, title: 'Raise' }, db);
+    await setItemDiscussed(item.id, true, db);
+    const discussed = await db.items.get(item.id);
+    expect(discussed?.discussedAt).toBeGreaterThan(0);
+    expect(discussed?.updatedAt).toBe(item.updatedAt);
+
+    await setItemDiscussed(item.id, false, db);
+    expect((await db.items.get(item.id))?.discussedAt).toBeUndefined();
   });
 });

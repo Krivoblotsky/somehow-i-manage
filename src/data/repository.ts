@@ -7,7 +7,15 @@ import {
 } from '../map/layout';
 import { normalizeContacts } from '../model/contacts';
 import { pickColor } from '../model/palette';
-import type { AvatarSource, Contact, Item, ItemKind, MapPosition, Person } from '../model/types';
+import type {
+  AvatarSource,
+  Contact,
+  Item,
+  ItemKind,
+  MapPosition,
+  Meeting,
+  Person,
+} from '../model/types';
 import { db as defaultDb, type PersonalDB } from './db';
 import { parseBulkText } from './import';
 
@@ -298,4 +306,29 @@ export async function clearAllData(database: PersonalDB = defaultDb): Promise<vo
     await database.items.clear();
     await database.people.clear();
   });
+}
+
+/** Appends a finished 1:1 to the person's history. */
+export async function recordMeeting(
+  personId: string,
+  meeting: Meeting,
+  database: PersonalDB = defaultDb,
+): Promise<void> {
+  await database.transaction('rw', database.people, async () => {
+    const person = await database.people.get(personId);
+    if (!person) return;
+    await database.people.update(personId, {
+      meetings: [...(person.meetings ?? []), meeting],
+      updatedAt: now(),
+    });
+  });
+}
+
+/** Marks an item as covered in the running 1:1, or clears that. Not an edit: updatedAt stays. */
+export async function setItemDiscussed(
+  id: string,
+  discussed: boolean,
+  database: PersonalDB = defaultDb,
+): Promise<void> {
+  await database.items.update(id, { discussedAt: discussed ? now() : undefined });
 }

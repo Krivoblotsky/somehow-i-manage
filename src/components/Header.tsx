@@ -14,6 +14,7 @@ export function Header() {
   const people = useLiveQuery(() => db.people.orderBy('sortOrder').toArray(), []) ?? [];
   const view = useUI((s) => s.view);
   const setView = useUI((s) => s.setView);
+  const meeting = useUI((s) => s.meeting);
   const search = useUI((s) => s.search);
   const setSearch = useUI((s) => s.setSearch);
   const selectedPersonId = useUI((s) => s.selectedPersonId);
@@ -32,6 +33,8 @@ export function Header() {
     setSearch('');
     selectPerson(id);
     if (view === 'map') focusPerson(id);
+    // During a 1:1, someone else's avatar opens their dossier; the 1:1 keeps running.
+    if (view === 'meeting') setView(meeting?.personId === id ? 'meeting' : 'list');
   }
 
   return (
@@ -43,6 +46,17 @@ export function Header() {
 
       <div className={styles.tools}>
         <ViewToggle view={view} onChange={setView} />
+        {meeting && view !== 'meeting' && (
+          <button
+            type="button"
+            className={styles.meetingPill}
+            onClick={() => setView('meeting')}
+            title="Back to the running 1:1"
+          >
+            <span className={styles.liveDot} aria-hidden="true" />
+            1:1 with {people.find((p) => p.id === meeting.personId)?.name ?? '…'}
+          </button>
+        )}
 
         <label className={styles.search}>
           <SearchIcon />

@@ -3,10 +3,12 @@ import type { CSSProperties, ReactNode } from 'react';
 import { db } from '../data/db';
 import { createItem, deletePerson } from '../data/repository';
 import { describeStats, groupItems, personStats, stripHtml } from '../model/derive';
-import { formatDateTime } from '../model/format';
-import { personColor } from '../model/palette';
+import { formatDateTime, formatRelativeDays } from '../model/format';
+import { lastMeeting } from '../model/oneOnOne';
+import { contrastText, personColor } from '../model/palette';
 import type { Item, ItemKind } from '../model/types';
-import { deleteItemWithUndo } from '../state/actions';
+import { deleteItemWithUndo, startOneOnOne } from '../state/actions';
+import { useNow } from '../state/now';
 import { useUI } from '../state/ui';
 import { Avatar } from './Avatar';
 import { ContactLinks } from './ContactLinks';
@@ -28,10 +30,13 @@ export function PersonPanel({ personId }: { personId: string }) {
   const selectPerson = useUI((s) => s.selectPerson);
   const closePanel = useUI((s) => s.closePanel);
   const openDialog = useUI((s) => s.openDialog);
+  const now = useNow();
 
   if (!person || !items) return null;
 
   const stats = personStats(items);
+  const previous = lastMeeting(person);
+  const accent = personColor(person.colorIndex);
   const { openTasks, notes, completed } = groupItems(items);
 
   async function add(kind: ItemKind) {
@@ -63,7 +68,7 @@ export function PersonPanel({ personId }: { personId: string }) {
     <section
       className={styles.panel}
       aria-label="Person details"
-      style={{ '--accent': personColor(person.colorIndex) } as CSSProperties}
+      style={{ '--accent': accent, '--accent-text': contrastText(accent) } as CSSProperties}
     >
       <div className={styles.head}>
         <Avatar person={person} size={60} ring={4} gapColor="#fff" />
@@ -72,12 +77,20 @@ export function PersonPanel({ personId }: { personId: string }) {
           <div className={styles.meta}>
             {person.role ? `${person.role} · ` : ''}
             {describeStats(stats)}
+            {previous ? ` · Last 1:1 ${formatRelativeDays(previous.endedAt, now)}` : ''}
           </div>
           <ContactLinks contacts={person.contacts} tone="light" />
         </div>
       </div>
 
       <div className={styles.actions}>
+        <button
+          type="button"
+          className={ui.chipAccent}
+          onClick={() => void startOneOnOne(personId)}
+        >
+          Start 1:1
+        </button>
         <button type="button" className={ui.chipPrimary} onClick={() => void add('task')}>
           + Task
         </button>

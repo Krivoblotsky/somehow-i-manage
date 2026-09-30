@@ -79,3 +79,19 @@ describe('buildResults', () => {
     expect(r.map((x) => x.label).sort()).toEqual(['Back up to file', 'Restore from file']);
   });
 });
+
+describe('1:1 commands', () => {
+  it('offers a 1:1 with whoever matched, and with everyone for a "1:1" query', () => {
+    const labels = (q: string) => buildResults(q, people, items, 'list').map((r) => r.label);
+    expect(labels('nat')).toContain('Start 1:1 with Nata');
+    expect(labels('nat')).not.toContain('Start 1:1 with Vira');
+    expect(labels('1:1')).toEqual(
+      expect.arrayContaining(['Start 1:1 with Vira', 'Start 1:1 with Nata']),
+    );
+    expect(labels('')).not.toContain('Start 1:1 with Vira');
+  });
+  it('shows both view switches from the 1:1 screen', () => {
+    const labels = buildResults('switch', people, items, 'meeting').map((r) => r.label);
+    expect(labels).toEqual(expect.arrayContaining(['Switch to Map view', 'Switch to List view']));
+  });
+});

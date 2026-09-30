@@ -1,0 +1,312 @@
+.screen {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+.top {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  padding: 8px 4px 4px;
+}
+.topText {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+.kicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.live {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+  animation: livePulse 1.6s ease-in-out infinite;
+}
+.name {
+  margin: 2px 0 0;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.meta {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.end {
+  margin-left: auto;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(300px, 2fr);
+  gap: 36px;
+  margin-top: 28px;
+  align-items: start;
+}
+.block + .block {
+  margin-top: 32px;
+}
+.sectionHead {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.sectionTitle {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+.count {
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+.hint {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+.list {
+  display: grid;
+  gap: 10px;
+}
+.empty {
+  color: var(--text-subtle);
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 4px 0;
+}
+.more {
+  color: var(--text-subtle);
+  font-size: 12px;
+  padding: 4px 0;
+}
+.quick {
+  margin-bottom: 12px;
+}
+
+/* agenda cards: the list-view card, a size up, with the "discussed" toggle */
+.card {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  width: 100%;
+  background: var(--card);
+  color: var(--card-text);
+  border-radius: var(--radius-card);
+  padding: 14px 16px;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 100ms,
+    box-shadow 100ms,
+    opacity 160ms;
+}
+.card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+.cardSelected,
+.cardSelected:hover {
+  box-shadow: 0 0 0 3px var(--accent);
+}
+.cardCovered {
+  opacity: 0.6;
+}
+.cardDone {
+  background: var(--completed-card);
+  color: var(--completed-text);
+}
+.body {
+  flex: 1;
+  min-width: 0;
+}
+.title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1.3;
+}
+.flag {
+  color: #e0a100;
+  display: inline-flex;
+  align-self: center;
+}
+.untitled {
+  color: var(--card-muted);
+  font-weight: 500;
+}
+.tag {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--action);
+  background: rgba(47, 111, 111, 0.12);
+  border-radius: 999px;
+  padding: 2px 7px;
+}
+.preview {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--card-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.cardDone .preview {
+  color: #a1a1a6;
+}
+.controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  flex: none;
+}
+.check {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  transition: background 120ms;
+}
+.check:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+.checkDone,
+.checkDone:hover {
+  background: var(--success) var(--check-icon) center / 100% no-repeat;
+  border-color: var(--success);
+}
+.noteMark {
+  width: 24px;
+  height: 24px;
+  color: var(--card-muted);
+}
+.discuss {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--card-muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 10px;
+  transition:
+    background 120ms,
+    color 120ms;
+}
+.discuss:hover {
+  background: #f2f2f7;
+  color: var(--card-text);
+}
+.discussOn,
+.discussOn:hover {
+  background: var(--action);
+  border-color: var(--action);
+  color: #fff;
+}
+.cardDone .discuss {
+  border-color: rgba(255, 255, 255, 0.25);
+  color: var(--completed-text);
+}
+.cardDone .discuss:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+/* compact rows: captured now, done since */
+.compact {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: var(--chrome);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 10px 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 120ms;
+}
+.compact:hover {
+  background: var(--chrome-2);
+}
+.compactSelected,
+.compactSelected:hover {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+.compactTitle {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.compactDone .compactTitle {
+  color: var(--text-muted);
+}
+.compactDate {
+  flex: none;
+  font-size: 11px;
+  color: var(--text-subtle);
+}
+.miniCheck {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid var(--text-muted);
+  transition: background 120ms;
+}
+.miniCheck:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.miniCheckDone,
+.miniCheckDone:hover {
+  background: var(--success) var(--check-icon) center / 100% no-repeat;
+  border-color: var(--success);
+}
+.miniNote {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+}
+
+@keyframes livePulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+@media (max-width: 900px) {
+  .columns {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+}

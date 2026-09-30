@@ -40,3 +40,11 @@ describe('personToMarkdown', () => {
     expect(md).toContain('  Soon');
   });
 });
+
+describe('personToMarkdown — 1:1 history', () => {
+  it('mentions the last 1:1 when there was one', () => {
+    const endedAt = new Date(2026, 8, 18, 16, 35).getTime();
+    const md = personToMarkdown({ ...person, meetings: [{ startedAt: 0, endedAt }] }, items);
+    expect(md).toContain('- Last 1:1: 18 Sep 2026 at 16:35');
+  });
+});
