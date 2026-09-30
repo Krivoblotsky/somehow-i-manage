@@ -37,6 +37,32 @@
   background: var(--completed-card);
   color: var(--completed-text);
 }
+/* Sits left of the tick on hover; positioned absolutely so the card never changes size. */
+.trash {
+  position: absolute;
+  top: 7px;
+  right: 32px;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  background: var(--completed-card);
+  color: #d1d1d6;
+  opacity: 0;
+  transition:
+    opacity 120ms,
+    background 120ms,
+    color 120ms;
+}
+.card:hover .trash,
+.trash:focus-visible {
+  opacity: 1;
+}
+.trash:hover {
+  background: rgba(0, 0, 0, 0.28);
+  color: #ff8a8a;
+}
 .head {
   display: flex;
   align-items: flex-start;
@@ -91,7 +117,7 @@
 }
 .checkDone,
 .checkDone:hover {
-  background: var(--success);
+  background: var(--success) var(--check-icon) center / 100% no-repeat;
   border-color: var(--success);
 }
 .noteMark {

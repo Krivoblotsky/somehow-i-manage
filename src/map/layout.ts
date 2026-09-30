@@ -91,3 +91,77 @@ export function layoutClusters(itemCounts: number[]): MapPosition[] {
   }
   return positions;
 }
+
+/** Centre of a card given its top-left, relative to the person node. */
+function cardCenter(position: MapPosition) {
+  return { x: position.x + CARD.width / 2, y: position.y + CARD.height / 2 };
+}
+
+function overlapsAny(candidate: MapPosition, existing: MapPosition[]): boolean {
+  return existing.some(
+    (e) =>
+      Math.abs(e.x - candidate.x) < CARD.width + 16 &&
+      Math.abs(e.y - candidate.y) < CARD.height + 24,
+  );
+}
+
+/**
+ * Where a new card goes so that nothing already placed has to move: the middle of the widest
+ * angular gap around the hub, on the innermost ring where it does not overlap a neighbour.
+ * The first card takes the balanced layout's first slot, the second lands opposite it, and so on.
+ */
+export function placeItem(existing: MapPosition[]): MapPosition {
+  if (existing.length === 0) {
+    return itemRelativePosition({ radius: FIRST_RING_MIN_RADIUS, angle: START_ANGLE });
+  }
+  const hub = PERSON_NODE.avatarCenter;
+  const angles = existing
+    .map(cardCenter)
+    .map((c) => Math.atan2(c.y - hub.y, c.x - hub.x))
+    .sort((a, b) => a - b);
+  const gaps: { angle: number; size: number }[] = [];
+  for (let i = 0; i < angles.length; i++) {
+    const from = angles[i];
+    const to = i + 1 < angles.length ? angles[i + 1] : angles[0] + 2 * Math.PI;
+    gaps.push({ angle: from + (to - from) / 2, size: to - from });
+  }
+  gaps.sort((a, b) => b.size - a.size);
+  for (let ring = 0; ring < 4; ring++) {
+    const radius = FIRST_RING_MIN_RADIUS + ring * RING_GAP;
+    for (const gap of gaps) {
+      const candidate = itemRelativePosition({ radius, angle: gap.angle });
+      if (!overlapsAny(candidate, existing)) return candidate;
+    }
+  }
+  return itemRelativePosition({
+    radius: FIRST_RING_MIN_RADIUS + 4 * RING_GAP,
+    angle: gaps[0].angle,
+  });
+}
+
+export interface PlacedCluster {
+  position: MapPosition;
+  itemCount: number;
+}
+
+/** Room reserved for a newcomer's future cards when choosing their spot. */
+const NEWCOMER_ITEMS = 4;
+
+/**
+ * Where a new person goes without moving anyone: to the right of the rightmost cluster, on
+ * that cluster's row, with room for a few cards of their own.
+ */
+export function placePerson(existing: PlacedCluster[]): MapPosition {
+  if (existing.length === 0) return layoutClusters([0])[0];
+  let rightEdge = -Infinity;
+  let row = existing[0].position.y;
+  for (const cluster of existing) {
+    const edge = cluster.position.x + PERSON_NODE.avatarCenter.x + clusterRadius(cluster.itemCount);
+    if (edge > rightEdge) {
+      rightEdge = edge;
+      row = cluster.position.y;
+    }
+  }
+  const reserved = clusterRadius(NEWCOMER_ITEMS);
+  return { x: rightEdge + CLUSTER_GAP + reserved - PERSON_NODE.avatarCenter.x, y: row };
+}

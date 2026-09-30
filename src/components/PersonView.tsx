@@ -6,9 +6,10 @@ import { describeStats, groupItems, personStats, stripHtml } from '../model/deri
 import { formatDateTime } from '../model/format';
 import { personColor } from '../model/palette';
 import type { Item } from '../model/types';
+import { deleteItemWithUndo } from '../state/actions';
 import { useUI } from '../state/ui';
 import { Avatar } from './Avatar';
-import { FlagIcon, NoteIcon } from './icons';
+import { FlagIcon, NoteIcon, TrashIcon } from './icons';
 import styles from './PersonView.module.css';
 import ui from './ui.module.css';
 
@@ -196,6 +197,20 @@ function Row({
         <div className={styles.rowDate}>{formatDateTime(shownDate)}</div>
         {preview && <div className={styles.rowPreview}>{preview}</div>}
       </div>
+      {isTask && item.isCompleted && (
+        <button
+          type="button"
+          className={styles.trash}
+          aria-label="Delete completed task"
+          title="Delete (undo available)"
+          onClick={(e) => {
+            e.stopPropagation();
+            void deleteItemWithUndo(item);
+          }}
+        >
+          <TrashIcon />
+        </button>
+      )}
       {isTask ? (
         <button
           type="button"

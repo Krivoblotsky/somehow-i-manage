@@ -36,6 +36,9 @@
   --radius-card: 12px;
   --radius-panel: 16px;
 
+  /* white tick, drawn on a green circle for completed tasks */
+  --check-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4.2 8.4l2.5 2.5 5.1-5.3' fill='none' stroke='%23fff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+
   /* Fixel Display (MacPaw, SIL OFL) when installed locally; system font otherwise. */
   --font:
     'Fixel Display', 'Fixel Text', -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui,

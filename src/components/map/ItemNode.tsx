@@ -5,7 +5,8 @@ import { markEnterPlayed, shouldPlayEnter } from '../../map/enterFx';
 import type { ItemNodeType } from '../../map/graph';
 import { CARD } from '../../map/layout';
 import { stripHtml } from '../../model/derive';
-import { FlagIcon, NoteIcon } from '../icons';
+import { deleteItemWithUndo } from '../../state/actions';
+import { FlagIcon, NoteIcon, TrashIcon } from '../icons';
 import styles from './ItemNode.module.css';
 
 /** A task or note card on the map. Same visual language as the cards in the list view. */
@@ -80,6 +81,20 @@ export function ItemNode({ data }: NodeProps<ItemNodeType>) {
         )}
       </div>
       {preview && <div className={styles.preview}>{preview}</div>}
+      {done && (
+        <button
+          type="button"
+          className={`nodrag nopan ${styles.trash}`}
+          aria-label="Delete completed task"
+          title="Delete (undo available)"
+          onClick={(e) => {
+            e.stopPropagation();
+            void deleteItemWithUndo(item);
+          }}
+        >
+          <TrashIcon size={13} />
+        </button>
+      )}
     </div>
   );
 }

@@ -9,18 +9,19 @@ import {
   type CSSProperties,
 } from 'react';
 import { db } from '../data/db';
-import { deleteItem, setItemCompleted, setItemKind, updateItem } from '../data/repository';
+import { setItemCompleted, setItemKind, updateItem } from '../data/repository';
 import { formatDateTime } from '../model/format';
 import { personColor } from '../model/palette';
 import type { Item, ItemKind, Person } from '../model/types';
+import { deleteItemWithUndo } from '../state/actions';
 import { useUI } from '../state/ui';
 import { Avatar } from './Avatar';
+import { ChevronLeftIcon, FlagIcon } from './icons';
+import styles from './ItemPanel.module.css';
+import ui from './ui.module.css';
 
 // TipTap is the heaviest dependency; load it only when a panel is actually opened.
 const BodyEditor = lazy(() => import('./BodyEditor').then((m) => ({ default: m.BodyEditor })));
-import { FlagIcon } from './icons';
-import styles from './ItemPanel.module.css';
-import ui from './ui.module.css';
 
 /** The right-hand detail panel for a task or a note. */
 export function ItemPanel({ itemId }: { itemId: string }) {
@@ -70,12 +71,8 @@ function ItemEditor({ item, person }: { item: Item; person: Person }) {
   }
 
   async function remove() {
-    if (window.confirm(`Delete “${title.trim() || 'Untitled'}”? This cannot be undone.`)) {
-      window.clearTimeout(timer.current);
-      pending.current = {};
-      await deleteItem(item.id);
-      selectItem(null);
-    }
+    await flush(); // so Undo brings back the latest text
+    await deleteItemWithUndo(item);
   }
 
   return (
@@ -84,6 +81,15 @@ function ItemEditor({ item, person }: { item: Item; person: Person }) {
       aria-label={isTask ? 'Task details' : 'Note details'}
       style={{ '--accent': personColor(person.colorIndex) } as CSSProperties}
     >
+      <button
+        type="button"
+        className={styles.back}
+        onClick={() => selectPerson(person.id)}
+        title={`Back to ${person.name}`}
+      >
+        <ChevronLeftIcon size={12} />
+        {person.name}
+      </button>
       <div className={styles.date}>{formatDateTime(item.createdAt)}</div>
 
       <div className={styles.topRow}>

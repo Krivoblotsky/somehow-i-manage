@@ -74,6 +74,7 @@ summary.sectionTitle::-webkit-details-marker {
   padding: 12px 0;
   border-bottom: 1px solid var(--divider);
   color: inherit;
+  cursor: pointer;
 }
 .row:hover .rowTitle {
   color: var(--accent);
@@ -120,6 +121,25 @@ summary.sectionTitle::-webkit-details-marker {
   flex: none;
   margin-top: 2px;
   color: var(--card-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.trash {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  color: #a1a1a6;
+  transition:
+    background 120ms,
+    color 120ms;
+}
+.trash:hover {
+  background: #fdeced;
+  color: var(--danger);
 }
 .footer {
   display: flex;

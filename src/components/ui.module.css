@@ -74,7 +74,7 @@
   display: inline-block;
 }
 .pillDotOn {
-  background: var(--success);
+  background: var(--success) var(--check-icon) center / 100% no-repeat;
   border-color: var(--success);
 }
 

@@ -51,7 +51,7 @@
 }
 .input:focus,
 .textarea:focus {
-  border-color: var(--person-0);
+  border-color: #6e6e73;
 }
 .textarea {
   min-height: 200px;

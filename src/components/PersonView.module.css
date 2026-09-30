@@ -152,7 +152,7 @@ summary.sectionHead {
 }
 .checkDone,
 .checkDone:hover {
-  background: var(--success);
+  background: var(--success) var(--check-icon) center / 100% no-repeat;
   border-color: var(--success);
 }
 .noteMark {
@@ -161,4 +161,21 @@ summary.sectionHead {
   width: 16px;
   height: 16px;
   color: var(--card-muted);
+}
+.trash {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin: -2px 0 0;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  color: #a1a1a6;
+  transition:
+    background 120ms,
+    color 120ms;
+}
+.trash:hover {
+  background: rgba(0, 0, 0, 0.28);
+  color: #ff8a8a;
 }

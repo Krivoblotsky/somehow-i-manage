@@ -32,7 +32,7 @@ Why it stalled (my reading of the code and history):
 |---|---|---|
 | M0 | Project skeleton, model, persistence, CI | ✅ 2026-09-29 — Dexie schema, repository, 25 tests, CI workflow |
 | M1 | People list + person page + item editor | 🟡 first cut 2026-09-29: header people strip, dossier view, item panel with WYSIWYG, add/edit/delete person, paste-a-list import, search, Markdown export. Needs Sergii's real data + feedback |
-| M2 | People Map (auto radial layout, colours, edges, selection) | 🟡 first cut 2026-09-29: React Flow canvas, person hubs with ring + name + hover “+”, cards on auto rings (multi-ring for many items), colour-coded floating bezier edges, drag with saved positions (person drag carries its cards), right-click menus, Person Details panel, Map ⇄ List toggle. 2026-09-30: drag a card onto another person to move it (pointer-based drop with hub highlight), “with ‹person›” link in the item panel, ⌘⇧N new task, editor code-split. Off-screen people stay pinned at the canvas edge as avatar + direction triangle (the ▼ from the frames); click flies to them. New branches animate: the card grows out of the hub and flies to its slot while the edge draws itself and the hub pulses (`src/map/enterFx.ts`, plays once per item created in this session). Needs a polish pass against the frames with real data |
+| M2 | People Map (auto radial layout, colours, edges, selection) | 🟡 first cut 2026-09-29: React Flow canvas, person hubs with ring + name + hover “+”, cards on auto rings (multi-ring for many items), colour-coded floating bezier edges, drag with saved positions (person drag carries its cards), right-click menus, Person Details panel, Map ⇄ List toggle. 2026-09-30: drag a card onto another person to move it (pointer-based drop with hub highlight), “with ‹person›” link in the item panel, ⌘⇧N new task, editor code-split. Off-screen people stay pinned at the canvas edge as avatar + direction triangle (the ▼ from the frames); click flies to them. New branches animate: the card grows out of the hub and flies to its slot while the edge draws itself and the hub pulses (`src/map/enterFx.ts`, plays once per item created in this session). Completed items have a trash icon (list rows, panel rows, map cards on hover); item deletion never asks, it shows a toast with Undo (`src/state/actions.ts`, `src/state/toast.ts`). Item panel has a back button to the person. Text fields lost their blue focus rings. Completed = white tick on a green circle everywhere; completing a card never changes its size; deleting a card leaves the others exactly where they were (positions are data, see Stack). Needs a polish pass against the frames with real data |
 | M3 | Search, keyboard shortcuts, undo, quick capture | Daily use without reaching for Notes |
 | M4 | Sync (iCloud / CloudKit) + iPhone read-only companion | Same data on both Macs and the phone |
 | M5 | Free/Pro paywall, onboarding, App Store assets, TestFlight to 5 MacPaw managers | First external users |
@@ -47,8 +47,13 @@ Sergii chose the web stack and the "boring core first" order. Consequences:
 * TypeScript is back on (strict). Vite 8, Vitest 5, ESLint 10 flat config, Prettier.
 * The mind-map canvas (M2) uses `@xyflow/react` 12. Layout and edge geometry are pure modules in
   `src/map/` with tests; the 2024 edge math was ported from `git show ca155c1:src/App.jsx`.
-  People are parent nodes and their cards child nodes, so dragging a person moves the cluster;
-  positions are saved per node (`mapPosition`), automatic layout fills the rest.
+  People are parent nodes and their cards child nodes, so dragging a person moves the cluster.
+  **Positions are data**: every person and card gets a saved `mapPosition` when created (a card
+  goes into the widest free gap around its hub, `placeItem`; a person to the right of the others,
+  `placePerson`), so deleting or moving something never shifts its neighbours. "Reset layout"
+  (`resetMapLayout`) re-grids clusters and spreads cards evenly; `ensureMapPositions` runs at
+  startup to place data from before positions were stored. `buildGraph` still tolerates missing
+  positions.
 * Rich text is TipTap 3 (StarterKit) storing HTML in `Item.body`.
 
 Options as they were evaluated:

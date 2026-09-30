@@ -3,12 +3,14 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 import App from './App';
 import { db } from './data/db';
+import { useToast } from './state/toast';
 import { useUI } from './state/ui';
 
 beforeEach(async () => {
   await db.items.clear();
   await db.people.clear();
   localStorage.clear();
+  useToast.getState().dismiss();
   useUI.setState({
     view: 'list',
     selectedPersonId: null,
@@ -60,6 +62,27 @@ describe('App (list view)', () => {
     await user.click(screen.getAllByRole('button', { name: 'Mark as completed' })[0]);
 
     expect(await screen.findByText('2 tasks, 3 done, 1 note')).toBeInTheDocument();
+  });
+});
+
+describe('App (list view) — completed items', () => {
+  it('deletes a completed task from the list and brings it back with Undo', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByText(/add your first person/i);
+    await user.click(screen.getByRole('button', { name: /load sample data/i }));
+    await screen.findByRole('heading', { name: 'Vira' });
+    const before = await db.items.count();
+
+    await user.click(screen.getAllByRole('button', { name: 'Delete completed task' })[0]);
+
+    const toast = await screen.findByRole('status');
+    expect(toast).toHaveTextContent(/^Deleted “/);
+    expect(await db.items.count()).toBe(before - 1);
+
+    await user.click(within(toast).getByRole('button', { name: 'Undo' }));
+    expect(await db.items.count()).toBe(before);
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 });
 

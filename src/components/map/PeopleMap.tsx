@@ -16,7 +16,6 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   createItem,
-  deleteItem,
   deletePerson,
   moveItem,
   resetMapLayout,
@@ -34,6 +33,7 @@ import {
 } from '../../map/graph';
 import { CARD, PERSON_NODE } from '../../map/layout';
 import type { Item, ItemKind, Person } from '../../model/types';
+import { deleteItemWithUndo } from '../../state/actions';
 import { useUI } from '../../state/ui';
 import menu from '../menu.module.css';
 import { FloatingEdge } from './FloatingEdge';
@@ -237,10 +237,7 @@ function Canvas({ people, items }: PeopleMapProps) {
   }
 
   async function removeItem(item: Item) {
-    if (window.confirm(`Delete “${item.title || 'Untitled'}”? This cannot be undone.`)) {
-      await deleteItem(item.id);
-      if (selectedItemId === item.id) selectItem(null);
-    }
+    await deleteItemWithUndo(item);
   }
 
   return (

@@ -10,8 +10,9 @@ import { PersonDialog } from './components/PersonDialog';
 import { PersonPanel } from './components/PersonPanel';
 import { PersonView } from './components/PersonView';
 import { SearchResults } from './components/SearchResults';
+import { Toast } from './components/Toast';
 import { db } from './data/db';
-import { createItem } from './data/repository';
+import { createItem, ensureMapPositions } from './data/repository';
 import { useUI } from './state/ui';
 
 export default function App() {
@@ -22,6 +23,11 @@ export default function App() {
   const selectedItemId = useUI((s) => s.selectedItemId);
   const personPanelOpen = useUI((s) => s.personPanelOpen);
   const search = useUI((s) => s.search);
+
+  // Data from before positions were stored gets placed once, on startup.
+  useEffect(() => {
+    void ensureMapPositions();
+  }, []);
 
   // Latest people list for the keyboard handler, which is registered once.
   const peopleRef = useRef(people);
@@ -87,6 +93,7 @@ export default function App() {
       </div>
       <PersonDialog />
       <BulkAddDialog />
+      <Toast />
     </div>
   );
 }

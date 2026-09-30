@@ -6,9 +6,10 @@ import { describeStats, groupItems, personStats, stripHtml } from '../model/deri
 import { formatDateTime } from '../model/format';
 import { personColor } from '../model/palette';
 import type { Item, ItemKind } from '../model/types';
+import { deleteItemWithUndo } from '../state/actions';
 import { useUI } from '../state/ui';
 import { Avatar } from './Avatar';
-import { FlagIcon, NoteIcon } from './icons';
+import { FlagIcon, NoteIcon, TrashIcon } from './icons';
 import styles from './PersonPanel.module.css';
 import ui from './ui.module.css';
 
@@ -164,11 +165,18 @@ function Row({
   const preview = stripHtml(item.body);
   const shownDate = done && item.completedAt ? item.completedAt : item.updatedAt;
   return (
-    <button
-      type="button"
+    <div
       className={selected ? `${styles.row} ${styles.rowSelected}` : styles.row}
       onClick={onSelect}
+      role="button"
+      tabIndex={0}
       aria-pressed={selected}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelect();
+        }
+      }}
     >
       <div className={styles.rowMain}>
         <div className={styles.rowTitle}>
@@ -179,11 +187,25 @@ function Row({
         {preview && <div className={styles.rowPreview}>{preview}</div>}
       </div>
       {done && (
-        <span className={`${ui.pill} ${styles.rowSide}`}>
-          completed <span className={`${ui.pillDot} ${ui.pillDotOn}`} />
-        </span>
+        <div className={styles.rowSide}>
+          <span className={ui.pill}>
+            completed <span className={`${ui.pillDot} ${ui.pillDotOn}`} />
+          </span>
+          <button
+            type="button"
+            className={styles.trash}
+            aria-label="Delete completed task"
+            title="Delete (undo available)"
+            onClick={(e) => {
+              e.stopPropagation();
+              void deleteItemWithUndo(item);
+            }}
+          >
+            <TrashIcon />
+          </button>
+        </div>
       )}
       {!isTask && <NoteIcon className={styles.rowSide} size={14} />}
-    </button>
+    </div>
   );
 }

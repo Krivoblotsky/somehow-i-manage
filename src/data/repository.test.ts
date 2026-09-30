@@ -4,8 +4,13 @@ import {
   bulkAddItems,
   createItem,
   createPerson,
+  deleteItem,
   deletePerson,
+  ensureMapPositions,
   moveItem,
+  relayoutPerson,
+  resetMapLayout,
+  restoreItem,
   setItemKind,
   toggleItemCompleted,
 } from './repository';
@@ -81,7 +86,7 @@ describe('items', () => {
   it('moves an item to another person at the end of their list', async () => {
     const a = await createPerson({ name: 'A' }, db);
     const b = await createPerson({ name: 'B' }, db);
-    await createItem({ personId: b.id, title: 'b1' }, db);
+    const b1 = await createItem({ personId: b.id, title: 'b1' }, db);
     const item = await createItem({ personId: a.id, title: 'a1' }, db);
     await db.items.update(item.id, { mapPosition: { x: 10, y: 20 } });
 
@@ -89,7 +94,18 @@ describe('items', () => {
     const moved = await db.items.get(item.id);
     expect(moved?.personId).toBe(b.id);
     expect(moved?.sortOrder).toBe(1);
-    expect(moved?.mapPosition).toBeUndefined();
+    // relative to the new owner, and not on top of b1
+    expect(moved?.mapPosition).not.toEqual({ x: 10, y: 20 });
+    expect(moved?.mapPosition).not.toEqual((await db.items.get(b1.id))?.mapPosition);
+  });
+
+  it('restores a deleted item exactly as it was', async () => {
+    const p = await createPerson({ name: 'A' }, db);
+    const item = await createItem({ personId: p.id, title: 'Keep me', isCompleted: true }, db);
+    await deleteItem(item.id, db);
+    expect(await db.items.get(item.id)).toBeUndefined();
+    await restoreItem(item, db);
+    expect(await db.items.get(item.id)).toEqual(item);
   });
 
   it('bulk-adds a pasted list in order', async () => {
@@ -105,5 +121,59 @@ describe('items', () => {
       ['note', 'Retro feedback', false],
     ]);
     expect(created.map((i) => i.sortOrder)).toEqual([0, 1, 2]);
+  });
+});
+
+describe('map positions', () => {
+  it('places every new person and item, and deleting one leaves the others where they were', async () => {
+    const a = await createPerson({ name: 'A' }, db);
+    const b = await createPerson({ name: 'B' }, db);
+    expect(a.mapPosition).toBeDefined();
+    expect(b.mapPosition).toBeDefined();
+    expect(b.mapPosition!.x).toBeGreaterThan(a.mapPosition!.x);
+
+    const items = [];
+    for (let i = 0; i < 4; i++)
+      items.push(await createItem({ personId: a.id, title: `t${i}` }, db));
+    const before = new Map(items.map((i) => [i.id, i.mapPosition]));
+
+    await deleteItem(items[1].id, db);
+
+    for (const item of await db.items.toArray()) {
+      expect(item.mapPosition).toEqual(before.get(item.id));
+    }
+  });
+
+  it('relayoutPerson spreads cards evenly and resetMapLayout re-grids everything', async () => {
+    const a = await createPerson({ name: 'A' }, db);
+    const b = await createPerson({ name: 'B' }, db);
+    for (let i = 0; i < 3; i++) await createItem({ personId: a.id, title: `t${i}` }, db);
+    await db.people.update(a.id, { mapPosition: { x: 5000, y: 5000 } });
+
+    await relayoutPerson(a.id, db);
+    const spread = (await db.items.where('personId').equals(a.id).toArray()).map(
+      (i) => i.mapPosition,
+    );
+    expect(new Set(spread.map((p) => JSON.stringify(p))).size).toBe(3);
+    expect((await db.people.get(a.id))?.mapPosition).toEqual({ x: 5000, y: 5000 }); // hub kept
+
+    await resetMapLayout(db);
+    const people = await db.people.toArray();
+    expect(people.find((p) => p.id === a.id)?.mapPosition).not.toEqual({ x: 5000, y: 5000 });
+    expect(people.find((p) => p.id === b.id)?.mapPosition).toBeDefined();
+  });
+
+  it('ensureMapPositions fills only what is missing', async () => {
+    const a = await createPerson({ name: 'A' }, db);
+    const keep = await createItem({ personId: a.id, title: 'keep' }, db);
+    const legacy = await createItem({ personId: a.id, title: 'legacy' }, db);
+    await db.people.update(a.id, { mapPosition: undefined });
+    await db.items.update(legacy.id, { mapPosition: undefined });
+
+    await ensureMapPositions(db);
+
+    expect((await db.people.get(a.id))?.mapPosition).toBeDefined();
+    expect((await db.items.get(legacy.id))?.mapPosition).toBeDefined();
+    expect((await db.items.get(keep.id))?.mapPosition).toEqual(keep.mapPosition);
   });
 });

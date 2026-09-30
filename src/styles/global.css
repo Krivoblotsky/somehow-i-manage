@@ -36,11 +36,19 @@ button {
 }
 
 button:focus-visible,
-input:focus-visible,
-textarea:focus-visible,
 [tabindex]:focus-visible {
   outline: 2px solid var(--person-0);
   outline-offset: 2px;
+}
+
+/* Text fields show a caret; they need no focus ring. */
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible,
+[contenteditable]:focus,
+[contenteditable]:focus-visible {
+  outline: none;
 }
 
 ::selection {

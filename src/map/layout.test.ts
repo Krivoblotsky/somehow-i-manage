@@ -5,6 +5,8 @@ import {
   clusterRadius,
   itemRelativePosition,
   layoutClusters,
+  placeItem,
+  placePerson,
   ringLayout,
 } from './layout';
 
@@ -70,5 +72,56 @@ describe('layoutClusters', () => {
 
   it('handles no people', () => {
     expect(layoutClusters([])).toEqual([]);
+  });
+});
+
+describe('placeItem', () => {
+  const hub = PERSON_NODE.avatarCenter;
+  const angleOf = (p: { x: number; y: number }) =>
+    Math.atan2(p.y + CARD.height / 2 - hub.y, p.x + CARD.width / 2 - hub.x);
+
+  it('puts the first card where the balanced layout would', () => {
+    expect(placeItem([])).toEqual(ringLayout(1).map(itemRelativePosition)[0]);
+  });
+
+  it('puts the second card opposite the first', () => {
+    const first = placeItem([]);
+    const second = placeItem([first]);
+    const delta = Math.abs(angleOf(second) - angleOf(first));
+    expect(Math.min(delta, 2 * Math.PI - delta)).toBeCloseTo(Math.PI, 5);
+  });
+
+  it('never overlaps existing cards, even after many additions', () => {
+    const placed: { x: number; y: number }[] = [];
+    for (let i = 0; i < 20; i++) placed.push(placeItem(placed));
+    for (let i = 0; i < placed.length; i++) {
+      for (let j = i + 1; j < placed.length; j++) {
+        const dx = Math.abs(placed[i].x - placed[j].x);
+        const dy = Math.abs(placed[i].y - placed[j].y);
+        expect(dx >= CARD.width + 16 || dy >= CARD.height + 24).toBe(true);
+      }
+    }
+  });
+
+  it('leaves existing cards alone (pure function of the input)', () => {
+    const existing = [placeItem([])];
+    const snapshot = JSON.stringify(existing);
+    placeItem(existing);
+    expect(JSON.stringify(existing)).toBe(snapshot);
+  });
+});
+
+describe('placePerson', () => {
+  it('starts like the grid for the first person', () => {
+    expect(placePerson([])).toEqual(layoutClusters([0])[0]);
+  });
+
+  it('goes to the right of the rightmost cluster with room to grow', () => {
+    const a = { position: { x: 0, y: 100 }, itemCount: 8 };
+    const b = { position: { x: 900, y: 400 }, itemCount: 0 };
+    const p = placePerson([a, b]);
+    const bEdge = b.position.x + PERSON_NODE.avatarCenter.x + clusterRadius(0);
+    expect(p.x + PERSON_NODE.avatarCenter.x - clusterRadius(4)).toBeGreaterThanOrEqual(bEdge);
+    expect(p.y).toBe(400);
   });
 });

@@ -1,5 +1,5 @@
 import { db as defaultDb, type PersonalDB } from './db';
-import { createItem, createPerson } from './repository';
+import { createItem, createPerson, relayoutPerson } from './repository';
 
 const MIPP_BODY =
   '<p>The objective of the MacPaw Innovations Portfolio Program is to continuously generate and implement new ideas by conducting experiments and validating hypotheses that can unlock potential value.</p>' +
@@ -45,5 +45,9 @@ export async function loadSampleData(database: PersonalDB = defaultDb): Promise<
       },
       database,
     );
+
+    // Demo people look best on balanced rings, like the design frames.
+    await relayoutPerson(vira.id, database);
+    await relayoutPerson(nata.id, database);
   });
 }
