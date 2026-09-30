@@ -33,7 +33,8 @@ See `DESIGN.md` for the exact screens.
 ## MVP — v0.1 "Replace Sergii's Apple Notes"
 
 Must have:
-* People: create / edit / delete; name, photo (or initials), colour; order.
+* People: create / edit / delete; name, photo (or initials), colour; order; contacts (email, phone,
+  Slack, Telegram, LinkedIn, GitHub, X, website) as one-click links; Gravatar photo from the email.
 * Items per person: **Task** (title, rich body, done) and **Note** (title, rich body). Timestamps.
 * **People Map**: automatic radial layout of items around each person; pan/zoom; click to select.
 * **Detail panel**: Person view (list of items, "N tasks, M open") and Item view (WYSIWYG body,

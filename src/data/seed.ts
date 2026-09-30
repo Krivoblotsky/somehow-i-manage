@@ -8,8 +8,28 @@ const MIPP_BODY =
 /** The three people from the Figma frames, with their items. Appends; never clears. */
 export async function loadSampleData(database: PersonalDB = defaultDb): Promise<void> {
   await database.transaction('rw', database.people, database.items, async () => {
-    const vira = await createPerson({ name: 'Vira', colorIndex: 0 }, database);
-    const nata = await createPerson({ name: 'Nata', colorIndex: 1 }, database);
+    const vira = await createPerson(
+      {
+        name: 'Vira',
+        colorIndex: 0,
+        contacts: [
+          { kind: 'email', value: 'vira@example.com' },
+          { kind: 'slack', value: '@vira' },
+        ],
+      },
+      database,
+    );
+    const nata = await createPerson(
+      {
+        name: 'Nata',
+        colorIndex: 1,
+        contacts: [
+          { kind: 'email', value: 'nata@example.com' },
+          { kind: 'phone', value: '+380 67 123 45 67' },
+        ],
+      },
+      database,
+    );
     await createPerson({ name: 'Anton', colorIndex: 2 }, database);
 
     for (const title of [

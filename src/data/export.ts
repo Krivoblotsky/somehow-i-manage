@@ -1,3 +1,4 @@
+import { CONTACT_LABEL, contactDisplay } from '../model/contacts';
 import { stripHtml } from '../model/derive';
 import { formatDateTime } from '../model/format';
 import type { Item, Person } from '../model/types';
@@ -6,6 +7,8 @@ import type { Item, Person } from '../model/types';
 export function personToMarkdown(person: Person, items: Item[]): string {
   const lines: string[] = [`# ${person.name}`];
   if (person.role) lines.push(`_${person.role}_`);
+  for (const c of person.contacts ?? [])
+    lines.push(`- ${CONTACT_LABEL[c.kind]}: ${contactDisplay(c)}`);
   lines.push('');
 
   const tasks = items

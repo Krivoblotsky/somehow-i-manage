@@ -47,3 +47,48 @@
   text-decoration: underline;
   font-size: 12px;
 }
+.contacts {
+  display: grid;
+  gap: 8px;
+}
+.contactRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.contactRow input {
+  flex: 1;
+  min-width: 0;
+}
+.contactIcon {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--bg);
+  display: grid;
+  place-items: center;
+  color: var(--text-muted);
+}
+.remove {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  color: var(--text-subtle);
+  font-size: 18px;
+  line-height: 1;
+}
+.remove:hover {
+  background: var(--chrome-2);
+  color: #fff;
+}
+.addSelect {
+  justify-self: start;
+  background: var(--bg);
+  border: 1px solid var(--chrome-2);
+  border-radius: 8px;
+  color: var(--text-muted);
+  padding: 6px 10px;
+  font-size: 12px;
+}

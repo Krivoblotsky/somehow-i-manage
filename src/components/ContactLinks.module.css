@@ -1,0 +1,30 @@
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.link {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  color: var(--text-muted);
+  background: var(--chrome);
+  transition:
+    background 120ms,
+    color 120ms;
+}
+.link:hover {
+  color: #fff;
+  background: var(--chrome-2);
+}
+.light .link {
+  color: var(--card-muted);
+  background: #f2f2f7;
+}
+.light .link:hover {
+  color: var(--card-text);
+  background: #e5e5ea;
+}

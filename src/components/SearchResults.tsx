@@ -20,7 +20,10 @@ export function SearchResults({ query }: { query: string }) {
   if (!data) return null;
   const q = query.trim().toLowerCase();
   const peopleHits = data.people.filter(
-    (p) => p.name.toLowerCase().includes(q) || (p.role ?? '').toLowerCase().includes(q),
+    (p) =>
+      p.name.toLowerCase().includes(q) ||
+      (p.role ?? '').toLowerCase().includes(q) ||
+      (p.contacts ?? []).some((c) => c.value.toLowerCase().includes(q)),
   );
   const itemHits = data.items.filter(
     (i) => i.title.toLowerCase().includes(q) || stripHtml(i.body).toLowerCase().includes(q),

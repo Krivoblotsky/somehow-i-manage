@@ -31,6 +31,24 @@ describe('people', () => {
     expect(b.sortOrder).toBe(a.sortOrder + 1);
   });
 
+  it('stores contacts trimmed and in canonical order', async () => {
+    const p = await createPerson(
+      {
+        name: 'V',
+        contacts: [
+          { kind: 'slack', value: ' vira ' },
+          { kind: 'phone', value: '' },
+          { kind: 'email', value: 'v@x.com' },
+        ],
+      },
+      db,
+    );
+    expect(p.contacts).toEqual([
+      { kind: 'email', value: 'v@x.com' },
+      { kind: 'slack', value: 'vira' },
+    ]);
+  });
+
   it('reuses the least-used colour once the palette wraps', async () => {
     for (let i = 0; i < 6; i++) await createPerson({ name: `P${i}` }, db);
     const seventh = await createPerson({ name: 'P7' }, db);

@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import { db } from './data/db';
 import { useToast } from './state/toast';
@@ -62,6 +62,28 @@ describe('App (list view)', () => {
     await user.click(screen.getAllByRole('button', { name: 'Mark as completed' })[0]);
 
     expect(await screen.findByText('2 tasks, 3 done, 1 note')).toBeInTheDocument();
+  });
+});
+
+describe('App (list view) — person contacts', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('saves an email from the dialog and shows it as a mailto link', async () => {
+    // Gravatar lookups must never reach the network from tests.
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 404 }));
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByText(/add your first person/i);
+
+    await user.click(screen.getByRole('button', { name: 'Add a person' }));
+    await user.type(screen.getByLabelText(/^name/i), 'Sergii');
+    await user.type(screen.getByLabelText('Email'), 'sergii@example.com');
+    await user.click(screen.getByRole('button', { name: 'Add person' }));
+
+    const link = await screen.findByRole('link', { name: 'Email: sergii@example.com' });
+    expect(link).toHaveAttribute('href', 'mailto:sergii@example.com');
+    const saved = (await db.people.toArray())[0];
+    expect(saved.contacts).toEqual([{ kind: 'email', value: 'sergii@example.com' }]);
   });
 });
 

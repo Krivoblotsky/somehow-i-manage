@@ -1,5 +1,17 @@
 export type ItemKind = 'task' | 'note';
 
+export type ContactKind =
+  'email' | 'phone' | 'slack' | 'telegram' | 'linkedin' | 'github' | 'x' | 'website';
+
+/** One way to reach a person. Handles may be stored with or without the leading "@". */
+export interface Contact {
+  kind: ContactKind;
+  value: string;
+}
+
+/** Where the avatar image came from; decides whether a new email may replace it. */
+export type AvatarSource = 'upload' | 'gravatar';
+
 /** A point on the People Map, in canvas units. */
 export interface MapPosition {
   x: number;
@@ -14,8 +26,10 @@ export interface Person {
   role?: string;
   /** Index into PERSON_PALETTE. */
   colorIndex: number;
-  /** Small square JPEG/PNG as a data URL; undefined = initials. */
+  /** Small square image as a data URL (or an https URL); undefined = initials. */
   avatarDataUrl?: string;
+  avatarSource?: AvatarSource;
+  contacts?: Contact[];
   /** Top-left of the person's node on the map; undefined = automatic layout. */
   mapPosition?: MapPosition;
   sortOrder: number;

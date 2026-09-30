@@ -5,8 +5,9 @@ import {
   placePerson,
   ringLayout,
 } from '../map/layout';
+import { normalizeContacts } from '../model/contacts';
 import { pickColor } from '../model/palette';
-import type { Item, ItemKind, MapPosition, Person } from '../model/types';
+import type { AvatarSource, Contact, Item, ItemKind, MapPosition, Person } from '../model/types';
 import { db as defaultDb, type PersonalDB } from './db';
 import { parseBulkText } from './import';
 
@@ -18,6 +19,8 @@ export interface NewPerson {
   role?: string;
   colorIndex?: number;
   avatarDataUrl?: string;
+  avatarSource?: AvatarSource;
+  contacts?: Contact[];
   mapPosition?: MapPosition;
 }
 
@@ -46,6 +49,8 @@ export async function createPerson(
       role: input.role?.trim() || undefined,
       colorIndex: input.colorIndex ?? pickColor(existing.map((p) => p.colorIndex)),
       avatarDataUrl: input.avatarDataUrl,
+      avatarSource: input.avatarDataUrl ? input.avatarSource : undefined,
+      contacts: input.contacts ? normalizeContacts(input.contacts) : undefined,
       mapPosition:
         input.mapPosition ??
         placePerson(

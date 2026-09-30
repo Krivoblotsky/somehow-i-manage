@@ -9,6 +9,7 @@ import type { Item, ItemKind } from '../model/types';
 import { deleteItemWithUndo } from '../state/actions';
 import { useUI } from '../state/ui';
 import { Avatar } from './Avatar';
+import { ContactLinks } from './ContactLinks';
 import { FlagIcon, NoteIcon, TrashIcon } from './icons';
 import styles from './PersonPanel.module.css';
 import ui from './ui.module.css';
@@ -70,6 +71,7 @@ export function PersonPanel({ personId }: { personId: string }) {
             {person.role ? `${person.role} · ` : ''}
             {describeStats(stats)}
           </div>
+          <ContactLinks contacts={person.contacts} tone="light" />
         </div>
       </div>
 

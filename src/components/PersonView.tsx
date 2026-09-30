@@ -9,6 +9,7 @@ import type { Item } from '../model/types';
 import { deleteItemWithUndo } from '../state/actions';
 import { useUI } from '../state/ui';
 import { Avatar } from './Avatar';
+import { ContactLinks } from './ContactLinks';
 import { FlagIcon, NoteIcon, TrashIcon } from './icons';
 import styles from './PersonView.module.css';
 import ui from './ui.module.css';
@@ -68,6 +69,7 @@ export function PersonView({ personId }: { personId: string }) {
             {person.role ? `${person.role} · ` : ''}
             {describeStats(stats)}
           </div>
+          <ContactLinks contacts={person.contacts} />
         </div>
         <div className={styles.actions}>
           <button type="button" className={ui.btnPrimary} onClick={() => void add('task')}>
