@@ -34,6 +34,28 @@ export function personStats(items: Item[]): PersonStats {
   return stats;
 }
 
+export interface GroupedItems {
+  /** Flagged first, then creation order. */
+  openTasks: Item[];
+  /** Most recently edited first. */
+  notes: Item[];
+  /** Most recently completed first. */
+  completed: Item[];
+}
+
+/** The three sections every person view shows. */
+export function groupItems(items: Item[]): GroupedItems {
+  return {
+    openTasks: items
+      .filter((i) => i.kind === 'task' && !i.isCompleted)
+      .sort((a, b) => Number(b.isFlagged) - Number(a.isFlagged) || a.sortOrder - b.sortOrder),
+    notes: items.filter((i) => i.kind === 'note').sort((a, b) => b.updatedAt - a.updatedAt),
+    completed: items
+      .filter((i) => i.kind === 'task' && i.isCompleted)
+      .sort((a, b) => (b.completedAt ?? 0) - (a.completedAt ?? 0)),
+  };
+}
+
 function plural(n: number, word: string): string {
   return `${n} ${word}${n === 1 ? '' : 's'}`;
 }

@@ -1,0 +1,51 @@
+/* Shared look for Radix dropdown and context menus. */
+.menu {
+  min-width: 220px;
+  padding: 6px;
+  border-radius: 12px;
+  background: var(--chrome);
+  border: 1px solid var(--chrome-2);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  color: #fff;
+  z-index: 40;
+}
+.item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  outline: 0;
+  cursor: default;
+  user-select: none;
+}
+.item[data-highlighted] {
+  background: var(--person-0);
+}
+.item[data-disabled] {
+  opacity: 0.45;
+}
+.danger {
+  color: #ff8a8a;
+}
+.danger[data-highlighted] {
+  background: var(--danger);
+  color: #fff;
+}
+.separator {
+  height: 1px;
+  background: var(--chrome-2);
+  margin: 6px 4px;
+}
+.label {
+  padding: 6px 10px 4px;
+  font-size: 11px;
+  color: var(--text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 260px;
+}

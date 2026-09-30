@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 import App from './App';
@@ -9,10 +9,18 @@ beforeEach(async () => {
   await db.items.clear();
   await db.people.clear();
   localStorage.clear();
-  useUI.setState({ selectedPersonId: null, selectedItemId: null, search: '', dialog: null });
+  useUI.setState({
+    view: 'list',
+    selectedPersonId: null,
+    selectedItemId: null,
+    personPanelOpen: false,
+    focusRequest: null,
+    search: '',
+    dialog: null,
+  });
 });
 
-describe('App', () => {
+describe('App (list view)', () => {
   it('shows the empty state, loads sample data and opens the first person', async () => {
     const user = userEvent.setup();
     render(<App />);
@@ -52,5 +60,40 @@ describe('App', () => {
     await user.click(screen.getAllByRole('button', { name: 'Mark as completed' })[0]);
 
     expect(await screen.findByText('2 tasks, 3 done, 1 note')).toBeInTheDocument();
+  });
+});
+
+describe('App (map view)', () => {
+  it('renders every person and card on the map and opens a card in the panel', async () => {
+    useUI.setState({ view: 'map' });
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByText(/add your first person/i);
+    await user.click(screen.getByRole('button', { name: /load sample data/i }));
+
+    const map = await screen.findByTestId('people-map');
+    expect(await within(map).findByText('Nata')).toBeInTheDocument();
+    expect(within(map).getByText('Anton')).toBeInTheDocument();
+    expect(within(map).getByText('Launch MIPP')).toBeInTheDocument();
+    expect(within(map).getByText('Team Restructuring')).toBeInTheDocument();
+    // 11 sample items → 11 edges
+    expect(map.querySelectorAll('.react-flow__edge')).toHaveLength(11);
+
+    // fireEvent: user-event's mousedown has no `view`, which trips d3-drag in jsdom.
+    fireEvent.click(within(map).getByText('Salary Review'));
+    const panel = await screen.findByRole('region', { name: 'Task details' });
+    expect(within(panel).getByLabelText('Title')).toHaveValue('Salary Review');
+  });
+
+  it('switches to the list view from the header', async () => {
+    useUI.setState({ view: 'map' });
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByText(/add your first person/i);
+    await user.click(screen.getByRole('button', { name: /load sample data/i }));
+    await screen.findByTestId('people-map');
+
+    await user.click(screen.getByRole('button', { name: 'List' }));
+    expect(await screen.findByRole('heading', { name: 'Vira' })).toBeInTheDocument();
   });
 });

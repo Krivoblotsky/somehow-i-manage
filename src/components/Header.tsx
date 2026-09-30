@@ -4,17 +4,21 @@ import { db } from '../data/db';
 import { allToMarkdown } from '../data/export';
 import { clearAllData } from '../data/repository';
 import { loadSampleData } from '../data/seed';
-import { useUI } from '../state/ui';
+import { useUI, type ViewMode } from '../state/ui';
 import { Avatar } from './Avatar';
-import { SearchIcon } from './icons';
 import styles from './Header.module.css';
+import { SearchIcon } from './icons';
+import menu from './menu.module.css';
 
 export function Header() {
   const people = useLiveQuery(() => db.people.orderBy('sortOrder').toArray(), []) ?? [];
+  const view = useUI((s) => s.view);
+  const setView = useUI((s) => s.setView);
   const search = useUI((s) => s.search);
   const setSearch = useUI((s) => s.setSearch);
   const selectedPersonId = useUI((s) => s.selectedPersonId);
   const selectPerson = useUI((s) => s.selectPerson);
+  const focusPerson = useUI((s) => s.focusPerson);
   const openDialog = useUI((s) => s.openDialog);
 
   async function exportAll() {
@@ -33,6 +37,12 @@ export function Header() {
     }
   }
 
+  function pickPerson(id: string) {
+    setSearch('');
+    selectPerson(id);
+    if (view === 'map') focusPerson(id);
+  }
+
   return (
     <header className={styles.header}>
       <div className={styles.brand}>
@@ -41,6 +51,8 @@ export function Header() {
       </div>
 
       <div className={styles.tools}>
+        <ViewToggle view={view} onChange={setView} />
+
         <label className={styles.search}>
           <SearchIcon />
           <input
@@ -72,10 +84,7 @@ export function Header() {
                   ? `${styles.personBtn} ${styles.personBtnActive}`
                   : styles.personBtn
               }
-              onClick={() => {
-                setSearch('');
-                selectPerson(p.id);
-              }}
+              onClick={() => pickPerson(p.id)}
               title={p.name}
               aria-label={p.name}
               aria-pressed={p.id === selectedPersonId}
@@ -92,16 +101,16 @@ export function Header() {
             </button>
           </DropdownMenu.Trigger>
           <DropdownMenu.Portal>
-            <DropdownMenu.Content className={styles.menu} align="end" sideOffset={8}>
-              <DropdownMenu.Item className={styles.menuItem} onSelect={() => void loadSampleData()}>
+            <DropdownMenu.Content className={menu.menu} align="end" sideOffset={8}>
+              <DropdownMenu.Item className={menu.item} onSelect={() => void loadSampleData()}>
                 Load sample data
               </DropdownMenu.Item>
-              <DropdownMenu.Item className={styles.menuItem} onSelect={() => void exportAll()}>
+              <DropdownMenu.Item className={menu.item} onSelect={() => void exportAll()}>
                 Export everything as Markdown
               </DropdownMenu.Item>
-              <DropdownMenu.Separator className={styles.menuSep} />
+              <DropdownMenu.Separator className={menu.separator} />
               <DropdownMenu.Item
-                className={`${styles.menuItem} ${styles.menuDanger}`}
+                className={`${menu.item} ${menu.danger}`}
                 onSelect={() => void deleteAll()}
               >
                 Delete all data…
@@ -111,6 +120,24 @@ export function Header() {
         </DropdownMenu.Root>
       </div>
     </header>
+  );
+}
+
+function ViewToggle({ view, onChange }: { view: ViewMode; onChange: (view: ViewMode) => void }) {
+  return (
+    <div className={styles.view} role="group" aria-label="View">
+      {(['map', 'list'] as const).map((mode) => (
+        <button
+          key={mode}
+          type="button"
+          className={view === mode ? styles.viewBtnOn : styles.viewBtn}
+          aria-pressed={view === mode}
+          onClick={() => onChange(mode)}
+        >
+          {mode === 'map' ? 'Map' : 'List'}
+        </button>
+      ))}
+    </div>
   );
 }
 

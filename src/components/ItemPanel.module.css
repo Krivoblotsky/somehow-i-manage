@@ -43,6 +43,20 @@
   color: var(--card-muted);
   margin-top: 2px;
 }
+.withLink {
+  color: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  transition: text-decoration-color 120ms;
+}
+.withLink:hover {
+  color: var(--accent);
+  text-decoration-color: currentColor;
+}
+.editorLoading {
+  min-height: 160px;
+}
 .body {
   flex: 1;
   min-height: 0;

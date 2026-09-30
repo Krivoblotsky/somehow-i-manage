@@ -1,5 +1,11 @@
 export type ItemKind = 'task' | 'note';
 
+/** A point on the People Map, in canvas units. */
+export interface MapPosition {
+  x: number;
+  y: number;
+}
+
 /** The root object of the app. Everything hangs off a person. */
 export interface Person {
   id: string;
@@ -10,6 +16,8 @@ export interface Person {
   colorIndex: number;
   /** Small square JPEG/PNG as a data URL; undefined = initials. */
   avatarDataUrl?: string;
+  /** Top-left of the person's node on the map; undefined = automatic layout. */
+  mapPosition?: MapPosition;
   sortOrder: number;
   createdAt: number;
   updatedAt: number;
@@ -28,6 +36,8 @@ export interface Item {
   /** "urgent" in the design. */
   isFlagged: boolean;
   dueDate?: number;
+  /** Position relative to the owner's node on the map; undefined = automatic ring layout. */
+  mapPosition?: MapPosition;
   sortOrder: number;
   createdAt: number;
   updatedAt: number;

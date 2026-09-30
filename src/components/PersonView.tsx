@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import type { CSSProperties, ReactNode } from 'react';
 import { db } from '../data/db';
 import { createItem, deletePerson, setItemCompleted } from '../data/repository';
-import { describeStats, personStats, stripHtml } from '../model/derive';
+import { describeStats, groupItems, personStats, stripHtml } from '../model/derive';
 import { formatDateTime } from '../model/format';
 import { personColor } from '../model/palette';
 import type { Item } from '../model/types';
@@ -27,13 +27,7 @@ export function PersonView({ personId }: { personId: string }) {
   if (!person || !items) return null;
 
   const stats = personStats(items);
-  const openTasks = items
-    .filter((i) => i.kind === 'task' && !i.isCompleted)
-    .sort((a, b) => Number(b.isFlagged) - Number(a.isFlagged) || a.sortOrder - b.sortOrder);
-  const notes = items.filter((i) => i.kind === 'note').sort((a, b) => b.updatedAt - a.updatedAt);
-  const completed = items
-    .filter((i) => i.kind === 'task' && i.isCompleted)
-    .sort((a, b) => (b.completedAt ?? 0) - (a.completedAt ?? 0));
+  const { openTasks, notes, completed } = groupItems(items);
 
   async function add(kind: 'task' | 'note') {
     const item = await createItem({ personId, kind });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { describeStats, getInitials, personStats, stripHtml } from './derive';
+import { describeStats, getInitials, groupItems, personStats, stripHtml } from './derive';
 import { formatDateTime } from './format';
 import { contrastText, personColor, pickColor } from './palette';
 import type { Item } from './types';
@@ -80,5 +80,21 @@ describe('palette', () => {
     expect(pickColor([])).toBe(0);
     expect(pickColor([0, 1, 2])).toBe(3);
     expect(pickColor([0, 0, 1, 2, 3, 4, 5])).toBe(1);
+  });
+});
+
+describe('groupItems', () => {
+  it('splits into open (flagged first), notes (newest first) and completed (latest first)', () => {
+    const grouped = groupItems([
+      item({ id: 't1', sortOrder: 0 }),
+      item({ id: 't2', sortOrder: 1, isFlagged: true }),
+      item({ id: 'n1', kind: 'note', updatedAt: 1 }),
+      item({ id: 'n2', kind: 'note', updatedAt: 2 }),
+      item({ id: 'd1', isCompleted: true, completedAt: 5 }),
+      item({ id: 'd2', isCompleted: true, completedAt: 9 }),
+    ]);
+    expect(grouped.openTasks.map((i) => i.id)).toEqual(['t2', 't1']);
+    expect(grouped.notes.map((i) => i.id)).toEqual(['n2', 'n1']);
+    expect(grouped.completed.map((i) => i.id)).toEqual(['d2', 'd1']);
   });
 });

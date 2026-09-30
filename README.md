@@ -2,9 +2,10 @@
 
 People-centric task manager for managers: **work with people, not tasks.**
 
-A person is the root object; tasks and notes hang off people. Local-first web app
-(React + TypeScript + Vite, IndexedDB via Dexie), designed to grow a People Map (mind-map
-canvas) and cloud sync.
+A person is the root object; tasks and notes hang off people and are shown on a **People Map**:
+every person is a hub with a coloured ring, their cards orbit it, edges carry the person's colour.
+Local-first web app (React + TypeScript + Vite, IndexedDB via Dexie, React Flow canvas), designed
+to grow cloud sync.
 
 ## Docs
 
@@ -40,9 +41,12 @@ CI (`.github/workflows/ci.yml`) runs lint, typecheck, tests and build on every p
 src/
   model/      types, palette, derived values (stats, initials), formatting — pure, tested
   data/       Dexie database, repository (all reads/writes), bulk-paste parser, sample data, Markdown export
-  state/      transient UI state (zustand): selection, search, open dialog
-  components/ Header (people strip, search, menu), PersonView (dossier), ItemPanel (editor),
-              PersonDialog, BulkAddDialog, SearchResults, EmptyState, Avatar, BodyEditor (TipTap)
+  map/        People Map geometry: ring layout, cluster grid, edge endpoints, graph builder — pure, tested
+  state/      transient UI state (zustand): view (map/list), selection, search, open dialog
+  components/ Header (view toggle, people strip, search, menu), PersonView (dossier list),
+              PersonPanel (person details), ItemPanel (editor), PersonDialog, BulkAddDialog,
+              SearchResults, EmptyState, Avatar, BodyEditor (TipTap)
+  components/map/ PeopleMap (React Flow canvas + context menus), PersonNode, ItemNode, FloatingEdge
   styles/     design tokens from docs/DESIGN.md, global reset
 ```
 

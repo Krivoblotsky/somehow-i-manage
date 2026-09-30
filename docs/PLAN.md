@@ -32,7 +32,7 @@ Why it stalled (my reading of the code and history):
 |---|---|---|
 | M0 | Project skeleton, model, persistence, CI | ✅ 2026-09-29 — Dexie schema, repository, 25 tests, CI workflow |
 | M1 | People list + person page + item editor | 🟡 first cut 2026-09-29: header people strip, dossier view, item panel with WYSIWYG, add/edit/delete person, paste-a-list import, search, Markdown export. Needs Sergii's real data + feedback |
-| M2 | People Map (auto radial layout, colours, edges, selection) | Matches DESIGN.md frames |
+| M2 | People Map (auto radial layout, colours, edges, selection) | 🟡 first cut 2026-09-29: React Flow canvas, person hubs with ring + name + hover “+”, cards on auto rings (multi-ring for many items), colour-coded floating bezier edges, drag with saved positions (person drag carries its cards), right-click menus, Person Details panel, Map ⇄ List toggle. 2026-09-30: drag a card onto another person to move it (pointer-based drop with hub highlight), “with ‹person›” link in the item panel, ⌘⇧N new task, editor code-split. Needs a polish pass against the frames with real data |
 | M3 | Search, keyboard shortcuts, undo, quick capture | Daily use without reaching for Notes |
 | M4 | Sync (iCloud / CloudKit) + iPhone read-only companion | Same data on both Macs and the phone |
 | M5 | Free/Pro paywall, onboarding, App Store assets, TestFlight to 5 MacPaw managers | First external users |
@@ -45,8 +45,10 @@ Sergii chose the web stack and the "boring core first" order. Consequences:
   with no backend and no accounts. Every read/write goes through `src/data/repository.ts`; the
   sync backend (Supabase is the default candidate) plugs in behind that module in M4.
 * TypeScript is back on (strict). Vite 8, Vitest 5, ESLint 10 flat config, Prettier.
-* The mind-map canvas is M2 and will use `@xyflow/react` (reactflow 12); the 2024 edge math
-  lives in git history (`git show ca155c1:src/App.jsx`).
+* The mind-map canvas (M2) uses `@xyflow/react` 12. Layout and edge geometry are pure modules in
+  `src/map/` with tests; the 2024 edge math was ported from `git show ca155c1:src/App.jsx`.
+  People are parent nodes and their cards child nodes, so dragging a person moves the cluster;
+  positions are saved per node (`mapPosition`), automatic layout fills the rest.
 * Rich text is TipTap 3 (StarterKit) storing HTML in `Item.body`.
 
 Options as they were evaluated:

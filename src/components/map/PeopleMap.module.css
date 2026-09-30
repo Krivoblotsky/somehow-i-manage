@@ -1,0 +1,61 @@
+.canvas {
+  position: absolute;
+  inset: 0;
+
+  /* React Flow theming (v12 CSS variables) */
+  --xy-background-color-default: var(--bg);
+  --xy-background-pattern-dots-color-default: #2c2c2e;
+  --xy-edge-stroke-default: #555;
+  --xy-node-boxshadow-selected-default: none;
+  --xy-controls-button-background-color-default: var(--chrome);
+  --xy-controls-button-background-color-hover-default: var(--chrome-2);
+  --xy-controls-button-color-default: #fff;
+  --xy-controls-button-color-hover-default: #fff;
+  --xy-controls-button-border-color-default: var(--chrome-2);
+  --xy-controls-box-shadow-default: none;
+  --xy-attribution-background-color-default: transparent;
+}
+.canvas :global(.react-flow) {
+  background: var(--bg);
+}
+.canvas :global(.react-flow__node) {
+  cursor: grab;
+}
+.canvas :global(.react-flow__node.dragging) {
+  cursor: grabbing;
+  z-index: 1000 !important; /* a dragged card rides above every other card */
+}
+.canvas :global(.react-flow__handle) {
+  opacity: 0;
+  pointer-events: none;
+  width: 1px;
+  height: 1px;
+  min-width: 0;
+  min-height: 0;
+  border: 0;
+}
+.canvas :global(.react-flow__controls) {
+  gap: 4px;
+  margin: 16px;
+}
+.canvas :global(.react-flow__controls-button) {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--chrome-2);
+  background: var(--chrome);
+  color: #fff;
+}
+.canvas :global(.react-flow__controls-button svg) {
+  fill: currentColor;
+}
+.canvas :global(.react-flow__controls-button:hover) {
+  background: var(--chrome-2);
+}
+.canvas :global(.react-flow__attribution) {
+  background: transparent;
+  font-size: 10px;
+}
+.canvas :global(.react-flow__attribution a) {
+  color: var(--text-subtle);
+}

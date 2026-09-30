@@ -1,5 +1,13 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import {
+  Suspense,
+  lazy,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react';
 import { db } from '../data/db';
 import { deleteItem, setItemCompleted, setItemKind, updateItem } from '../data/repository';
 import { formatDateTime } from '../model/format';
@@ -7,7 +15,9 @@ import { personColor } from '../model/palette';
 import type { Item, ItemKind, Person } from '../model/types';
 import { useUI } from '../state/ui';
 import { Avatar } from './Avatar';
-import { BodyEditor } from './BodyEditor';
+
+// TipTap is the heaviest dependency; load it only when a panel is actually opened.
+const BodyEditor = lazy(() => import('./BodyEditor').then((m) => ({ default: m.BodyEditor })));
 import { FlagIcon } from './icons';
 import styles from './ItemPanel.module.css';
 import ui from './ui.module.css';
@@ -29,6 +39,7 @@ const SAVE_DELAY_MS = 400;
 
 function ItemEditor({ item, person }: { item: Item; person: Person }) {
   const selectItem = useUI((s) => s.selectItem);
+  const selectPerson = useUI((s) => s.selectPerson);
   const [title, setTitle] = useState(item.title);
   const pending = useRef<TextPatch>({});
   const timer = useRef<number | undefined>(undefined);
@@ -117,14 +128,26 @@ function ItemEditor({ item, person }: { item: Item; person: Person }) {
         }}
         onBlur={() => void flush()}
       />
-      <div className={styles.with}>with {person.name}</div>
+      <div className={styles.with}>
+        with{' '}
+        <button
+          type="button"
+          className={styles.withLink}
+          onClick={() => selectPerson(person.id)}
+          title={`Open ${person.name}`}
+        >
+          {person.name}
+        </button>
+      </div>
 
       <div className={styles.body}>
-        <BodyEditor
-          initialValue={item.body}
-          onChange={(html) => queueSave({ body: html })}
-          placeholder={isTask ? 'Details, context, next steps…' : 'Write your note…'}
-        />
+        <Suspense fallback={<div className={styles.editorLoading} aria-hidden="true" />}>
+          <BodyEditor
+            initialValue={item.body}
+            onChange={(html) => queueSave({ body: html })}
+            placeholder={isTask ? 'Details, context, next steps…' : 'Write your note…'}
+          />
+        </Suspense>
       </div>
 
       <div className={styles.footer}>

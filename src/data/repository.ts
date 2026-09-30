@@ -1,5 +1,5 @@
 import { pickColor } from '../model/palette';
-import type { Item, ItemKind, Person } from '../model/types';
+import type { Item, ItemKind, MapPosition, Person } from '../model/types';
 import { db as defaultDb, type PersonalDB } from './db';
 import { parseBulkText } from './import';
 
@@ -157,6 +157,7 @@ export async function moveItem(
     await database.items.update(id, {
       personId: toPersonId,
       sortOrder: maxOrder + 1,
+      mapPosition: undefined, // a position relative to the old owner means nothing now
       updatedAt: now(),
     });
   });
@@ -176,6 +177,35 @@ export async function bulkAddItems(
     }
   });
   return created;
+}
+
+/** Layout only — does not touch updatedAt, so dragging a card never changes its shown date. */
+export async function setPersonMapPosition(
+  id: string,
+  position: MapPosition | undefined,
+  database: PersonalDB = defaultDb,
+): Promise<void> {
+  await database.people.update(id, { mapPosition: position });
+}
+
+export async function setItemMapPosition(
+  id: string,
+  position: MapPosition | undefined,
+  database: PersonalDB = defaultDb,
+): Promise<void> {
+  await database.items.update(id, { mapPosition: position });
+}
+
+/** Forget every manual position; the map falls back to the automatic layout. */
+export async function resetMapLayout(database: PersonalDB = defaultDb): Promise<void> {
+  await database.transaction('rw', database.people, database.items, async () => {
+    await database.people.toCollection().modify((p) => {
+      delete p.mapPosition;
+    });
+    await database.items.toCollection().modify((i) => {
+      delete i.mapPosition;
+    });
+  });
 }
 
 export async function clearAllData(database: PersonalDB = defaultDb): Promise<void> {

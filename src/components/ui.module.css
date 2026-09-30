@@ -77,3 +77,39 @@
   background: var(--success);
   border-color: var(--success);
 }
+
+/* small buttons for white panels */
+.chip,
+.chipPrimary,
+.chipDanger {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.chip {
+  background: #f2f2f7;
+  color: #111;
+}
+.chip:hover {
+  background: #e5e5ea;
+}
+.chipPrimary {
+  background: var(--action);
+  color: #fff;
+}
+.chipPrimary:hover {
+  filter: brightness(1.12);
+}
+.chipDanger {
+  background: #fdeced;
+  color: var(--danger);
+}
+.chipDanger:hover {
+  background: #fbd9db;
+}

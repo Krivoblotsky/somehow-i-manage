@@ -1,0 +1,78 @@
+/* Geometry must match PERSON_NODE in src/map/layout.ts: avatar centre at (60, 34). */
+.person {
+  position: relative;
+  width: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 6px;
+  color: var(--text);
+}
+.avatarWrap {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+}
+.selected .avatarWrap {
+  outline: 2px solid rgba(255, 255, 255, 0.9);
+  outline-offset: 9px;
+}
+.avatarWrap {
+  transition:
+    transform 120ms,
+    outline-color 120ms;
+}
+.dropTarget .avatarWrap {
+  transform: scale(1.15);
+  outline: 2px dashed rgba(255, 255, 255, 0.95);
+  outline-offset: 10px;
+}
+.add {
+  position: absolute;
+  right: -16px;
+  bottom: -2px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--chrome-2);
+  color: #fff;
+  font-size: 17px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--bg);
+  opacity: 0;
+  transition:
+    opacity 120ms,
+    background 120ms;
+}
+.person:hover .add,
+.add:focus-visible {
+  opacity: 1;
+}
+.add:hover {
+  background: var(--accent);
+}
+.name {
+  margin-top: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+.emptyMark {
+  width: 0;
+  height: 0;
+  margin-top: 5px;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 7px solid var(--accent);
+}
+.handle {
+  top: 34px;
+}

@@ -83,11 +83,13 @@ describe('items', () => {
     const b = await createPerson({ name: 'B' }, db);
     await createItem({ personId: b.id, title: 'b1' }, db);
     const item = await createItem({ personId: a.id, title: 'a1' }, db);
+    await db.items.update(item.id, { mapPosition: { x: 10, y: 20 } });
 
     await moveItem(item.id, b.id, db);
     const moved = await db.items.get(item.id);
     expect(moved?.personId).toBe(b.id);
     expect(moved?.sortOrder).toBe(1);
+    expect(moved?.mapPosition).toBeUndefined();
   });
 
   it('bulk-adds a pasted list in order', async () => {
