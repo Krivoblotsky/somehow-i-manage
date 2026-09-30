@@ -41,6 +41,18 @@ describe('buildGraph', () => {
     expect(a1?.parentId).toBe('a');
   });
 
+  it('points each card back at its owner’s avatar', () => {
+    const people = [person({ id: 'a' })];
+    const items = [item({ id: 'a1', personId: 'a', mapPosition: { x: 200, y: 34 - 32 } })];
+    const { nodes } = buildGraph(people, items, none);
+    const card = nodes.find((n) => n.id === 'a1');
+    expect(card?.type).toBe('item');
+    if (card?.type === 'item') {
+      // card centre at (292, 34) → avatar centre (60, 34) is 232 to the left
+      expect(card.data.hubOffset).toEqual({ x: -232, y: 0 });
+    }
+  });
+
   it('prefers saved positions over the automatic layout', () => {
     const people = [person({ id: 'a', mapPosition: { x: 999, y: -5 } })];
     const items = [item({ id: 'a1', personId: 'a', mapPosition: { x: 1, y: 2 } })];

@@ -38,6 +38,7 @@ import { useUI } from '../../state/ui';
 import menu from '../menu.module.css';
 import { FloatingEdge } from './FloatingEdge';
 import { ItemNode } from './ItemNode';
+import { OffscreenMarkers } from './OffscreenMarkers';
 import styles from './PeopleMap.module.css';
 import { PersonNode } from './PersonNode';
 
@@ -73,6 +74,7 @@ function Canvas({ people, items }: PeopleMapProps) {
   const selectPerson = useUI((s) => s.selectPerson);
   const closePanel = useUI((s) => s.closePanel);
   const openDialog = useUI((s) => s.openDialog);
+  const focusPerson = useUI((s) => s.focusPerson);
   const { fitView, getNodes, getInternalNode, updateNodeData, screenToFlowPosition } = useReactFlow<
     MapNode,
     FloatingEdgeType
@@ -277,6 +279,7 @@ function Canvas({ people, items }: PeopleMapProps) {
           >
             <Background variant={BackgroundVariant.Dots} gap={28} size={1.4} />
             <Controls showInteractive={false} position="bottom-left" />
+            <OffscreenMarkers onPick={focusPerson} />
           </ReactFlow>
         </div>
       </ContextMenu.Trigger>

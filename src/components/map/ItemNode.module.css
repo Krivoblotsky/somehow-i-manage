@@ -17,6 +17,22 @@
     0 0 0 4px var(--accent),
     0 8px 24px rgba(0, 0, 0, 0.35);
 }
+.enter {
+  animation: card-enter 280ms cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+@keyframes card-enter {
+  0% {
+    opacity: 0;
+    transform: translate(var(--hub-dx), var(--hub-dy)) scale(0.15);
+  }
+  45% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+}
 .done {
   background: var(--completed-card);
   color: var(--completed-text);

@@ -1,7 +1,7 @@
 import type { Edge, Node } from '@xyflow/react';
 import { personColor } from '../model/palette';
 import type { Item, Person } from '../model/types';
-import { itemRelativePosition, layoutClusters, ringLayout } from './layout';
+import { CARD, PERSON_NODE, itemRelativePosition, layoutClusters, ringLayout } from './layout';
 
 export type PersonNodeData = {
   person: Person;
@@ -16,13 +16,19 @@ export type ItemNodeData = {
   item: Item;
   color: string;
   isSelected: boolean;
+  /** Vector from the card's centre to the owner's avatar centre — where a new card grows from. */
+  hubOffset: { x: number; y: number };
 };
 
 export type PersonNodeType = Node<PersonNodeData, 'person'>;
 export type ItemNodeType = Node<ItemNodeData, 'item'>;
 export type MapNode = PersonNodeType | ItemNodeType;
 
-export type FloatingEdgeData = { color: string };
+export type FloatingEdgeData = {
+  color: string;
+  /** When the target item was created; drives the draw-in effect for new branches. */
+  createdAt: number;
+};
 export type FloatingEdgeType = Edge<FloatingEdgeData, 'floating'>;
 
 export interface MapSelection {
@@ -73,12 +79,21 @@ export function buildGraph(people: Person[], items: Item[], selection: MapSelect
 
     const slots = ringLayout(personItems.length);
     personItems.forEach((item, j) => {
+      const position = item.mapPosition ?? itemRelativePosition(slots[j]);
       nodes.push({
         id: item.id,
         type: 'item',
         parentId: person.id,
-        position: item.mapPosition ?? itemRelativePosition(slots[j]),
-        data: { item, color, isSelected: selection.itemId === item.id },
+        position,
+        data: {
+          item,
+          color,
+          isSelected: selection.itemId === item.id,
+          hubOffset: {
+            x: PERSON_NODE.avatarCenter.x - (position.x + CARD.width / 2),
+            y: PERSON_NODE.avatarCenter.y - (position.y + CARD.height / 2),
+          },
+        },
         zIndex: 2,
       });
       edges.push({
@@ -86,7 +101,7 @@ export function buildGraph(people: Person[], items: Item[], selection: MapSelect
         source: person.id,
         target: item.id,
         type: 'floating',
-        data: { color },
+        data: { color, createdAt: item.createdAt },
         focusable: false,
         selectable: false,
       });

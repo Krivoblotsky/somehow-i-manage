@@ -51,8 +51,10 @@ docked on the right. The only difference between frames is what the panel shows.
 * Avatar 54 pt circle, photo or initials on the person colour, **4 pt ring** in the person colour.
 * Name under the avatar: 14 pt bold white, centred.
 * Small **"+" button** (20 pt circle, `#3E3E40`, white plus) at the avatar's bottom-right → new item for this person.
-* A person with no items (Anton) shows a small **filled triangle ▼** in the person colour under the name
-  (reads as "expand / add here"; treat as the empty-state affordance).
+* The small **filled triangle ▼** in the person colour under Anton is the **off-screen marker**
+  (clarified by Sergii, 2026-09-30): when a person's hub leaves the visible canvas, their avatar
+  stays pinned at the canvas edge with a triangle pointing to their real position; clicking it
+  flies to that person.
 
 **Item card (task or note)**
 * White `#FFFFFF`, radius 12, ~162 × 60 pt min, padding 12; title 15 pt bold `#111`, description
@@ -117,5 +119,6 @@ Fallback: system font.
 * Task ⇄ Note toggle changes the item kind; notes have no checkbox / completion.
 * Delete in the panel deletes the item; "Delete…" in the context menu deletes the selected node.
 * Search filters people and items on the map.
+* Off-screen people: pinned avatar + direction triangle at the canvas edge, click to fly there.
 * Ambiguous / not in the mock: due dates (the person panel says "1 urgent", so some priority/flag
   exists), manual dragging of nodes, more than ~6 people per screen, light theme.

@@ -1,5 +1,5 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react';
-import type { CSSProperties, MouseEvent as ReactMouseEvent } from 'react';
+import { useState, type CSSProperties, type MouseEvent as ReactMouseEvent } from 'react';
 import { createItem } from '../../data/repository';
 import type { PersonNodeType } from '../../map/graph';
 import { useUI } from '../../state/ui';
@@ -8,11 +8,13 @@ import styles from './PersonNode.module.css';
 
 /** A person on the map: ringed avatar, name, and a "+" that adds a task. */
 export function PersonNode({ data }: NodeProps<PersonNodeType>) {
-  const { person, itemCount, color, isSelected, isDropTarget } = data;
+  const { person, color, isSelected, isDropTarget } = data;
   const selectItem = useUI((s) => s.selectItem);
+  const [pulsing, setPulsing] = useState(false);
 
   async function addTask(e: ReactMouseEvent) {
     e.stopPropagation();
+    setPulsing(true);
     const item = await createItem({ personId: person.id, kind: 'task' });
     selectItem(item.id, person.id);
   }
@@ -30,7 +32,10 @@ export function PersonNode({ data }: NodeProps<PersonNodeType>) {
         className={styles.handle}
         isConnectable={false}
       />
-      <div className={styles.avatarWrap}>
+      <div
+        className={pulsing ? `${styles.avatarWrap} ${styles.pulse}` : styles.avatarWrap}
+        onAnimationEnd={() => setPulsing(false)}
+      >
         <Avatar person={person} size={56} ring={4} />
         <button
           type="button"
@@ -45,7 +50,6 @@ export function PersonNode({ data }: NodeProps<PersonNodeType>) {
       <div className={styles.name} title={person.name}>
         {person.name}
       </div>
-      {itemCount === 0 && <div className={styles.emptyMark} aria-hidden="true" />}
     </div>
   );
 }
