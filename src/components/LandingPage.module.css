@@ -117,20 +117,10 @@
 .hero > * {
   position: relative;
 }
-.kicker {
-  margin: 0;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--person-1);
-}
-.light .kicker {
-  color: var(--action);
-}
 .title {
-  margin: 18px auto 0;
+  margin: 0 auto;
   max-width: 14ch;
+  text-wrap: balance;
   font-size: clamp(42px, 7vw, 84px);
   line-height: 0.98;
   letter-spacing: -0.03em;
@@ -262,12 +252,13 @@
   color: var(--paper-muted);
 }
 .h2 {
-  margin: 14px 0 0;
-  max-width: 18ch;
-  font-size: clamp(32px, 4.4vw, 52px);
-  line-height: 1.04;
-  letter-spacing: -0.025em;
+  margin: 0;
+  max-width: 24ch;
+  font-size: clamp(38px, 5.4vw, 66px);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
   font-weight: 700;
+  text-wrap: balance;
 }
 .statement {
   max-width: none;
@@ -447,7 +438,7 @@
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.18);
 }
 .story {
-  margin-top: 18px;
+  margin-top: 28px;
 }
 .story p {
   margin: 0 0 20px;

@@ -59,7 +59,6 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
       <main id="top">
         <section className={styles.hero}>
           <div className={styles.inner}>
-            <p className={styles.kicker}>A task manager for managers</p>
             <h1 className={styles.title}>Work with people, not&nbsp;tasks.</h1>
             <p className={styles.lead}>
               Every task, note and 1:1 lives with the person it’s about. The map below is the real
@@ -99,7 +98,6 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
 
         <section id="how" className={`${styles.band} ${styles.light}`}>
           <div className={styles.inner}>
-            <p className={styles.kicker}>How it works</p>
             <h2 className={styles.h2}>Three habits, one place.</h2>
             <ul className={styles.steps}>
               <Step
@@ -133,7 +131,7 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
               decoding="async"
             />
             <div>
-              <p className={styles.kicker}>From the author</p>
+              <h2 className={styles.h2}>From the author</h2>
               <div className={styles.story}>
                 <p>
                   I’ve managed teams for a long time. For most of it, everything I knew about my
@@ -296,7 +294,6 @@ function MapSection() {
   return (
     <section id="map" className={styles.band}>
       <div className={styles.inner}>
-        <p className={styles.kicker}>The People Map</p>
         <h2 className={styles.h2}>Your whole team, at a glance.</h2>
         <div className={styles.split}>
           <div className={styles.frame} data-tint="map">
@@ -365,7 +362,6 @@ function PersonSection() {
   return (
     <section id="person" className={styles.band}>
       <div className={styles.inner}>
-        <p className={styles.kicker}>One place per person</p>
         <h2 className={styles.h2}>Everything about someone, when you need it.</h2>
         <div className={styles.tabs} role="tablist" aria-label="Views">
           {PERSON_TABS.map((t, i) => (
