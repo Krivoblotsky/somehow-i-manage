@@ -34,8 +34,9 @@
   min-height: 0;
   border: 0;
 }
-/* zoom controls as one small glass island, matching the header */
+/* zoom controls as one small glass island, matching the header; above the edge markers */
 .canvas :global(.react-flow__controls) {
+  z-index: 15;
   gap: 2px;
   margin: 16px;
   padding: 4px;

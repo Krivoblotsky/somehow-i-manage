@@ -1,5 +1,5 @@
 import { backupFilename, createBackup, serializeBackup } from '../data/backup';
-import { db } from '../data/db';
+import { db, type PersonalDB } from '../data/db';
 import { allToMarkdown } from '../data/export';
 import { deleteItem, recordMeeting, restoreItem } from '../data/repository';
 import { buildMeetingView, lastMeeting, summarizeMeeting } from '../model/oneOnOne';
@@ -11,14 +11,14 @@ import { useUI } from './ui';
  * Delete an item without a confirmation dialog; offer Undo in a toast instead.
  * Reads the latest copy first so an undo brings back edits made moments before.
  */
-export async function deleteItemWithUndo(item: Item): Promise<void> {
-  const latest = (await db.items.get(item.id)) ?? item;
+export async function deleteItemWithUndo(item: Item, database: PersonalDB = db): Promise<void> {
+  const latest = (await database.items.get(item.id)) ?? item;
   const ui = useUI.getState();
   if (ui.selectedItemId === latest.id) ui.selectItem(null);
-  await deleteItem(latest.id);
+  await deleteItem(latest.id, database);
   useToast.getState().show(`Deleted “${latest.title.trim() || 'Untitled'}”`, {
     actionLabel: 'Undo',
-    onAction: () => void restoreItem(latest),
+    onAction: () => void restoreItem(latest, database),
   });
 }
 

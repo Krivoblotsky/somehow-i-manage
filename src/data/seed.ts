@@ -1,85 +1,294 @@
 import { db as defaultDb, type PersonalDB } from './db';
-import { createItem, createPerson, resetMapLayout } from './repository';
+import { createItem, createPerson, resetMapLayout, type NewItem } from './repository';
+import { SAMPLE_AVATARS } from './sampleAvatars';
+
+const DAY = 24 * 60 * 60 * 1000;
+const MINUTE = 60 * 1000;
 
 const MIPP_BODY =
   '<p>The objective of the MacPaw Innovations Portfolio Program is to continuously generate and implement new ideas by conducting experiments and validating hypotheses that can unlock potential value.</p>' +
   '<p>Repeated innovation is going to have to be front and center at MacPaw. Primary goal is to help employees identify, develop and move an idea through an organization – an idea that can change your team’s and your unit’s future and jumpstart innovation.</p>';
 
-/** The three people from the Figma frames, with their items. Appends; never clears. */
-export async function loadSampleData(database: PersonalDB = defaultDb): Promise<void> {
-  await database.transaction('rw', database.people, database.items, async () => {
-    const vira = await createPerson(
-      {
-        name: 'Vira',
-        colorIndex: 0,
-        contacts: [
-          { kind: 'email', value: 'vira@example.com' },
-          { kind: 'slack', value: '@vira' },
-        ],
-      },
-      database,
-    );
-    const nata = await createPerson(
-      {
-        name: 'Nata',
-        colorIndex: 1,
-        contacts: [
-          { kind: 'email', value: 'nata@example.com' },
-          { kind: 'phone', value: '+380 67 123 45 67' },
-        ],
-      },
-      database,
-    );
-    await createPerson({ name: 'Anton', colorIndex: 2 }, database);
+/** One sample item: what to create, plus the dates that make it look lived-in. */
+interface SampleItem extends Omit<NewItem, 'personId'> {
+  /** Days before now it was created (and last edited); 0 = today. */
+  ago?: number;
+  /** Days before now it was completed; implies isCompleted. */
+  doneAgo?: number;
+  /** Due date, in days from today (negative = overdue). */
+  due?: number;
+  /** Covered in the previous 1:1 (days before now). */
+  discussedAgo?: number;
+}
 
-    for (const title of [
-      'Promotion Next Steps',
-      'Approve Focus Areas',
-      'Patents Agreement',
-      'Team Restructuring',
-    ]) {
-      await createItem(
-        { personId: nata.id, title, body: '<p>Some text about this item.</p>' },
+/**
+ * A team of ten (32 items) with every kind of thing the app can show — urgent, due soon, overdue, done,
+ * discussed, rich notes, a past 1:1, and one person with nothing yet. Appends; never clears.
+ */
+export async function loadSampleData(database: PersonalDB = defaultDb): Promise<void> {
+  const now = Date.now();
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const dueIn = (days: number) => startOfToday.getTime() + days * DAY;
+  const lastOneOnOne = now - 12 * DAY;
+
+  await database.transaction('rw', database.people, database.items, async () => {
+    async function person(
+      name: string,
+      role: string,
+      colorIndex: number,
+      avatar: keyof typeof SAMPLE_AVATARS,
+      contacts: { kind: 'email' | 'phone' | 'slack' | 'linkedin'; value: string }[],
+      items: SampleItem[],
+    ) {
+      const created = await createPerson(
+        {
+          name,
+          role,
+          colorIndex,
+          avatarDataUrl: SAMPLE_AVATARS[avatar],
+          avatarSource: 'upload',
+          contacts,
+        },
         database,
       );
+      for (const { ago = 0, doneAgo, due, discussedAgo, ...input } of items) {
+        const item = await createItem(
+          { ...input, personId: created.id, isCompleted: doneAgo !== undefined },
+          database,
+        );
+        const at = now - ago * DAY;
+        await database.items.update(item.id, {
+          createdAt: at,
+          updatedAt: at,
+          completedAt: doneAgo !== undefined ? now - doneAgo * DAY : undefined,
+          dueDate: due !== undefined ? dueIn(due) : undefined,
+          discussedAt: discussedAgo !== undefined ? now - discussedAgo * DAY : undefined,
+        });
+      }
+      return created;
     }
-    await createItem({ personId: nata.id, title: 'Buy Tickets', isCompleted: true }, database);
 
-    const mipp = await createItem(
-      { personId: vira.id, title: 'Launch MIPP', body: MIPP_BODY, isCompleted: true },
-      database,
+    const emily = await person(
+      'Emily Carter',
+      'Senior iOS Engineer',
+      0,
+      'emily',
+      [
+        { kind: 'email', value: 'emily.carter@example.com' },
+        { kind: 'slack', value: '@emily' },
+      ],
+      [
+        {
+          title: 'Promotion',
+          isFlagged: true,
+          due: 3,
+          body: '<p>Emily is ready for Staff. The case:</p><ul><li>Led the offline-first migration end to end</li><li>Mentors two juniors, both shipping</li><li>Owns release quality since Q2</li></ul>',
+        },
+        {
+          title: 'Salary Review',
+          ago: 20,
+          discussedAgo: 12,
+          body: '<p>Benchmark against the new band before we talk numbers.</p>',
+        },
+        {
+          title: 'Business Trip',
+          ago: 20,
+          due: 7,
+          body: '<p>Berlin, 14–16 Oct. Needs a budget code.</p>',
+        },
+        { title: 'Expense report', ago: 20, due: -4 },
+        { title: 'Launch MIPP', ago: 20, doneAgo: 3, body: MIPP_BODY },
+        { title: 'Complete Job Description', ago: 20, doneAgo: 1 },
+        {
+          kind: 'note',
+          title: 'Retro takeaways',
+          body: '<p>Wants more ownership of the roadmap. Bring it up at the next 1:1.</p><ul><li>Frustrated by late scope changes</li><li>Loved the pairing week — do it again</li></ul>',
+        },
+      ],
     );
-    const salary = await createItem({ personId: vira.id, title: 'Salary Review' }, database);
-    const trip = await createItem({ personId: vira.id, title: 'Business Trip' }, database);
-    const jobDescription = await createItem(
-      { personId: vira.id, title: 'Complete Job Description', isCompleted: true },
-      database,
-    );
-    await createItem({ personId: vira.id, title: 'Promotion', isFlagged: true }, database);
-    await createItem(
-      {
-        personId: vira.id,
-        kind: 'note',
-        title: 'Retro takeaways',
-        body: '<p>Wants more ownership of the roadmap. Bring it up at the next 1:1.</p>',
-      },
-      database,
-    );
-
-    // Vira had a 1:1 twelve days ago: her older items predate it, two tasks got done since,
-    // and one was covered back then. That gives the 1:1 screen a real recap to show.
-    const day = 24 * 60 * 60 * 1000;
-    const lastOneOnOne = Date.now() - 12 * day;
-    await database.people.update(vira.id, {
-      meetings: [{ startedAt: lastOneOnOne, endedAt: lastOneOnOne + 35 * 60 * 1000 }],
+    // Emily had a 1:1 twelve days ago, so her screen has a "since last 1:1" recap to show.
+    await database.people.update(emily.id, {
+      meetings: [{ startedAt: lastOneOnOne, endedAt: lastOneOnOne + 35 * MINUTE }],
     });
-    for (const item of [mipp, salary, trip, jobDescription]) {
-      await database.items.update(item.id, {
-        createdAt: lastOneOnOne - 8 * day,
-        updatedAt: lastOneOnOne - 8 * day,
-      });
-    }
-    await database.items.update(salary.id, { discussedAt: lastOneOnOne + 10 * 60 * 1000 });
+
+    await person(
+      'Marcus Johnson',
+      'Product Manager',
+      1,
+      'marcus',
+      [
+        { kind: 'email', value: 'marcus.johnson@example.com' },
+        { kind: 'phone', value: '+1 (415) 555-0133' },
+      ],
+      [
+        {
+          title: 'Promotion Next Steps',
+          ago: 6,
+          due: 0,
+          body: '<p>Agree the timeline with HR, then write the case together.</p>',
+        },
+        {
+          title: 'Approve Focus Areas',
+          ago: 6,
+          due: 1,
+          body: '<p>The Q4 draft is in the shared doc; two areas still overlap.</p>',
+        },
+        { title: 'Patents Agreement', ago: 4, body: '<p>Legal needs the final inventor list.</p>' },
+        {
+          title: 'Team Restructuring',
+          ago: 2,
+          body: '<p>Proposal for the platform split:</p><ol><li>Two squads, one shared on-call rotation</li><li>Marcus leads hiring for both</li><li>Decide by the end of the quarter</li></ol>',
+        },
+        { title: 'Buy Tickets', ago: 15, doneAgo: 10 },
+        {
+          kind: 'note',
+          title: 'Prefers async updates',
+          ago: 1,
+          body: '<p>Written status on Fridays beats a sync. Keep the weekly short.</p>',
+        },
+      ],
+    );
+
+    await person(
+      'Sofia Reyes',
+      'Design Lead',
+      2,
+      'sofia',
+      [
+        { kind: 'email', value: 'sofia.reyes@example.com' },
+        { kind: 'linkedin', value: 'sofia-reyes' },
+      ],
+      [
+        {
+          title: 'Hire a junior designer',
+          isFlagged: true,
+          ago: 14,
+          due: -7,
+          body: '<p>Two finalists. Decide this week or we lose both.</p>',
+        },
+        { title: 'Design system audit', ago: 9, doneAgo: 2 },
+        { title: 'Conference talk proposal', ago: 3, due: 12 },
+        {
+          kind: 'note',
+          title: 'Career goals',
+          ago: 5,
+          body: '<blockquote><p>“I want to run a team by next year.”</p></blockquote><p>Discussed two paths: lead designer and manager. She leans manager.</p>',
+        },
+      ],
+    );
+
+    // A peer who joined recently: nothing on the map yet, which is also a state worth showing.
+    await person('David Nguyen', 'Engineering Manager · peer', 4, 'david', [], []);
+
+    // The wider team: enough people that some sit off-screen and the strip scrolls.
+    await person(
+      'Olivia Bennett',
+      'Backend Engineer',
+      5,
+      'olivia',
+      [],
+      [
+        {
+          title: 'Postmortem write-up',
+          ago: 2,
+          due: 1,
+          body: '<p>The Tuesday outage. Blameless, two pages, one action list.</p>',
+        },
+        { kind: 'note', title: 'Wants to try leading on-call', ago: 9 },
+      ],
+    );
+    // James opens the landing-page demo, so he shows a bit of everything.
+    await person(
+      'James Patel',
+      'QA Lead',
+      0,
+      'james',
+      [{ kind: 'email', value: 'james.patel@example.com' }],
+      [
+        {
+          title: 'Regression suite for 2.1',
+          isFlagged: true,
+          ago: 3,
+          due: 2,
+          body: '<p>Blocks the release train. Needs the new device lab images.</p>',
+        },
+        { title: 'Release checklist v2', ago: 4, body: '<p>Fold the App Store steps in.</p>' },
+        { title: 'Device lab budget', ago: 9, due: -3 },
+        { title: 'Shadow Olivia on the on-call rota', ago: 2, due: 9 },
+        { title: 'Flaky test audit', ago: 12, doneAgo: 5 },
+        {
+          kind: 'note',
+          title: 'Wants to move into SDET',
+          ago: 6,
+          body: '<p>Came up at the offsite.</p><ul><li>Loves tooling, less so manual passes</li><li>Needs a mentor on the platform team</li></ul>',
+        },
+        {
+          kind: 'note',
+          title: 'Prefers written feedback',
+          ago: 15,
+          body: '<p>Give him a day with the notes before talking it through.</p>',
+        },
+      ],
+    );
+    await person(
+      'Ava Thompson',
+      'Recruiter',
+      1,
+      'ava',
+      [],
+      [
+        {
+          title: 'Offer for the designer role',
+          isFlagged: true,
+          ago: 1,
+          due: 0,
+          body: '<p>Sofia’s pick. Comp approved, start date open.</p>',
+        },
+      ],
+    );
+    await person(
+      'Daniel Kim',
+      'Data Analyst',
+      2,
+      'daniel',
+      [],
+      [
+        {
+          kind: 'note',
+          title: 'Dashboard numbers lag a week',
+          ago: 3,
+          body: '<p>Knows about it; the fix lands with the next pipeline change.</p>',
+        },
+      ],
+    );
+    await person(
+      'Grace Miller',
+      'Customer Success',
+      3,
+      'grace',
+      [],
+      [
+        { title: 'Churn review prep', ago: 6, due: 5 },
+        { title: 'Share NPS verbatims', ago: 10, doneAgo: 5 },
+      ],
+    );
+    await person(
+      'Ethan Brooks',
+      'Intern',
+      4,
+      'ethan',
+      [],
+      [
+        { title: 'Onboarding buddy check-in', ago: 8, due: -1 },
+        {
+          kind: 'note',
+          title: 'Interested in iOS',
+          ago: 8,
+          body: '<p>Pair him with Emily for a week.</p>',
+        },
+      ],
+    );
 
     // Demo people look best on balanced rings with room between them, like the design frames.
     await resetMapLayout(database);

@@ -1,0 +1,54 @@
+.frame {
+  position: relative;
+  height: 560px;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid var(--glass-edge);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  background: var(--bg);
+}
+.loading {
+  height: 560px;
+  border-radius: 20px;
+  border: 1px solid var(--glass-edge);
+  background: var(--bg);
+}
+.hints {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 10;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  pointer-events: none;
+}
+.hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid var(--glass-edge);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+.hint b {
+  color: var(--person-1);
+  font-weight: 700;
+}
+@media (max-width: 700px) {
+  .frame,
+  .loading {
+    height: 420px;
+  }
+  /* one hint is plenty on a phone */
+  .hint:nth-child(n + 2) {
+    display: none;
+  }
+}

@@ -1,5 +1,6 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react';
 import { useState, type CSSProperties, type MouseEvent as ReactMouseEvent } from 'react';
+import { useDatabase } from '../../data/DatabaseContext';
 import { createItem } from '../../data/repository';
 import type { PersonNodeType } from '../../map/graph';
 import { selectFocusPersonId, useUI } from '../../state/ui';
@@ -10,6 +11,7 @@ import styles from './PersonNode.module.css';
 export function PersonNode({ data }: NodeProps<PersonNodeType>) {
   const { person, color, isSelected, isDropTarget } = data;
   const startEditing = useUI((s) => s.startEditing);
+  const database = useDatabase();
   const focus = useUI(selectFocusPersonId);
   const dimmed = focus !== null && focus !== person.id;
   const [pulsing, setPulsing] = useState(false);
@@ -18,7 +20,7 @@ export function PersonNode({ data }: NodeProps<PersonNodeType>) {
   async function addTask(e: ReactMouseEvent) {
     e.stopPropagation();
     setPulsing(true);
-    const item = await createItem({ personId: person.id, kind: 'task' });
+    const item = await createItem({ personId: person.id, kind: 'task' }, database);
     startEditing(item.id, true);
   }
 

@@ -1,10 +1,13 @@
-import { useState, type ReactNode } from 'react';
+import { Component, lazy, Suspense, useState, type ReactNode } from 'react';
 import { syncActions, type SyncActions } from '../sync/controller';
 import { useSync } from '../sync/store';
 import { CloudIcon, GoogleIcon } from './icons';
 import styles from './LandingPage.module.css';
 
-/** The front door: what the app is, and the one way in. Nothing else is reachable signed out. */
+// The live demo brings React Flow and the database with it; the page shows first, then it wakes up.
+const LiveDemo = lazy(() => import('./LiveDemo'));
+
+/** The front door: one line on what this is, the real map to play with, and the one way in. */
 export function LandingPage({ actions = syncActions }: { actions?: SyncActions }) {
   const authError = useSync((s) => s.authError);
   const [busy, setBusy] = useState(false);
@@ -22,98 +25,70 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
   }
 
   const problem = error ?? authError;
+  const googleButton = (
+    <button type="button" className={styles.google} disabled={busy} onClick={() => void signIn()}>
+      <GoogleIcon />
+      {busy ? 'Opening Google…' : 'Continue with Google'}
+    </button>
+  );
+
   return (
     <div className={styles.page}>
       <div className={styles.inner}>
         <header className={styles.nav}>
-          <div className={styles.brand}>Somehow I Manage</div>
+          <div className={styles.brand}>
+            <span className={styles.mark} aria-hidden="true" />
+            Somehow I Manage
+          </div>
           <button type="button" className={styles.navBtn} onClick={() => void signIn()}>
             Sign in
           </button>
         </header>
 
         <section className={styles.hero}>
-          <div className={styles.heroText}>
-            <div className={styles.kicker}>A task manager for managers</div>
-            <h1 className={styles.title}>Work with people, not&nbsp;tasks.</h1>
-            <p className={styles.lead}>
-              Every task, note and 1:1 lives with the person it’s about. See your whole team on one
-              map, walk into every 1:1 prepared, and retire the dossier you keep in Apple Notes.
-            </p>
-            <div className={styles.cta}>
-              <button
-                type="button"
-                className={styles.google}
-                disabled={busy}
-                onClick={() => void signIn()}
-              >
-                <GoogleIcon />
-                {busy ? 'Opening Google…' : 'Continue with Google'}
-              </button>
-              <span className={styles.ctaNote}>
-                Free while in beta.
-                <br />
-                Only your email address, nothing else.
-              </span>
-            </div>
-            {problem && (
-              <p className={styles.error} role="alert">
-                {problem}
-              </p>
-            )}
+          <div className={styles.kicker}>A task manager for managers</div>
+          <h1 className={styles.title}>Work with people, not&nbsp;tasks.</h1>
+          <p className={styles.lead}>
+            Every task, note and 1:1 lives with the person it’s about. This is the real thing — go
+            ahead and poke it.
+          </p>
+          <div className={styles.cta}>
+            {googleButton}
+            <span className={styles.ctaNote}>Free while in beta · only your email address</span>
           </div>
-          <MapIllustration />
+          {problem && (
+            <p className={styles.error} role="alert">
+              {problem}
+            </p>
+          )}
         </section>
 
-        <h2 className={styles.sectionTitle}>What’s different</h2>
-        <section className={styles.features}>
-          <Feature
-            color="var(--person-0)"
-            icon={<PersonGlyph />}
-            title="People first"
-            text="Add a person, then collect what you need to do with them. A task is “with Vira”, not assigned to her."
-          />
+        <section className={styles.demo} aria-label="Live demo">
+          <DemoBoundary fallback={<StillDemo />}>
+            <Suspense fallback={<StillDemo />}>
+              <LiveDemo />
+            </Suspense>
+          </DemoBoundary>
+        </section>
+
+        <section className={styles.features} aria-label="What you get">
           <Feature
             color="var(--person-1)"
             icon={<MapGlyph />}
             title="The People Map"
-            text="Your team as hubs, their items as cards around them. Drag a card to another person to hand it over."
+            text="Your team at a glance. Hand a card over by dragging it."
           />
           <Feature
             color="var(--person-2)"
             icon={<MeetingGlyph />}
             title="1:1 mode"
-            text="One screen for the meeting: tick what got done, mark what you covered, capture what comes up, see what changed since last time."
+            text="Walk in prepared: agenda, what got done, what came up."
           />
           <Feature
             color="var(--person-4)"
             icon={<CloudIcon size={20} />}
             title="Yours, everywhere"
-            text="Works offline, installs like an app, syncs across your devices. Export to Markdown or JSON whenever you like."
-          />
-        </section>
-
-        <h2 className={styles.sectionTitle}>How it works</h2>
-        <section className={styles.steps}>
-          <Step
-            no="01"
-            title="Add your people"
-            text="Direct reports, peers, clients — anyone you keep things in mind for. A photo comes from Gravatar if they have one."
-          />
-          <Step
-            no="02"
-            title="Capture as it happens"
-            text={
-              <>
-                Type a line under their name, hit <kbd>⌘K</kbd> from anywhere, or paste a whole list
-                straight out of your notes.
-              </>
-            }
-          />
-          <Step
-            no="03"
-            title="Run your 1:1s"
-            text="Start the meeting from their page. The agenda is already there; so is what got done since you last talked."
+            text="Offline, installable, synced. Export any time."
           />
         </section>
 
@@ -126,6 +101,29 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
       </div>
     </div>
   );
+}
+
+/** The still of the map: what shows while the live demo loads, or if it cannot. */
+function StillDemo() {
+  return (
+    <div className={styles.demoFallback}>
+      <MapIllustration />
+    </div>
+  );
+}
+
+/** If the demo chunk fails to load (offline, a deploy in flight), the page must stay up. */
+class DemoBoundary extends Component<
+  { fallback: ReactNode; children: ReactNode },
+  { failed: boolean }
+> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
 }
 
 function Feature({
@@ -150,26 +148,8 @@ function Feature({
   );
 }
 
-function Step({ no, title, text }: { no: string; title: string; text: ReactNode }) {
-  return (
-    <article>
-      <div className={styles.stepNo}>{no}</div>
-      <h3 className={styles.stepTitle}>{title}</h3>
-      <p className={styles.stepText}>{text}</p>
-    </article>
-  );
-}
-
 const glyph = { width: 20, height: 20, viewBox: '0 0 20 20', fill: 'none', stroke: 'currentColor' };
 
-function PersonGlyph() {
-  return (
-    <svg {...glyph} strokeWidth="1.8" aria-hidden="true">
-      <circle cx="10" cy="7" r="3.5" />
-      <path d="M3.5 17a6.5 6.5 0 0 1 13 0" strokeLinecap="round" />
-    </svg>
-  );
-}
 function MapGlyph() {
   return (
     <svg {...glyph} strokeWidth="1.8" aria-hidden="true">

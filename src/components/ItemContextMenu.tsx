@@ -1,7 +1,7 @@
 import * as ContextMenu from '@radix-ui/react-context-menu';
 import { useLiveQuery } from 'dexie-react-hooks';
 import type { ReactNode } from 'react';
-import { db } from '../data/db';
+import { useDatabase } from '../data/DatabaseContext';
 import { moveItem, setItemCompleted, setItemKind, updateItem } from '../data/repository';
 import type { Item } from '../model/types';
 import { deleteItemWithUndo } from '../state/actions';
@@ -25,14 +25,16 @@ export function ItemContextMenu({ item, children }: { item: Item; children: Reac
 
 /** The menu entries themselves; render inside a ContextMenu.Content. */
 export function ItemMenuItems({ item }: { item: Item }) {
-  const people = useLiveQuery(() => db.people.orderBy('sortOrder').toArray(), []) ?? [];
+  const database = useDatabase();
+  const people =
+    useLiveQuery(() => database.people.orderBy('sortOrder').toArray(), [database]) ?? [];
   const selectItem = useUI((s) => s.selectItem);
   const show = useToast((s) => s.show);
   const isTask = item.kind === 'task';
   const others = people.filter((p) => p.id !== item.personId);
 
   async function move(personId: string, name: string) {
-    await moveItem(item.id, personId);
+    await moveItem(item.id, personId, database);
     show(`Moved “${item.title || 'Untitled'}” to ${name}`);
   }
 
@@ -45,7 +47,7 @@ export function ItemMenuItems({ item }: { item: Item }) {
       {isTask && (
         <ContextMenu.Item
           className={menu.item}
-          onSelect={() => void setItemCompleted(item.id, !item.isCompleted)}
+          onSelect={() => void setItemCompleted(item.id, !item.isCompleted, database)}
         >
           {item.isCompleted ? 'Mark as not completed' : 'Mark as completed'}
         </ContextMenu.Item>
@@ -53,14 +55,14 @@ export function ItemMenuItems({ item }: { item: Item }) {
       {isTask && !item.isCompleted && (
         <ContextMenu.Item
           className={menu.item}
-          onSelect={() => void updateItem(item.id, { isFlagged: !item.isFlagged })}
+          onSelect={() => void updateItem(item.id, { isFlagged: !item.isFlagged }, database)}
         >
           {item.isFlagged ? 'Remove urgent flag' : 'Mark as urgent'}
         </ContextMenu.Item>
       )}
       <ContextMenu.Item
         className={menu.item}
-        onSelect={() => void setItemKind(item.id, isTask ? 'note' : 'task')}
+        onSelect={() => void setItemKind(item.id, isTask ? 'note' : 'task', database)}
       >
         {isTask ? 'Turn into a note' : 'Turn into a task'}
       </ContextMenu.Item>
@@ -87,7 +89,7 @@ export function ItemMenuItems({ item }: { item: Item }) {
       <ContextMenu.Separator className={menu.separator} />
       <ContextMenu.Item
         className={`${menu.item} ${menu.danger}`}
-        onSelect={() => void deleteItemWithUndo(item)}
+        onSelect={() => void deleteItemWithUndo(item, database)}
       >
         Delete
       </ContextMenu.Item>

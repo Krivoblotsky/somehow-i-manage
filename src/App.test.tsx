@@ -33,6 +33,7 @@ beforeEach(async () => {
     focusRequest: null,
     search: '',
     dialog: null,
+    tipsDismissed: false,
   });
 });
 
@@ -43,13 +44,13 @@ describe('App (list view)', () => {
 
     expect(await screen.findByText(/add your first person/i)).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: /load sample data/i }));
+    await user.click(screen.getByRole('button', { name: /sample data/i }));
 
-    expect(await screen.findByRole('heading', { name: 'Vira' })).toBeInTheDocument();
-    expect(screen.getByText(/3 tasks, 1 urgent, 2 done, 1 note/)).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Emily Carter' })).toBeInTheDocument();
+    expect(screen.getByText(/4 tasks, 1 urgent, 2 done, 1 note/)).toBeInTheDocument();
     // header avatars for all three people
     const people = screen.getByLabelText('People');
-    expect(within(people).getAllByRole('button')).toHaveLength(3);
+    expect(within(people).getAllByRole('button')).toHaveLength(10);
   });
 
   it('adds a person through the dialog and selects them', async () => {
@@ -70,12 +71,13 @@ describe('App (list view)', () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByText(/add your first person/i);
-    await user.click(screen.getByRole('button', { name: /load sample data/i }));
-    await screen.findByRole('heading', { name: 'Vira' });
+    await user.click(screen.getByRole('button', { name: /sample data/i }));
+    await screen.findByRole('heading', { name: 'Emily Carter' });
 
     await user.click(screen.getAllByRole('button', { name: 'Mark as completed' })[0]);
 
-    expect(await screen.findByText(/2 tasks, 3 done, 1 note/)).toBeInTheDocument();
+    // the first open task is the urgent one, so it leaves the urgent count behind too
+    expect(await screen.findByText(/3 tasks, 3 done, 1 note/)).toBeInTheDocument();
   });
 });
 
@@ -141,8 +143,8 @@ describe('App — item context menu in the list', () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByText(/add your first person/i);
-    await user.click(screen.getByRole('button', { name: /load sample data/i }));
-    await screen.findByRole('heading', { name: 'Vira' });
+    await user.click(screen.getByRole('button', { name: /sample data/i }));
+    await screen.findByRole('heading', { name: 'Emily Carter' });
 
     fireEvent.contextMenu(screen.getByText('Business Trip'));
     await user.click(await screen.findByRole('menuitem', { name: 'Delete' }));
@@ -153,10 +155,10 @@ describe('App — item context menu in the list', () => {
     await user.click(await screen.findByRole('menuitem', { name: 'Move to…' }));
     // A plain click: user-event would first "travel" the pointer from the trigger into the
     // submenu, and without real geometry in jsdom Radix reads that as leaving the menu.
-    fireEvent.click(await screen.findByRole('menuitem', { name: 'Nata' }));
-    expect(await screen.findByText('Moved “Salary Review” to Nata')).toBeInTheDocument();
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Marcus Johnson' }));
+    expect(await screen.findByText('Moved “Salary Review” to Marcus Johnson')).toBeInTheDocument();
     const moved = (await db.items.toArray()).find((i) => i.title === 'Salary Review');
-    const nata = (await db.people.toArray()).find((p) => p.name === 'Nata');
+    const nata = (await db.people.toArray()).find((p) => p.name === 'Marcus Johnson');
     expect(moved?.personId).toBe(nata?.id);
   });
 });
@@ -166,11 +168,11 @@ describe('App — quick add and palette', () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByText(/add your first person/i);
-    await user.click(screen.getByRole('button', { name: /load sample data/i }));
-    await screen.findByRole('heading', { name: 'Vira' });
+    await user.click(screen.getByRole('button', { name: /sample data/i }));
+    await screen.findByRole('heading', { name: 'Emily Carter' });
     const before = await db.items.count();
 
-    const field = screen.getByLabelText('Add a task with Vira');
+    const field = screen.getByLabelText('Add a task with Emily Carter');
     await user.type(field, 'Prepare the deck{Enter}');
     expect(await screen.findByText('Prepare the deck')).toBeInTheDocument();
     expect(field).toHaveValue('');
@@ -187,21 +189,21 @@ describe('App — quick add and palette', () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByText(/add your first person/i);
-    await user.click(screen.getByRole('button', { name: /load sample data/i }));
-    await screen.findByRole('heading', { name: 'Vira' });
+    await user.click(screen.getByRole('button', { name: /sample data/i }));
+    await screen.findByRole('heading', { name: 'Emily Carter' });
 
     useUI.getState().openDialog({ type: 'palette' });
     const input = await screen.findByRole('textbox', { name: 'Command palette' });
-    await user.type(input, 'Nata{Enter}');
-    expect(await screen.findByRole('heading', { name: 'Nata' })).toBeInTheDocument();
+    await user.type(input, 'Marcus{Enter}');
+    expect(await screen.findByRole('heading', { name: 'Marcus Johnson' })).toBeInTheDocument();
 
     useUI.getState().openDialog({ type: 'palette' });
     await user.type(
       await screen.findByLabelText('Command palette'),
-      'Vira: Book the offsite{Enter}',
+      'Emily: Book the offsite{Enter}',
     );
     expect(await screen.findByRole('status')).toHaveTextContent(
-      'Added task “Book the offsite” with Vira',
+      'Added task “Book the offsite” with Emily Carter',
     );
     const created = (await db.items.toArray()).find((i) => i.title === 'Book the offsite');
     expect(created?.kind).toBe('task');
@@ -219,7 +221,9 @@ describe('App — backup restore', () => {
       app: 'somehow-i-manage',
       version: 1,
       exportedAt: '2026-09-30T10:00:00.000Z',
-      people: [{ id: 'p1', name: 'Vira', colorIndex: 0, sortOrder: 0, createdAt: 1, updatedAt: 1 }],
+      people: [
+        { id: 'p1', name: 'Emily Carter', colorIndex: 0, sortOrder: 0, createdAt: 1, updatedAt: 1 },
+      ],
       items: [
         {
           id: 'i1',
@@ -241,7 +245,7 @@ describe('App — backup restore', () => {
     expect(await screen.findByText('backup.json', { exact: false })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Merge into my data' }));
 
-    expect(await screen.findByRole('heading', { name: 'Vira' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Emily Carter' })).toBeInTheDocument();
     expect(await db.items.count()).toBe(1);
     expect(screen.getByRole('status')).toHaveTextContent('Restored 1 people and 1 items');
   });
@@ -252,8 +256,8 @@ describe('App (list view) — completed items', () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByText(/add your first person/i);
-    await user.click(screen.getByRole('button', { name: /load sample data/i }));
-    await screen.findByRole('heading', { name: 'Vira' });
+    await user.click(screen.getByRole('button', { name: /sample data/i }));
+    await screen.findByRole('heading', { name: 'Emily Carter' });
     const before = await db.items.count();
 
     await user.click(screen.getAllByRole('button', { name: 'Delete completed task' })[0]);
@@ -274,15 +278,15 @@ describe('App (map view)', () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByText(/add your first person/i);
-    await user.click(screen.getByRole('button', { name: /load sample data/i }));
+    await user.click(screen.getByRole('button', { name: /sample data/i }));
 
     const map = await screen.findByTestId('people-map');
-    expect(await within(map).findByText('Nata')).toBeInTheDocument();
-    expect(within(map).getByText('Anton')).toBeInTheDocument();
+    expect(await within(map).findByText('Marcus Johnson')).toBeInTheDocument();
+    expect(within(map).getByText('David Nguyen')).toBeInTheDocument();
     expect(within(map).getByText('Launch MIPP')).toBeInTheDocument();
     expect(within(map).getByText('Team Restructuring')).toBeInTheDocument();
-    // 11 sample items → 11 edges
-    expect(map.querySelectorAll('.react-flow__edge')).toHaveLength(11);
+    // 32 sample items → 32 edges
+    expect(map.querySelectorAll('.react-flow__edge')).toHaveLength(32);
 
     // fireEvent: user-event's mousedown has no `view`, which trips d3-drag in jsdom.
     fireEvent.click(within(map).getByText('Salary Review'));
@@ -300,11 +304,11 @@ describe('App (map view)', () => {
       </StrictMode>,
     );
     await screen.findByText(/add your first person/i);
-    await user.click(screen.getByRole('button', { name: /load sample data/i }));
+    await user.click(screen.getByRole('button', { name: /sample data/i }));
     const map = await screen.findByTestId('people-map');
-    await within(map).findByText('Anton');
+    await within(map).findByText('David Nguyen');
 
-    fireEvent.click(within(map).getByRole('button', { name: 'New task with Anton' }));
+    fireEvent.click(within(map).getByRole('button', { name: 'New task with David Nguyen' }));
     const input = await within(map).findByRole('textbox', { name: 'Task title' });
     await user.type(input, 'Talk about the promo{Enter}');
 
@@ -315,7 +319,7 @@ describe('App (map view)', () => {
 
     // Escape on an empty new card removes it again
     const before = await db.items.count();
-    fireEvent.click(within(map).getByRole('button', { name: 'New task with Anton' }));
+    fireEvent.click(within(map).getByRole('button', { name: 'New task with David Nguyen' }));
     const second = await within(map).findByRole('textbox', { name: 'Task title' });
     await user.type(second, '{Escape}');
     await new Promise((r) => setTimeout(r, 50));
@@ -327,7 +331,7 @@ describe('App (map view)', () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByText(/add your first person/i);
-    await user.click(screen.getByRole('button', { name: /load sample data/i }));
+    await user.click(screen.getByRole('button', { name: /sample data/i }));
     const map = await screen.findByTestId('people-map');
     const card = await within(map).findByText('Salary Review');
 
@@ -351,22 +355,38 @@ describe('App (map view)', () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByText(/add your first person/i);
-    await user.click(screen.getByRole('button', { name: /load sample data/i }));
+    await user.click(screen.getByRole('button', { name: /sample data/i }));
     const map = await screen.findByTestId('people-map');
-    await within(map).findByText('Nata');
+    await within(map).findByText('Marcus Johnson');
     const nodeOf = (text: string) =>
       within(map).getByText(text).closest('[data-dimmed]') as HTMLElement;
-    expect(nodeOf('Nata')).toHaveAttribute('data-dimmed', 'false');
+    expect(nodeOf('Marcus Johnson')).toHaveAttribute('data-dimmed', 'false');
 
-    fireEvent.click(within(map).getByText('Salary Review')); // one of Vira's cards
+    fireEvent.click(within(map).getByText('Salary Review')); // one of Emily Carter's cards
     await screen.findByRole('region', { name: 'Task details' });
-    expect(nodeOf('Nata')).toHaveAttribute('data-dimmed', 'true');
+    expect(nodeOf('Marcus Johnson')).toHaveAttribute('data-dimmed', 'true');
     expect(nodeOf('Promotion Next Steps')).toHaveAttribute('data-dimmed', 'true');
-    expect(nodeOf('Vira')).toHaveAttribute('data-dimmed', 'false');
+    expect(nodeOf('Emily Carter')).toHaveAttribute('data-dimmed', 'false');
     expect(nodeOf('Salary Review')).toHaveAttribute('data-dimmed', 'false');
 
     await user.keyboard('{Escape}');
-    await vi.waitFor(() => expect(nodeOf('Nata')).toHaveAttribute('data-dimmed', 'false'));
+    await vi.waitFor(() =>
+      expect(nodeOf('Marcus Johnson')).toHaveAttribute('data-dimmed', 'false'),
+    );
+  });
+
+  it('shows first-run tips on the map until they are dismissed', async () => {
+    useUI.setState({ view: 'map' });
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByText(/add your first person/i);
+    await user.click(screen.getByRole('button', { name: /try with sample data/i }));
+    await screen.findByTestId('people-map');
+    const tips = await screen.findByRole('note', { name: 'Tips' });
+    expect(tips).toHaveTextContent('Drag a card onto a person');
+    await user.click(within(tips).getByRole('button', { name: 'Got it' }));
+    expect(screen.queryByRole('note', { name: 'Tips' })).not.toBeInTheDocument();
+    expect(useUI.getState().tipsDismissed).toBe(true);
   });
 
   it('switches to the list view from the header', async () => {
@@ -374,11 +394,11 @@ describe('App (map view)', () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByText(/add your first person/i);
-    await user.click(screen.getByRole('button', { name: /load sample data/i }));
+    await user.click(screen.getByRole('button', { name: /sample data/i }));
     await screen.findByTestId('people-map');
 
     await user.click(screen.getByRole('button', { name: 'List' }));
-    expect(await screen.findByRole('heading', { name: 'Vira' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Emily Carter' })).toBeInTheDocument();
   });
 });
 
@@ -393,8 +413,8 @@ describe('App — 1:1 mode', () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByText(/add your first person/i);
-    await user.click(screen.getByRole('button', { name: /load sample data/i }));
-    await screen.findByRole('heading', { name: 'Vira' });
+    await user.click(screen.getByRole('button', { name: /sample data/i }));
+    await screen.findByRole('heading', { name: 'Emily Carter' });
     expect(screen.getByText(/Last 1:1 12 days ago/)).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Start 1:1' }));
@@ -405,6 +425,7 @@ describe('App — 1:1 mode', () => {
       'Promotion',
       'Salary Review',
       'Business Trip',
+      'Expense report',
       'Retro takeaways',
     ]);
     // two of them appeared since the last 1:1
@@ -422,6 +443,7 @@ describe('App — 1:1 mode', () => {
       expect(await discussOrder(agenda)).toEqual([
         'Promotion',
         'Salary Review',
+        'Expense report',
         'Retro takeaways',
         'Business Trip',
       ]),
@@ -443,7 +465,7 @@ describe('App — 1:1 mode', () => {
     // whatever comes up is captured next to the box, not in the agenda
     const capture = within(meeting).getByRole('region', { name: 'Capture' });
     await user.type(
-      within(capture).getByLabelText('Add a task with Vira'),
+      within(capture).getByLabelText('Add a task with Emily Carter'),
       'Follow up on budget{Enter}',
     );
     expect(await within(capture).findByText('Follow up on budget')).toBeInTheDocument();
@@ -451,15 +473,15 @@ describe('App — 1:1 mode', () => {
 
     // looking at the map does not end it; the header pill brings you back
     await user.click(screen.getByRole('button', { name: 'Map' }));
-    await user.click(await screen.findByRole('button', { name: /1:1 with Vira/ }));
+    await user.click(await screen.findByRole('button', { name: /1:1 with Emily Carter/ }));
     await screen.findByTestId('one-on-one');
 
     // ending records it on the person and sums up
     await user.click(screen.getByRole('button', { name: 'End 1:1' }));
     expect(await screen.findByRole('status')).toHaveTextContent(
-      '1:1 with Vira ended · 1 discussed, 1 done, 1 added',
+      '1:1 with Emily Carter ended · 1 discussed, 1 done, 1 added',
     );
-    const vira = (await db.people.toArray()).find((p) => p.name === 'Vira');
+    const vira = (await db.people.toArray()).find((p) => p.name === 'Emily Carter');
     expect(vira?.meetings).toHaveLength(2);
     expect(screen.queryByTestId('one-on-one')).not.toBeInTheDocument();
     expect(await screen.findByRole('button', { name: 'Start 1:1' })).toBeInTheDocument();
@@ -471,12 +493,12 @@ describe('App — polish', () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByText(/add your first person/i);
-    await user.click(screen.getByRole('button', { name: /load sample data/i }));
-    await screen.findByRole('heading', { name: 'Vira' });
+    await user.click(screen.getByRole('button', { name: /sample data/i }));
+    await screen.findByRole('heading', { name: 'Emily Carter' });
 
-    await user.type(screen.getByLabelText('Add a task with Vira'), '?');
+    await user.type(screen.getByLabelText('Add a task with Emily Carter'), '?');
     expect(screen.queryByRole('dialog', { name: 'Shortcuts' })).not.toBeInTheDocument();
-    await user.clear(screen.getByLabelText('Add a task with Vira'));
+    await user.clear(screen.getByLabelText('Add a task with Emily Carter'));
     await user.click(document.body);
     await user.keyboard('?');
     expect(await screen.findByRole('dialog', { name: 'Shortcuts' })).toBeInTheDocument();
@@ -486,14 +508,14 @@ describe('App — polish', () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByText(/add your first person/i);
-    await user.click(screen.getByRole('button', { name: /load sample data/i }));
-    await screen.findByRole('heading', { name: 'Vira' });
+    await user.click(screen.getByRole('button', { name: /sample data/i }));
+    await screen.findByRole('heading', { name: 'Emily Carter' });
 
-    await user.click(screen.getByText('Business Trip'));
+    await user.click(screen.getByText('Salary Review'));
     const panel = await screen.findByRole('region', { name: 'Task details' });
     await user.click(within(panel).getByRole('button', { name: 'Set a due date' }));
     fireEvent.change(within(panel).getByLabelText('Due date'), { target: { value: '2026-10-03' } });
-    const row = screen.getByText('Business Trip').closest('[role="button"]') as HTMLElement;
+    const row = screen.getByText('Salary Review').closest('[role="button"]') as HTMLElement;
     expect(await within(row).findByText(/Due |overdue/)).toBeInTheDocument();
 
     await user.click(within(panel).getByRole('button', { name: 'Clear due date' }));
@@ -504,14 +526,14 @@ describe('App — polish', () => {
     const user = userEvent.setup();
     render(<App />);
     await screen.findByText(/add your first person/i);
-    await user.click(screen.getByRole('button', { name: /load sample data/i }));
-    await screen.findByRole('heading', { name: 'Vira' });
+    await user.click(screen.getByRole('button', { name: /sample data/i }));
+    await screen.findByRole('heading', { name: 'Emily Carter' });
 
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
-    await user.click(screen.getByRole('button', { name: 'More for Vira' }));
+    await user.click(screen.getByRole('button', { name: 'More for Emily Carter' }));
     await user.click(await screen.findByRole('menuitem', { name: 'Delete person…' }));
-    expect(confirm).toHaveBeenCalledWith(expect.stringContaining('Delete Vira and their'));
-    expect(await screen.findByRole('heading', { name: 'Nata' })).toBeInTheDocument();
+    expect(confirm).toHaveBeenCalledWith(expect.stringContaining('Delete Emily Carter and their'));
+    expect(await screen.findByRole('heading', { name: 'Marcus Johnson' })).toBeInTheDocument();
     confirm.mockRestore();
   });
 });

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SyncActions } from '../sync/controller';
@@ -16,7 +16,7 @@ beforeEach(() => {
 });
 
 describe('LandingPage', () => {
-  it('explains the product and hands over to Google from any of its sign-in buttons', async () => {
+  it('shows the pitch, the live demo with the sample team, and hands over to Google', async () => {
     const user = userEvent.setup();
     const a = actions();
     render(<LandingPage actions={a} />);
@@ -24,7 +24,13 @@ describe('LandingPage', () => {
       'Work with people, not tasks.',
     );
     expect(screen.getByText('1:1 mode')).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: /People Map/ })).toBeInTheDocument();
+
+    // the real map, live, seeded with the sample team
+    const demo = await screen.findByTestId('people-map', {}, { timeout: 8000 });
+    expect(
+      await within(demo).findByText('Emily Carter', {}, { timeout: 8000 }),
+    ).toBeInTheDocument();
+    expect(within(demo).getByText('Marcus Johnson')).toBeInTheDocument();
 
     // every sign-in button is the same door; once one is pressed the main one shows it is busy
     await user.click(screen.getByRole('button', { name: 'Sign in' }));

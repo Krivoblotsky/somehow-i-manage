@@ -7,7 +7,9 @@ import {
   ReactFlow,
   ReactFlowProvider,
   useNodesState,
+  useNodesInitialized,
   useReactFlow,
+  useStore,
   type EdgeTypes,
   type NodeMouseHandler,
   type NodeTypes,
@@ -22,6 +24,7 @@ import {
   setItemMapPosition,
   setPersonMapPosition,
 } from '../../data/repository';
+import { useDatabase, useIsDemo } from '../../data/DatabaseContext';
 import { findDropTarget, type DropCandidate } from '../../map/dropTarget';
 import {
   buildGraph,
@@ -37,6 +40,7 @@ import { ItemMenuItems } from '../ItemContextMenu';
 import menu from '../menu.module.css';
 import { FloatingEdge } from './FloatingEdge';
 import { ItemNode } from './ItemNode';
+import { MapTips } from './MapTips';
 import { OffscreenMarkers } from './OffscreenMarkers';
 import styles from './PeopleMap.module.css';
 import { PersonNode } from './PersonNode';
@@ -48,6 +52,11 @@ const fitViewOptions = {
   padding: { top: '128px', right: '40px', bottom: '40px', left: '40px' } as const,
   maxZoom: 1,
 };
+/** The landing-page demo has no floating header to make room for. */
+const demoFitViewOptions = {
+  padding: { top: '72px', right: '32px', bottom: '32px', left: '32px' } as const,
+  maxZoom: 1,
+};
 /** How close a dragged card must get to a person's avatar centre to count as a drop. */
 const DROP_RADIUS = PERSON_NODE.ringRadius + 30;
 
@@ -57,6 +66,8 @@ type MenuTarget =
 interface PeopleMapProps {
   people: Person[];
   items: Item[];
+  /** Open on this person's cluster instead of fitting everyone (the landing-page demo). */
+  focusPersonId?: string;
 }
 
 /** The People Map: every person is a hub, their tasks and notes orbit them. */
@@ -68,7 +79,10 @@ export function PeopleMap(props: PeopleMapProps) {
   );
 }
 
-function Canvas({ people, items }: PeopleMapProps) {
+function Canvas({ people, items, focusPersonId }: PeopleMapProps) {
+  const database = useDatabase();
+  const demo = useIsDemo();
+  const fit = demo ? demoFitViewOptions : fitViewOptions;
   const selectedItemId = useUI((s) => s.selectedItemId);
   const selectedPersonId = useUI((s) => s.selectedPersonId);
   const personPanelOpen = useUI((s) => s.personPanelOpen);
@@ -82,6 +96,26 @@ function Canvas({ people, items }: PeopleMapProps) {
     MapNode,
     FloatingEdgeType
   >();
+  // How this map frames itself: on one person's cluster when asked, otherwise on everyone.
+  const frame = useCallback(() => {
+    if (focusPersonId) {
+      const ids = getNodes()
+        .filter(
+          (n) =>
+            n.id === focusPersonId || (n.type === 'item' && n.data.item.personId === focusPersonId),
+        )
+        .map((n) => ({ id: n.id }));
+      if (ids.length > 0) return fitView({ nodes: ids, padding: 0.3, maxZoom: 1 });
+    }
+    return fitView(fit);
+  }, [focusPersonId, getNodes, fitView, fit]);
+
+  // The demo's frame changes size with the page (phones, rotations): keep it framed.
+  const flowWidth = useStore((st) => st.width);
+  const flowHeight = useStore((st) => st.height);
+  useEffect(() => {
+    if (demo && flowWidth > 0 && flowHeight > 0) void frame();
+  }, [demo, flowWidth, flowHeight, frame]);
 
   const graph = useMemo(
     () =>
@@ -104,6 +138,8 @@ function Canvas({ people, items }: PeopleMapProps) {
   }, [items]);
   useEffect(() => {
     if (!focusRequest) return;
+    // A stale request (e.g. from the landing-page demo) names a person this map does not have.
+    if (!getNodes().some((n) => n.id === focusRequest.personId)) return;
     const ids = [
       focusRequest.personId,
       ...itemsRef.current.filter((i) => i.personId === focusRequest.personId).map((i) => i.id),
@@ -112,19 +148,28 @@ function Canvas({ people, items }: PeopleMapProps) {
       void fitView({ nodes: ids.map((id) => ({ id })), duration: 400, padding: 0.3, maxZoom: 1 });
     }, 50);
     return () => window.clearTimeout(timer);
-  }, [focusRequest, fitView]);
+  }, [focusRequest, fitView, getNodes]);
 
   // Re-fit when people are added or removed so a new cluster is never off-screen.
   const peopleCount = people.length;
   const lastCount = useRef(peopleCount);
+  // People arrived or left (sample data, a restore): show everyone — once React Flow has
+  // measured the new nodes, or the fit would only see the ones it already knows.
+  // The landing-page demo frames its own view instead.
+  const nodesInitialized = useNodesInitialized();
   useEffect(() => {
-    if (lastCount.current === peopleCount) return;
+    if (demo || !nodesInitialized || lastCount.current === peopleCount) return;
     lastCount.current = peopleCount;
-    const timer = window.setTimeout(() => {
-      void fitView({ ...fitViewOptions, duration: 300 });
-    }, 50);
-    return () => window.clearTimeout(timer);
-  }, [peopleCount, fitView]);
+    void fitView({ ...fit, duration: 300 });
+  }, [demo, nodesInitialized, peopleCount, fitView, fit]);
+
+  // First frame on the requested person, once React Flow has measured the nodes.
+  const framedOnce = useRef(false);
+  useEffect(() => {
+    if (!focusPersonId || !nodesInitialized || framedOnce.current) return;
+    framedOnce.current = true;
+    void frame();
+  }, [focusPersonId, nodesInitialized, frame]);
 
   const [menuTarget, setMenuTarget] = useState<MenuTarget>(null);
 
@@ -206,15 +251,15 @@ function Canvas({ people, items }: PeopleMapProps) {
       const pointer = pointerInFlow(event);
       for (const node of dragged) {
         if (node.type === 'person') {
-          void setPersonMapPosition(node.id, node.position);
+          void setPersonMapPosition(node.id, node.position, database);
           continue;
         }
         const target = findDropTarget(cardRect(node), candidates, node.data.item.personId, pointer);
-        if (target) void moveItem(node.data.item.id, target);
-        else void setItemMapPosition(node.id, node.position);
+        if (target) void moveItem(node.data.item.id, target, database);
+        else void setItemMapPosition(node.id, node.position, database);
       }
     },
-    [cardRect, dropCandidates, pointerInFlow, updateNodeData],
+    [cardRect, dropCandidates, pointerInFlow, updateNodeData, database],
   );
 
   const onNodeContextMenu: NodeMouseHandler<MapNode> = useCallback((_, node) => {
@@ -226,7 +271,7 @@ function Canvas({ people, items }: PeopleMapProps) {
   }, []);
 
   async function addItem(personId: string, kind: ItemKind) {
-    const created = await createItem({ personId, kind });
+    const created = await createItem({ personId, kind }, database);
     selectItem(created.id, personId);
   }
 
@@ -234,7 +279,7 @@ function Canvas({ people, items }: PeopleMapProps) {
     const count = items.filter((i) => i.personId === person.id).length;
     const what = count ? ` and their ${count} item${count === 1 ? '' : 's'}` : '';
     if (window.confirm(`Delete ${person.name}${what}? This cannot be undone.`)) {
-      await deletePerson(person.id);
+      await deletePerson(person.id, database);
       selectPerson(null);
     }
   }
@@ -259,14 +304,14 @@ function Canvas({ people, items }: PeopleMapProps) {
             onNodeDragStop={onNodeDragStop}
             onNodeContextMenu={onNodeContextMenu}
             onPaneContextMenu={() => setMenuTarget({ kind: 'pane' })}
-            fitView
-            fitViewOptions={fitViewOptions}
+            fitView={!focusPersonId}
+            fitViewOptions={fit}
+            panOnScroll
             // our own stacking: edges (0) under hubs (1) under cards (2); React Flow would lift
             // an edge to its card's level and draw it over the hub's name
             zIndexMode="manual"
             minZoom={0.2}
             maxZoom={2}
-            panOnScroll
             zoomOnScroll={false}
             zoomOnDoubleClick={false}
             nodesConnectable={false}
@@ -277,9 +322,10 @@ function Canvas({ people, items }: PeopleMapProps) {
             nodeDragThreshold={4}
           >
             <Background variant={BackgroundVariant.Dots} gap={28} size={1.4} />
-            <Controls showInteractive={false} position="bottom-left" />
+            <Controls showInteractive={false} position="bottom-left" fitViewOptions={fit} />
             <OffscreenMarkers onPick={focusPerson} />
           </ReactFlow>
+          {!demo && <MapTips />}
         </div>
       </ContextMenu.Trigger>
 
@@ -288,6 +334,7 @@ function Canvas({ people, items }: PeopleMapProps) {
           {menuTarget?.kind === 'person' && (
             <PersonMenu
               person={menuTarget.person}
+              demo={demo}
               onMeet={() => void startOneOnOne(menuTarget.person.id)}
               onAdd={(kind) => void addItem(menuTarget.person.id, kind)}
               onPaste={() => openDialog({ type: 'bulk', personId: menuTarget.person.id })}
@@ -298,15 +345,17 @@ function Canvas({ people, items }: PeopleMapProps) {
           {menuTarget?.kind === 'item' && <ItemMenuItems item={menuTarget.item} />}
           {(menuTarget === null || menuTarget.kind === 'pane') && (
             <>
+              {!demo && (
+                <ContextMenu.Item
+                  className={menu.item}
+                  onSelect={() => openDialog({ type: 'person' })}
+                >
+                  Add new person…
+                </ContextMenu.Item>
+              )}
               <ContextMenu.Item
                 className={menu.item}
-                onSelect={() => openDialog({ type: 'person' })}
-              >
-                Add new person…
-              </ContextMenu.Item>
-              <ContextMenu.Item
-                className={menu.item}
-                onSelect={() => void fitView({ ...fitViewOptions, duration: 300 })}
+                onSelect={() => void fitView({ ...fit, duration: 300 })}
               >
                 Fit to screen
               </ContextMenu.Item>
@@ -314,11 +363,8 @@ function Canvas({ people, items }: PeopleMapProps) {
                 className={menu.item}
                 onSelect={() => {
                   // new positions arrive through the live query; fit once they have landed
-                  void resetMapLayout().then(() =>
-                    window.setTimeout(
-                      () => void fitView({ ...fitViewOptions, duration: 400 }),
-                      350,
-                    ),
+                  void resetMapLayout(database).then(() =>
+                    window.setTimeout(() => void fitView({ ...fit, duration: 400 }), 350),
                   );
                 }}
               >
@@ -334,6 +380,7 @@ function Canvas({ people, items }: PeopleMapProps) {
 
 function PersonMenu({
   person,
+  demo,
   onMeet,
   onAdd,
   onPaste,
@@ -341,6 +388,7 @@ function PersonMenu({
   onDelete,
 }: {
   person: Person;
+  demo: boolean;
   onMeet: () => void;
   onAdd: (kind: ItemKind) => void;
   onPaste: () => void;
@@ -350,21 +398,27 @@ function PersonMenu({
   return (
     <>
       <ContextMenu.Label className={menu.label}>{person.name}</ContextMenu.Label>
-      <ContextMenu.Item className={menu.item} onSelect={onMeet}>
-        Start 1:1
-      </ContextMenu.Item>
+      {!demo && (
+        <ContextMenu.Item className={menu.item} onSelect={onMeet}>
+          Start 1:1
+        </ContextMenu.Item>
+      )}
       <ContextMenu.Item className={menu.item} onSelect={() => onAdd('task')}>
         New task
       </ContextMenu.Item>
       <ContextMenu.Item className={menu.item} onSelect={() => onAdd('note')}>
         New note
       </ContextMenu.Item>
-      <ContextMenu.Item className={menu.item} onSelect={onPaste}>
-        Paste list…
-      </ContextMenu.Item>
-      <ContextMenu.Item className={menu.item} onSelect={onEdit}>
-        Edit person…
-      </ContextMenu.Item>
+      {!demo && (
+        <>
+          <ContextMenu.Item className={menu.item} onSelect={onPaste}>
+            Paste list…
+          </ContextMenu.Item>
+          <ContextMenu.Item className={menu.item} onSelect={onEdit}>
+            Edit person…
+          </ContextMenu.Item>
+        </>
+      )}
       <ContextMenu.Separator className={menu.separator} />
       <ContextMenu.Item className={`${menu.item} ${menu.danger}`} onSelect={onDelete}>
         Delete person…

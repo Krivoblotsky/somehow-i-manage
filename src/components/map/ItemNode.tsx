@@ -7,6 +7,7 @@ import {
   type CSSProperties,
   type KeyboardEvent,
 } from 'react';
+import { useDatabase } from '../../data/DatabaseContext';
 import { deleteItem, setItemCompleted, updateItem } from '../../data/repository';
 import { markEnterPlayed, shouldPlayEnter } from '../../map/enterFx';
 import type { ItemNodeType } from '../../map/graph';
@@ -26,6 +27,7 @@ export function ItemNode({ data }: NodeProps<ItemNodeType>) {
   const done = isTask && item.isCompleted;
   const preview = stripHtml(item.body);
   const now = useNow();
+  const database = useDatabase();
   const focus = useUI(selectFocusPersonId);
   const dimmed = focus !== null && focus !== item.personId;
   const editing = useUI((s) => (s.editingItem?.id === item.id ? s.editingItem : null));
@@ -99,7 +101,7 @@ export function ItemNode({ data }: NodeProps<ItemNodeType>) {
             aria-pressed={done}
             onClick={(e) => {
               e.stopPropagation();
-              void setItemCompleted(item.id, !item.isCompleted);
+              void setItemCompleted(item.id, !item.isCompleted, database);
             }}
           />
         ) : (
@@ -120,7 +122,7 @@ export function ItemNode({ data }: NodeProps<ItemNodeType>) {
           title="Delete (undo available)"
           onClick={(e) => {
             e.stopPropagation();
-            void deleteItemWithUndo(item);
+            void deleteItemWithUndo(item, database);
           }}
         >
           <TrashIcon size={13} />
@@ -136,6 +138,7 @@ export function ItemNode({ data }: NodeProps<ItemNodeType>) {
  */
 function InlineTitle({ itemId, title, isNew }: { itemId: string; title: string; isNew: boolean }) {
   const [value, setValue] = useState(title);
+  const database = useDatabase();
   const stopEditing = useUI((s) => s.stopEditing);
   const inputRef = useRef<HTMLInputElement>(null);
   const latest = useRef({ value: title, finished: false });
@@ -146,9 +149,9 @@ function InlineTitle({ itemId, title, isNew }: { itemId: string; title: string; 
     latest.current.finished = true;
     const next = latest.current.value.trim();
     if (isNew && (!save || next === '')) {
-      await deleteItem(itemId);
+      await deleteItem(itemId, database);
     } else if (save && next !== title) {
-      await updateItem(itemId, { title: next });
+      await updateItem(itemId, { title: next }, database);
     }
     stopEditing(itemId);
   }

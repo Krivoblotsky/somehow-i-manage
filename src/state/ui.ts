@@ -34,6 +34,9 @@ interface UIState {
   /** Card whose title is being edited in place on the map. isNew: created moments ago, empty. */
   editingItem: { id: string; isNew: boolean } | null;
   meeting: ActiveMeeting | null;
+  /** The first-run tips island on the map was closed. */
+  tipsDismissed: boolean;
+  dismissTips: () => void;
   startEditing: (id: string, isNew: boolean) => void;
   /** Ends in-place editing. With an id, only if that card is still the one being edited. */
   stopEditing: (id?: string) => void;
@@ -74,6 +77,8 @@ export const useUI = create<UIState>()(
       dialog: null,
       editingItem: null,
       meeting: null,
+      tipsDismissed: false,
+      dismissTips: () => set({ tipsDismissed: true }),
       startEditing: (id, isNew) => set({ editingItem: { id, isNew } }),
       stopEditing: (id) =>
         set((s) => (id !== undefined && s.editingItem?.id !== id ? {} : { editingItem: null })),
@@ -113,6 +118,7 @@ export const useUI = create<UIState>()(
         selectedPersonId: s.selectedPersonId,
         selectedItemId: s.selectedItemId,
         meeting: s.meeting,
+        tipsDismissed: s.tipsDismissed,
       }),
     },
   ),
