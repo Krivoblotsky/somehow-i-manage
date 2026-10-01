@@ -137,3 +137,38 @@
   background: #f2f2f7;
   color: var(--card-text);
 }
+
+/* due date: a pill with a real date field inside, so every browser's own picker works */
+.dueField {
+  gap: 4px;
+  cursor: pointer;
+}
+.dateInput {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 0;
+  width: 7.5em;
+  cursor: pointer;
+}
+.dateInput::-webkit-calendar-picker-indicator {
+  display: none;
+}
+.clearDue {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  line-height: 1;
+  color: inherit;
+  opacity: 0.7;
+}
+.clearDue:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.1);
+}

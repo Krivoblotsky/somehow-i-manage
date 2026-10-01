@@ -179,3 +179,22 @@ export function GoogleIcon({ className, size = 18 }: IconProps) {
     </svg>
   );
 }
+
+export function CalendarIcon({ className, size = 12 }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      aria-hidden="true"
+    >
+      <rect x="2" y="3.5" width="12" height="10.5" rx="2" />
+      <path d="M2 7h12M5.5 2v3M10.5 2v3" />
+    </svg>
+  );
+}

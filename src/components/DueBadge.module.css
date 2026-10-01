@@ -1,0 +1,19 @@
+.due {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: #6e6e73;
+  background: #f2f2f7;
+  border-radius: 999px;
+  padding: 3px 7px;
+  white-space: nowrap;
+  align-self: center;
+}
+.overdue {
+  color: #fff;
+  background: var(--danger);
+}

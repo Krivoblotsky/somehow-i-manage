@@ -11,6 +11,7 @@ import { finishOneOnOne } from '../state/actions';
 import { useNow } from '../state/now';
 import { useUI, type ActiveMeeting } from '../state/ui';
 import { Avatar } from './Avatar';
+import { DueBadge } from './DueBadge';
 import { ItemContextMenu } from './ItemContextMenu';
 import { QuickAdd } from './QuickAdd';
 import { FlagIcon, NoteIcon } from './icons';
@@ -85,6 +86,7 @@ export function OneOnOne({ meeting }: { meeting: ActiveMeeting }) {
                 <AgendaCard
                   key={item.id}
                   item={item}
+                  now={now}
                   startedAt={meeting.startedAt}
                   isNew={view.newSinceIds.has(item.id)}
                   selected={item.id === selectedItemId}
@@ -184,12 +186,14 @@ function CheckButton({ item, className }: { item: Item; className: string }) {
 
 function AgendaCard({
   item,
+  now,
   startedAt,
   isNew,
   selected,
   onOpen,
 }: {
   item: Item;
+  now: number;
   startedAt: number;
   isNew: boolean;
   selected: boolean;
@@ -226,6 +230,9 @@ function AgendaCard({
             )}
             {item.title || <span className={styles.untitled}>Untitled</span>}
             {isNew && <span className={styles.tag}>new</span>}
+            {isTask && !item.isCompleted && item.dueDate !== undefined && (
+              <DueBadge dueDate={item.dueDate} now={now} />
+            )}
           </div>
           {preview && <div className={styles.preview}>{preview}</div>}
         </div>

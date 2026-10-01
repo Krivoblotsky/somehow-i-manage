@@ -35,7 +35,7 @@ export function personStats(items: Item[]): PersonStats {
 }
 
 export interface GroupedItems {
-  /** Flagged first, then creation order. */
+  /** Flagged first, then by due date (soonest first, undated last), then creation order. */
   openTasks: Item[];
   /** Most recently edited first. */
   notes: Item[];
@@ -48,7 +48,12 @@ export function groupItems(items: Item[]): GroupedItems {
   return {
     openTasks: items
       .filter((i) => i.kind === 'task' && !i.isCompleted)
-      .sort((a, b) => Number(b.isFlagged) - Number(a.isFlagged) || a.sortOrder - b.sortOrder),
+      .sort(
+        (a, b) =>
+          Number(b.isFlagged) - Number(a.isFlagged) ||
+          (a.dueDate ?? Infinity) - (b.dueDate ?? Infinity) ||
+          a.sortOrder - b.sortOrder,
+      ),
     notes: items.filter((i) => i.kind === 'note').sort((a, b) => b.updatedAt - a.updatedAt),
     completed: items
       .filter((i) => i.kind === 'task' && i.isCompleted)

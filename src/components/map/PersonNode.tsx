@@ -2,7 +2,7 @@ import { Handle, Position, type NodeProps } from '@xyflow/react';
 import { useState, type CSSProperties, type MouseEvent as ReactMouseEvent } from 'react';
 import { createItem } from '../../data/repository';
 import type { PersonNodeType } from '../../map/graph';
-import { useUI } from '../../state/ui';
+import { selectFocusPersonId, useUI } from '../../state/ui';
 import { Avatar } from '../Avatar';
 import styles from './PersonNode.module.css';
 
@@ -10,6 +10,8 @@ import styles from './PersonNode.module.css';
 export function PersonNode({ data }: NodeProps<PersonNodeType>) {
   const { person, color, isSelected, isDropTarget } = data;
   const startEditing = useUI((s) => s.startEditing);
+  const focus = useUI(selectFocusPersonId);
+  const dimmed = focus !== null && focus !== person.id;
   const [pulsing, setPulsing] = useState(false);
 
   // A new branch grows out of the hub and its title is editable right on the card.
@@ -22,9 +24,15 @@ export function PersonNode({ data }: NodeProps<PersonNodeType>) {
 
   return (
     <div
-      className={[styles.person, isSelected && styles.selected, isDropTarget && styles.dropTarget]
+      className={[
+        styles.person,
+        isSelected && styles.selected,
+        isDropTarget && styles.dropTarget,
+        dimmed && styles.dimmed,
+      ]
         .filter(Boolean)
         .join(' ')}
+      data-dimmed={dimmed}
       style={{ '--accent': color } as CSSProperties}
     >
       <Handle

@@ -102,6 +102,8 @@ export function buildGraph(people: Person[], items: Item[], selection: MapSelect
         target: item.id,
         type: 'floating',
         data: { color, createdAt: item.createdAt },
+        // Under the hubs and the cards; React Flow would otherwise lift an edge to its card's level.
+        zIndex: 0,
         focusable: false,
         selectable: false,
       });

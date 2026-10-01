@@ -46,3 +46,59 @@ export function formatRelativeTime(ms: number, now: number): string {
   if (hours < 24) return `${hours} h ago`;
   return formatRelativeDays(ms, now);
 }
+
+const SHORT_MONTHS = MONTHS;
+
+/** "today", "yesterday", "Mon", then "10 Sep" (with the year once it differs) — for list rows. */
+export function formatDayLabel(ms: number, now: number): string {
+  const startOfDay = (t: number) => {
+    const d = new Date(t);
+    d.setHours(0, 0, 0, 0);
+    return d.getTime();
+  };
+  const days = Math.round((startOfDay(now) - startOfDay(ms)) / 86_400_000);
+  if (days === 0) return 'today';
+  if (days === 1) return 'yesterday';
+  const d = new Date(ms);
+  if (days > 1 && days < 7) return d.toLocaleDateString(undefined, { weekday: 'short' });
+  const sameYear = d.getFullYear() === new Date(now).getFullYear();
+  return `${d.getDate()} ${SHORT_MONTHS[d.getMonth()]}${sameYear ? '' : ` ${d.getFullYear()}`}`;
+}
+
+/** Local midnight of a calendar date, as ms — how due dates are stored. */
+export function dateToMs(isoDate: string): number | undefined {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate);
+  if (!m) return undefined;
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])).getTime();
+}
+
+/** "2026-10-03" for a date input, from the stored ms. */
+export function msToDateInput(ms: number): string {
+  const d = new Date(ms);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/** How a due date reads on a card: "Due today", "Due tomorrow", "Due Fri", "Due 10 Oct", "3 days overdue". */
+export function describeDue(dueMs: number, now: number): { label: string; overdue: boolean } {
+  const startOfDay = (t: number) => {
+    const d = new Date(t);
+    d.setHours(0, 0, 0, 0);
+    return d.getTime();
+  };
+  const days = Math.round((startOfDay(dueMs) - startOfDay(now)) / 86_400_000);
+  if (days < 0) {
+    const n = -days;
+    return { label: n === 1 ? 'Due yesterday' : `${n} days overdue`, overdue: true };
+  }
+  if (days === 0) return { label: 'Due today', overdue: false };
+  if (days === 1) return { label: 'Due tomorrow', overdue: false };
+  const d = new Date(dueMs);
+  if (days < 7) {
+    return {
+      label: `Due ${d.toLocaleDateString(undefined, { weekday: 'short' })}`,
+      overdue: false,
+    };
+  }
+  return { label: `Due ${d.getDate()} ${SHORT_MONTHS[d.getMonth()]}`, overdue: false };
+}

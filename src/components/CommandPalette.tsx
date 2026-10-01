@@ -2,7 +2,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { db } from '../data/db';
-import { createItem } from '../data/repository';
+import { createItem, resetMapLayout } from '../data/repository';
 import {
   buildResults,
   type PaletteAction,
@@ -121,6 +121,13 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
           case 'view-list':
             ui.setView('list');
             break;
+          case 'tidy-map':
+            void resetMapLayout();
+            break;
+          case 'shortcuts':
+            onDone();
+            ui.openDialog({ type: 'shortcuts' });
+            return;
           case 'backup':
             void backupToFile();
             break;

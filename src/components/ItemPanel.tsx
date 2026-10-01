@@ -10,13 +10,20 @@ import {
 } from 'react';
 import { db } from '../data/db';
 import { setItemCompleted, setItemKind, updateItem } from '../data/repository';
-import { formatDateTime } from '../model/format';
+import {
+  dateToMs,
+  describeDue,
+  formatDateTime,
+  formatDayLabel,
+  msToDateInput,
+} from '../model/format';
 import { personColor } from '../model/palette';
 import type { Item, ItemKind, Person } from '../model/types';
 import { deleteItemWithUndo } from '../state/actions';
+import { useNow } from '../state/now';
 import { useUI } from '../state/ui';
 import { Avatar } from './Avatar';
-import { ChevronLeftIcon, FlagIcon } from './icons';
+import { CalendarIcon, ChevronLeftIcon, FlagIcon } from './icons';
 import styles from './ItemPanel.module.css';
 import ui from './ui.module.css';
 
@@ -41,6 +48,7 @@ const SAVE_DELAY_MS = 400;
 function ItemEditor({ item, person }: { item: Item; person: Person }) {
   const selectItem = useUI((s) => s.selectItem);
   const selectPerson = useUI((s) => s.selectPerson);
+  const now = useNow();
   const [title, setTitle] = useState(item.title);
   const [synced, setSynced] = useState(item.title);
   if (item.title !== synced) {
@@ -97,13 +105,16 @@ function ItemEditor({ item, person }: { item: Item; person: Person }) {
         <ChevronLeftIcon size={12} />
         {person.name}
       </button>
-      <div className={styles.date}>{formatDateTime(item.createdAt)}</div>
+      <div className={styles.date} title={formatDateTime(item.createdAt)}>
+        Created {formatDayLabel(item.createdAt, now)}
+      </div>
 
       <div className={styles.topRow}>
         <Avatar person={person} size={24} ring={2} gapColor="#fff" />
         <div className={styles.spacer} />
         {isTask && (
           <>
+            <DueField item={item} now={now} />
             <button
               type="button"
               className={[ui.pill, ui.pillButton, item.isFlagged && ui.pillActiveWarn]
@@ -197,5 +208,71 @@ function ItemEditor({ item, person }: { item: Item; person: Person }) {
         ×
       </button>
     </section>
+  );
+}
+
+/**
+ * Due date as a pill. Unset: a quiet "due date" button that opens the browser's own date picker.
+ * Set: the date, editable in place, with a × to clear. Red once the day has passed.
+ */
+function DueField({ item, now }: { item: Item; now: number }) {
+  const due = item.dueDate;
+  const [picking, setPicking] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const overdue = due !== undefined && !item.isCompleted && describeDue(due, now).overdue;
+
+  useEffect(() => {
+    if (!picking) return;
+    const el = inputRef.current;
+    if (!el) return;
+    el.focus();
+    try {
+      el.showPicker();
+    } catch {
+      // not every browser lets a script open the picker; the focused field still works
+    }
+  }, [picking]);
+
+  if (due === undefined && !picking) {
+    return (
+      <button
+        type="button"
+        className={`${ui.pill} ${ui.pillButton} ${styles.dueField}`}
+        onClick={() => setPicking(true)}
+        aria-label="Set a due date"
+      >
+        <CalendarIcon />
+        due date
+      </button>
+    );
+  }
+
+  const cls = [ui.pill, styles.dueField, overdue && ui.pillActiveWarn].filter(Boolean).join(' ');
+  return (
+    <span className={cls} title={due !== undefined ? describeDue(due, now).label : undefined}>
+      <CalendarIcon />
+      <input
+        ref={inputRef}
+        type="date"
+        className={styles.dateInput}
+        aria-label="Due date"
+        value={due !== undefined ? msToDateInput(due) : ''}
+        onChange={(e) => void updateItem(item.id, { dueDate: dateToMs(e.target.value) })}
+        onBlur={() => setPicking(false)}
+      />
+      {due !== undefined && (
+        <button
+          type="button"
+          className={styles.clearDue}
+          aria-label="Clear due date"
+          onClick={() => {
+            setPicking(false);
+            void updateItem(item.id, { dueDate: undefined });
+          }}
+        >
+          ×
+        </button>
+      )}
+    </span>
   );
 }

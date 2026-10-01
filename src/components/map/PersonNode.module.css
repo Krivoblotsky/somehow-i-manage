@@ -70,15 +70,31 @@
 }
 .name {
   margin-top: 12px;
+  /* wider than the hub and centred under the avatar; long names wrap instead of being cut */
+  width: 168px;
+  flex-shrink: 0;
   font-size: 14px;
   font-weight: 700;
+  line-height: 1.2;
   text-align: center;
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 .handle {
   top: 34px;
+}
+
+/* spotlight: when someone else is in focus, this hub steps back */
+.person {
+  transition:
+    transform 120ms,
+    outline-color 120ms,
+    opacity 220ms ease;
+}
+.dimmed {
+  opacity: 0.28;
+}
+.dimmed:hover {
+  opacity: 0.9;
 }

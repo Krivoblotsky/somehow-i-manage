@@ -346,6 +346,29 @@ describe('App (map view)', () => {
     );
   });
 
+  it('dims everyone else while a person or one of their cards is in focus', async () => {
+    useUI.setState({ view: 'map' });
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByText(/add your first person/i);
+    await user.click(screen.getByRole('button', { name: /load sample data/i }));
+    const map = await screen.findByTestId('people-map');
+    await within(map).findByText('Nata');
+    const nodeOf = (text: string) =>
+      within(map).getByText(text).closest('[data-dimmed]') as HTMLElement;
+    expect(nodeOf('Nata')).toHaveAttribute('data-dimmed', 'false');
+
+    fireEvent.click(within(map).getByText('Salary Review')); // one of Vira's cards
+    await screen.findByRole('region', { name: 'Task details' });
+    expect(nodeOf('Nata')).toHaveAttribute('data-dimmed', 'true');
+    expect(nodeOf('Promotion Next Steps')).toHaveAttribute('data-dimmed', 'true');
+    expect(nodeOf('Vira')).toHaveAttribute('data-dimmed', 'false');
+    expect(nodeOf('Salary Review')).toHaveAttribute('data-dimmed', 'false');
+
+    await user.keyboard('{Escape}');
+    await vi.waitFor(() => expect(nodeOf('Nata')).toHaveAttribute('data-dimmed', 'false'));
+  });
+
   it('switches to the list view from the header', async () => {
     useUI.setState({ view: 'map' });
     const user = userEvent.setup();
@@ -440,5 +463,55 @@ describe('App — 1:1 mode', () => {
     expect(vira?.meetings).toHaveLength(2);
     expect(screen.queryByTestId('one-on-one')).not.toBeInTheDocument();
     expect(await screen.findByRole('button', { name: 'Start 1:1' })).toBeInTheDocument();
+  });
+});
+
+describe('App — polish', () => {
+  it('opens the shortcuts sheet with ? and not while typing', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByText(/add your first person/i);
+    await user.click(screen.getByRole('button', { name: /load sample data/i }));
+    await screen.findByRole('heading', { name: 'Vira' });
+
+    await user.type(screen.getByLabelText('Add a task with Vira'), '?');
+    expect(screen.queryByRole('dialog', { name: 'Shortcuts' })).not.toBeInTheDocument();
+    await user.clear(screen.getByLabelText('Add a task with Vira'));
+    await user.click(document.body);
+    await user.keyboard('?');
+    expect(await screen.findByRole('dialog', { name: 'Shortcuts' })).toBeInTheDocument();
+  });
+
+  it('sets a due date in the panel and shows it on the row', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByText(/add your first person/i);
+    await user.click(screen.getByRole('button', { name: /load sample data/i }));
+    await screen.findByRole('heading', { name: 'Vira' });
+
+    await user.click(screen.getByText('Business Trip'));
+    const panel = await screen.findByRole('region', { name: 'Task details' });
+    await user.click(within(panel).getByRole('button', { name: 'Set a due date' }));
+    fireEvent.change(within(panel).getByLabelText('Due date'), { target: { value: '2026-10-03' } });
+    const row = screen.getByText('Business Trip').closest('[role="button"]') as HTMLElement;
+    expect(await within(row).findByText(/Due |overdue/)).toBeInTheDocument();
+
+    await user.click(within(panel).getByRole('button', { name: 'Clear due date' }));
+    await vi.waitFor(() => expect(within(row).queryByText(/Due |overdue/)).not.toBeInTheDocument());
+  });
+
+  it('deletes a person from the ⋯ menu, after a confirmation', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByText(/add your first person/i);
+    await user.click(screen.getByRole('button', { name: /load sample data/i }));
+    await screen.findByRole('heading', { name: 'Vira' });
+
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    await user.click(screen.getByRole('button', { name: 'More for Vira' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Delete person…' }));
+    expect(confirm).toHaveBeenCalledWith(expect.stringContaining('Delete Vira and their'));
+    expect(await screen.findByRole('heading', { name: 'Nata' })).toBeInTheDocument();
+    confirm.mockRestore();
   });
 });

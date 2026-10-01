@@ -7,6 +7,7 @@ export type DialogState =
   | { type: 'restore' }
   | { type: 'palette' }
   | { type: 'sync' }
+  | { type: 'shortcuts' }
   | null;
 
 /** Map, list, or the screen of the 1:1 that is running. */
@@ -49,6 +50,16 @@ interface UIState {
   openDialog: (dialog: Exclude<DialogState, null>) => void;
   closeDialog: () => void;
 }
+
+/**
+ * The person the map should spotlight: whoever's panel or card is open. null = nobody, show all.
+ * Everyone else's hubs, cards and edges fade while this is set.
+ */
+export const selectFocusPersonId = (s: {
+  personPanelOpen: boolean;
+  selectedItemId: string | null;
+  selectedPersonId: string | null;
+}): string | null => (s.personPanelOpen || s.selectedItemId !== null ? s.selectedPersonId : null);
 
 /** Transient UI state. View, selection and the running 1:1 survive reloads; nothing here is user data. */
 export const useUI = create<UIState>()(

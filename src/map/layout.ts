@@ -126,8 +126,9 @@ export function placeItem(existing: MapPosition[]): MapPosition {
     gaps.push({ angle: from + (to - from) / 2, size: to - from });
   }
   gaps.sort((a, b) => b.size - a.size);
-  for (let ring = 0; ring < 4; ring++) {
-    const radius = FIRST_RING_MIN_RADIUS + ring * RING_GAP;
+  // Step outwards gently rather than jumping a whole ring, so a crowded hub grows evenly.
+  const outermost = FIRST_RING_MIN_RADIUS + 4 * RING_GAP;
+  for (let radius = FIRST_RING_MIN_RADIUS; radius < outermost; radius += 40) {
     for (const gap of gaps) {
       const candidate = itemRelativePosition({ radius, angle: gap.angle });
       if (!overlapsAny(candidate, existing)) return candidate;
@@ -145,7 +146,7 @@ export interface PlacedCluster {
 }
 
 /** Room reserved for a newcomer's future cards when choosing their spot. */
-const NEWCOMER_ITEMS = 4;
+const NEWCOMER_ITEMS = 8;
 
 /**
  * Where a new person goes without moving anyone: to the right of the rightmost cluster, on

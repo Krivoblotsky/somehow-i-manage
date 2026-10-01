@@ -9,3 +9,9 @@
     stroke-dashoffset: 0;
   }
 }
+
+/* spotlight: edges of everyone else step back */
+.dimmed {
+  opacity: 0.18;
+  transition: opacity 220ms ease;
+}

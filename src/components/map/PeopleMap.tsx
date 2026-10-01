@@ -257,6 +257,9 @@ function Canvas({ people, items }: PeopleMapProps) {
             onPaneContextMenu={() => setMenuTarget({ kind: 'pane' })}
             fitView
             fitViewOptions={fitViewOptions}
+            // our own stacking: edges (0) under hubs (1) under cards (2); React Flow would lift
+            // an edge to its card's level and draw it over the hub's name
+            zIndexMode="manual"
             minZoom={0.2}
             maxZoom={2}
             panOnScroll
@@ -303,8 +306,19 @@ function Canvas({ people, items }: PeopleMapProps) {
               >
                 Fit to screen
               </ContextMenu.Item>
-              <ContextMenu.Item className={menu.item} onSelect={() => void resetMapLayout()}>
-                Reset layout
+              <ContextMenu.Item
+                className={menu.item}
+                onSelect={() => {
+                  // new positions arrive through the live query; fit once they have landed
+                  void resetMapLayout().then(() =>
+                    window.setTimeout(
+                      () => void fitView({ ...fitViewOptions, duration: 400 }),
+                      350,
+                    ),
+                  );
+                }}
+              >
+                Tidy up the map
               </ContextMenu.Item>
             </>
           )}

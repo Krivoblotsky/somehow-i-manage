@@ -4,12 +4,15 @@ import { getEdgeParams } from '../../map/edgeGeometry';
 import { markEnterPlayed, shouldPlayEnter } from '../../map/enterFx';
 import type { FloatingEdgeType, MapNode } from '../../map/graph';
 import { CARD, PERSON_NODE } from '../../map/layout';
+import { selectFocusPersonId, useUI } from '../../state/ui';
 import styles from './FloatingEdge.module.css';
 
 /** Curve from the edge of a person's ring to the nearest side of a card, in the person's colour. */
 export function FloatingEdge({ id, source, target, data, style }: EdgeProps<FloatingEdgeType>) {
   const sourceNode = useInternalNode<MapNode>(source);
   const targetNode = useInternalNode<MapNode>(target);
+  const focus = useUI(selectFocusPersonId);
+  const dimmed = focus !== null && focus !== source;
 
   // An edge to a card created in this session draws itself from the hub outwards, once.
   // The creation time rides on the edge data: the edge can mount before its node is looked up.
@@ -51,7 +54,9 @@ export function FloatingEdge({ id, source, target, data, style }: EdgeProps<Floa
       id={id}
       path={path}
       interactionWidth={0}
-      className={drawing ? styles.draw : undefined}
+      className={
+        [drawing && styles.draw, dimmed && styles.dimmed].filter(Boolean).join(' ') || undefined
+      }
       pathLength={1}
       onAnimationEnd={() => setDrawing(false)}
       style={{ stroke: data?.color ?? '#666', strokeWidth: 3.5, strokeLinecap: 'round', ...style }}

@@ -76,6 +76,12 @@ export function UserMenu({ actions = syncActions }: { actions?: SyncActions }) {
           <DropdownMenu.Item className={menu.item} onSelect={() => openDialog({ type: 'sync' })}>
             Account &amp; sync…
           </DropdownMenu.Item>
+          <DropdownMenu.Item
+            className={menu.item}
+            onSelect={() => openDialog({ type: 'shortcuts' })}
+          >
+            Keyboard shortcuts
+          </DropdownMenu.Item>
           <DropdownMenu.Separator className={menu.separator} />
           <DropdownMenu.Item className={menu.item} onSelect={() => void exportMarkdownToFile()}>
             Export everything as Markdown

@@ -97,4 +97,14 @@ describe('groupItems', () => {
     expect(grouped.notes.map((i) => i.id)).toEqual(['n2', 'n1']);
     expect(grouped.completed.map((i) => i.id)).toEqual(['d2', 'd1']);
   });
+
+  it('puts dated tasks before undated ones, soonest first, urgency still winning', () => {
+    const grouped = groupItems([
+      item({ id: 'later', sortOrder: 0, dueDate: 300 }),
+      item({ id: 'soon', sortOrder: 1, dueDate: 100 }),
+      item({ id: 'none', sortOrder: 2 }),
+      item({ id: 'urgent', sortOrder: 3, isFlagged: true }),
+    ]);
+    expect(grouped.openTasks.map((i) => i.id)).toEqual(['urgent', 'soon', 'later', 'none']);
+  });
 });

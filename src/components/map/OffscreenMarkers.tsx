@@ -6,6 +6,7 @@ import { computeEdgeMarkers } from '../../map/offscreen';
 import { personColor } from '../../model/palette';
 import { Avatar } from '../Avatar';
 import styles from './OffscreenMarkers.module.css';
+import { selectFocusPersonId, useUI } from '../../state/ui';
 
 /**
  * People whose hub is outside the visible canvas stay on screen as a small avatar pinned to the
@@ -13,6 +14,7 @@ import styles from './OffscreenMarkers.module.css';
  * Must render inside <ReactFlow>.
  */
 export function OffscreenMarkers({ onPick }: { onPick: (personId: string) => void }) {
+  const focus = useUI(selectFocusPersonId);
   const viewport = useViewport();
   const width = useStore((s) => s.width);
   const height = useStore((s) => s.height);
@@ -41,7 +43,9 @@ export function OffscreenMarkers({ onPick }: { onPick: (personId: string) => voi
           <button
             key={m.id}
             type="button"
-            className={styles.marker}
+            className={
+              focus !== null && focus !== m.id ? `${styles.marker} ${styles.dimmed}` : styles.marker
+            }
             style={
               { left: m.x, top: m.y, '--accent': personColor(person.colorIndex) } as CSSProperties
             }

@@ -1,9 +1,9 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import type { CSSProperties, ReactNode } from 'react';
 import { db } from '../data/db';
-import { createItem, deletePerson, setItemCompleted } from '../data/repository';
+import { createItem, setItemCompleted } from '../data/repository';
 import { describeStats, groupItems, personStats, stripHtml } from '../model/derive';
-import { formatDateTime, formatRelativeDays } from '../model/format';
+import { formatDateTime, formatDayLabel, formatRelativeDays } from '../model/format';
 import { lastMeeting } from '../model/oneOnOne';
 import { contrastText, personColor } from '../model/palette';
 import type { Item } from '../model/types';
@@ -13,6 +13,8 @@ import { useUI } from '../state/ui';
 import { Avatar } from './Avatar';
 import { ContactLinks } from './ContactLinks';
 import { ItemContextMenu } from './ItemContextMenu';
+import { PersonMoreMenu } from './PersonMoreMenu';
+import { DueBadge } from './DueBadge';
 import { QuickAdd } from './QuickAdd';
 import { FlagIcon, NoteIcon, TrashIcon } from './icons';
 import styles from './PersonView.module.css';
@@ -27,8 +29,6 @@ export function PersonView({ personId }: { personId: string }) {
   );
   const selectedItemId = useUI((s) => s.selectedItemId);
   const selectItem = useUI((s) => s.selectItem);
-  const selectPerson = useUI((s) => s.selectPerson);
-  const openDialog = useUI((s) => s.openDialog);
   const now = useNow();
 
   if (!person || !items) return null;
@@ -41,17 +41,6 @@ export function PersonView({ personId }: { personId: string }) {
   async function add(kind: 'task' | 'note') {
     const item = await createItem({ personId, kind });
     selectItem(item.id, personId);
-  }
-
-  async function remove() {
-    if (!person) return;
-    const what = items?.length
-      ? ` and their ${items.length} item${items.length === 1 ? '' : 's'}`
-      : '';
-    if (window.confirm(`Delete ${person.name}${what}? This cannot be undone.`)) {
-      await deletePerson(personId);
-      selectPerson(null);
-    }
   }
 
   const row = (item: Item) => (
@@ -93,23 +82,7 @@ export function PersonView({ personId }: { personId: string }) {
           <button type="button" className={ui.btn} onClick={() => void add('note')}>
             + Note
           </button>
-          <button
-            type="button"
-            className={ui.btn}
-            onClick={() => openDialog({ type: 'bulk', personId })}
-          >
-            Paste list…
-          </button>
-          <button
-            type="button"
-            className={ui.btn}
-            onClick={() => openDialog({ type: 'person', personId })}
-          >
-            Edit
-          </button>
-          <button type="button" className={ui.btnDanger} onClick={() => void remove()}>
-            Delete…
-          </button>
+          <PersonMoreMenu person={person} itemCount={items.length} className={ui.btn} />
         </div>
       </div>
 
@@ -181,6 +154,7 @@ function Row({
   onSelect: () => void;
 }) {
   const preview = stripHtml(item.body);
+  const now = useNow();
   const isTask = item.kind === 'task';
   const shownDate =
     isTask && item.isCompleted && item.completedAt ? item.completedAt : item.updatedAt;
@@ -215,8 +189,13 @@ function Row({
               </span>
             )}
             {item.title || <span className={styles.untitled}>Untitled</span>}
+            {isTask && !item.isCompleted && item.dueDate !== undefined && (
+              <DueBadge dueDate={item.dueDate} now={now} />
+            )}
           </div>
-          <div className={styles.rowDate}>{formatDateTime(shownDate)}</div>
+          <div className={styles.rowDate} title={formatDateTime(shownDate)}>
+            {formatDayLabel(shownDate, now)}
+          </div>
           {preview && <div className={styles.rowPreview}>{preview}</div>}
         </div>
         {isTask && item.isCompleted && (

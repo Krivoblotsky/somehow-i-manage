@@ -13,7 +13,9 @@ import type { ItemNodeType } from '../../map/graph';
 import { CARD } from '../../map/layout';
 import { stripHtml } from '../../model/derive';
 import { deleteItemWithUndo } from '../../state/actions';
-import { useUI } from '../../state/ui';
+import { useNow } from '../../state/now';
+import { selectFocusPersonId, useUI } from '../../state/ui';
+import { DueBadge } from '../DueBadge';
 import { FlagIcon, NoteIcon, TrashIcon } from '../icons';
 import styles from './ItemNode.module.css';
 
@@ -23,6 +25,9 @@ export function ItemNode({ data }: NodeProps<ItemNodeType>) {
   const isTask = item.kind === 'task';
   const done = isTask && item.isCompleted;
   const preview = stripHtml(item.body);
+  const now = useNow();
+  const focus = useUI(selectFocusPersonId);
+  const dimmed = focus !== null && focus !== item.personId;
   const editing = useUI((s) => (s.editingItem?.id === item.id ? s.editingItem : null));
   const startEditing = useUI((s) => s.startEditing);
 
@@ -42,6 +47,7 @@ export function ItemNode({ data }: NodeProps<ItemNodeType>) {
     done && styles.done,
     entering && styles.enter,
     editing && styles.editing,
+    dimmed && styles.dimmed,
   ]
     .filter(Boolean)
     .join(' ');
@@ -49,6 +55,7 @@ export function ItemNode({ data }: NodeProps<ItemNodeType>) {
   return (
     <div
       className={className}
+      data-dimmed={dimmed}
       style={
         {
           '--accent': color,
@@ -99,6 +106,11 @@ export function ItemNode({ data }: NodeProps<ItemNodeType>) {
           <NoteIcon className={styles.noteMark} size={14} />
         )}
       </div>
+      {item.dueDate !== undefined && !done && (
+        <div className={styles.dueRow}>
+          <DueBadge dueDate={item.dueDate} now={now} />
+        </div>
+      )}
       {preview && <div className={styles.preview}>{preview}</div>}
       {done && (
         <button

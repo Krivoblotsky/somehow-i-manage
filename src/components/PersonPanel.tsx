@@ -1,9 +1,9 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import type { CSSProperties, ReactNode } from 'react';
 import { db } from '../data/db';
-import { createItem, deletePerson } from '../data/repository';
+import { createItem } from '../data/repository';
 import { describeStats, groupItems, personStats, stripHtml } from '../model/derive';
-import { formatDateTime, formatRelativeDays } from '../model/format';
+import { formatDateTime, formatDayLabel, formatRelativeDays } from '../model/format';
 import { lastMeeting } from '../model/oneOnOne';
 import { contrastText, personColor } from '../model/palette';
 import type { Item, ItemKind } from '../model/types';
@@ -13,6 +13,8 @@ import { useUI } from '../state/ui';
 import { Avatar } from './Avatar';
 import { ContactLinks } from './ContactLinks';
 import { ItemContextMenu } from './ItemContextMenu';
+import { PersonMoreMenu } from './PersonMoreMenu';
+import { DueBadge } from './DueBadge';
 import { QuickAdd } from './QuickAdd';
 import { FlagIcon, NoteIcon, TrashIcon } from './icons';
 import styles from './PersonPanel.module.css';
@@ -27,9 +29,7 @@ export function PersonPanel({ personId }: { personId: string }) {
   );
   const selectedItemId = useUI((s) => s.selectedItemId);
   const selectItem = useUI((s) => s.selectItem);
-  const selectPerson = useUI((s) => s.selectPerson);
   const closePanel = useUI((s) => s.closePanel);
-  const openDialog = useUI((s) => s.openDialog);
   const now = useNow();
 
   if (!person || !items) return null;
@@ -42,17 +42,6 @@ export function PersonPanel({ personId }: { personId: string }) {
   async function add(kind: ItemKind) {
     const item = await createItem({ personId, kind });
     selectItem(item.id, personId);
-  }
-
-  async function remove() {
-    if (!person) return;
-    const what = items?.length
-      ? ` and their ${items.length} item${items.length === 1 ? '' : 's'}`
-      : '';
-    if (window.confirm(`Delete ${person.name}${what}? This cannot be undone.`)) {
-      await deletePerson(personId);
-      selectPerson(null);
-    }
   }
 
   const row = (item: Item) => (
@@ -97,20 +86,7 @@ export function PersonPanel({ personId }: { personId: string }) {
         <button type="button" className={ui.chip} onClick={() => void add('note')}>
           + Note
         </button>
-        <button
-          type="button"
-          className={ui.chip}
-          onClick={() => openDialog({ type: 'bulk', personId })}
-        >
-          Paste list…
-        </button>
-        <button
-          type="button"
-          className={ui.chip}
-          onClick={() => openDialog({ type: 'person', personId })}
-        >
-          Edit
-        </button>
+        <PersonMoreMenu person={person} itemCount={items.length} className={ui.chip} />
       </div>
 
       <div className={styles.quickAdd}>
@@ -130,12 +106,6 @@ export function PersonPanel({ personId }: { personId: string }) {
             {completed.map(row)}
           </details>
         )}
-      </div>
-
-      <div className={styles.footer}>
-        <button type="button" className={ui.chipDanger} onClick={() => void remove()}>
-          Delete person…
-        </button>
       </div>
 
       <button
@@ -184,6 +154,7 @@ function Row({
   const isTask = item.kind === 'task';
   const done = isTask && item.isCompleted;
   const preview = stripHtml(item.body);
+  const now = useNow();
   const shownDate = done && item.completedAt ? item.completedAt : item.updatedAt;
   return (
     <ItemContextMenu item={item}>
@@ -204,8 +175,13 @@ function Row({
           <div className={styles.rowTitle}>
             {item.isFlagged && !done && <FlagIcon className={styles.flag} />}
             {item.title || <span className={styles.untitled}>Untitled</span>}
+            {isTask && !item.isCompleted && item.dueDate !== undefined && (
+              <DueBadge dueDate={item.dueDate} now={now} />
+            )}
           </div>
-          <div className={styles.rowDate}>{formatDateTime(shownDate)}</div>
+          <div className={styles.rowDate} title={formatDateTime(shownDate)}>
+            {formatDayLabel(shownDate, now)}
+          </div>
           {preview && <div className={styles.rowPreview}>{preview}</div>}
         </div>
         {done && (

@@ -7,7 +7,8 @@ export type PaletteAction =
   | { type: 'meeting'; personId: string }
   | { type: 'command'; command: PaletteCommand };
 
-export type PaletteCommand = 'new-person' | 'view-map' | 'view-list' | 'backup' | 'restore';
+export type PaletteCommand =
+  'new-person' | 'view-map' | 'view-list' | 'tidy-map' | 'shortcuts' | 'backup' | 'restore';
 
 export type PaletteGroup = 'add' | 'people' | 'items' | 'commands';
 
@@ -29,6 +30,13 @@ const COMMANDS: {
   { command: 'new-person', label: 'New person', keywords: 'add create person people' },
   { command: 'view-map', label: 'Switch to Map view', keywords: 'map canvas', view: 'list' },
   { command: 'view-list', label: 'Switch to List view', keywords: 'list dossier', view: 'map' },
+  {
+    command: 'tidy-map',
+    label: 'Tidy up the map',
+    keywords: 'tidy layout arrange reset map',
+    view: 'map',
+  },
+  { command: 'shortcuts', label: 'Keyboard shortcuts', keywords: 'keyboard shortcuts help keys' },
   { command: 'backup', label: 'Back up to file', keywords: 'backup export json save' },
   { command: 'restore', label: 'Restore from file', keywords: 'restore import json' },
 ];
