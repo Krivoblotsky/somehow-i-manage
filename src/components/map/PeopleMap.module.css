@@ -34,23 +34,39 @@
   min-height: 0;
   border: 0;
 }
+/* zoom controls as one small glass island, matching the header */
 .canvas :global(.react-flow__controls) {
-  gap: 4px;
+  gap: 2px;
   margin: 16px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  backdrop-filter: blur(24px) saturate(170%);
+  border: 1px solid var(--glass-edge);
+  box-shadow:
+    inset 0 1px 0 var(--glass-shine),
+    0 10px 30px rgba(0, 0, 0, 0.35);
 }
 .canvas :global(.react-flow__controls-button) {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  border: 1px solid var(--chrome-2);
-  background: var(--chrome);
-  color: #fff;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  transition:
+    background 120ms,
+    color 120ms;
 }
 .canvas :global(.react-flow__controls-button svg) {
   fill: currentColor;
+  max-width: 14px;
+  max-height: 14px;
 }
 .canvas :global(.react-flow__controls-button:hover) {
-  background: var(--chrome-2);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
 }
 .canvas :global(.react-flow__attribution) {
   background: transparent;

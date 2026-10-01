@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
+import { useEffect, useRef } from 'react';
 import { db } from '../data/db';
 import { useUI, type ViewMode } from '../state/ui';
 import { Avatar } from './Avatar';
@@ -6,6 +7,10 @@ import styles from './Header.module.css';
 import { SearchIcon } from './icons';
 import { UserMenu } from './UserMenu';
 
+/**
+ * Floating islands over the canvas: brand · view · search · people · account. The header
+ * reports its height as --header-h so the views below know where to start.
+ */
 export function Header() {
   const people = useLiveQuery(() => db.people.orderBy('sortOrder').toArray(), []) ?? [];
   const view = useUI((s) => s.view);
@@ -17,6 +22,17 @@ export function Header() {
   const selectPerson = useUI((s) => s.selectPerson);
   const focusPerson = useUI((s) => s.focusPerson);
   const openDialog = useUI((s) => s.openDialog);
+  const ref = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new ResizeObserver(([entry]) => {
+      document.documentElement.style.setProperty('--header-h', `${entry.contentRect.height}px`);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   function pickPerson(id: string) {
     setSearch('');
@@ -27,13 +43,15 @@ export function Header() {
   }
 
   return (
-    <header className={styles.header}>
-      <div className={styles.brand}>
-        <div className={styles.title}>Somehow I Manage</div>
-        <div className={styles.subtitle}>Work with people, not tasks</div>
+    <header ref={ref} className={styles.header}>
+      <div className={`${styles.island} ${styles.brand}`} title="Work with people, not tasks">
+        <span className={styles.mark} aria-hidden="true" />
+        Somehow I Manage
       </div>
 
-      <div className={styles.tools}>
+      <div className={styles.spacer} />
+
+      <div className={styles.island}>
         <ViewToggle view={view} onChange={setView} />
         {meeting && view !== 'meeting' && (
           <button
@@ -46,7 +64,9 @@ export function Header() {
             1:1 with {people.find((p) => p.id === meeting.personId)?.name ?? '…'}
           </button>
         )}
+      </div>
 
+      <div className={styles.island}>
         <label className={styles.search}>
           <SearchIcon />
           <input
@@ -69,17 +89,9 @@ export function Header() {
             ⌘K
           </button>
         </label>
+      </div>
 
-        <button
-          type="button"
-          className={styles.round}
-          onClick={() => openDialog({ type: 'person' })}
-          title="Add person (⌘N)"
-          aria-label="Add person"
-        >
-          +
-        </button>
-
+      <div className={`${styles.island} ${styles.peopleIsland}`}>
         <div className={styles.people} aria-label="People">
           {people.map((p) => (
             <button
@@ -95,11 +107,25 @@ export function Header() {
               aria-label={p.name}
               aria-pressed={p.id === selectedPersonId}
             >
-              <Avatar person={p} size={40} />
+              {/* 32px photo + 2px gap + 2px ring = the same 40px footprint as the "+" */}
+              <Avatar person={p} size={32} ring={2} gapColor="transparent" />
             </button>
           ))}
         </div>
+        <button
+          type="button"
+          className={styles.round}
+          onClick={() => openDialog({ type: 'person' })}
+          title="Add person (⌘N)"
+          aria-label="Add person"
+        >
+          +
+        </button>
+      </div>
 
+      <div className={styles.spacer} />
+
+      <div className={styles.island}>
         <UserMenu />
       </div>
     </header>

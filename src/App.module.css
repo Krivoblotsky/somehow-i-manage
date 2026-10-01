@@ -1,19 +1,18 @@
+/* The header floats over everything; the views below start under it (see --header-h). */
 .app {
-  display: flex;
-  flex-direction: column;
+  position: relative;
   height: 100%;
 }
 .body {
-  position: relative;
-  flex: 1;
-  min-height: 0;
+  position: absolute;
+  inset: 0;
   display: flex;
 }
 .main {
   flex: 1;
   min-width: 0;
   overflow: auto;
-  padding: 16px 32px 64px;
+  padding: calc(var(--header-h) + 28px) 32px 64px;
 }
 .mainMap {
   flex: 1;
@@ -23,19 +22,14 @@
 .aside {
   width: 400px;
   flex: none;
-  margin: 0 24px 24px 0;
+  margin: calc(var(--header-h) + 14px) 24px 24px 0;
   min-height: 0;
   z-index: 5;
 }
 @media (max-width: 960px) {
-  .mainMap {
-    flex: 1;
-    min-width: 0;
-    position: relative;
-  }
   .aside {
     position: absolute;
-    inset: 0 0 0 auto;
+    inset: calc(var(--header-h) + 8px) 0 0 auto;
     width: min(400px, 100%);
     margin: 0;
   }

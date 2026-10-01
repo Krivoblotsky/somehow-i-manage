@@ -43,7 +43,11 @@ import { PersonNode } from './PersonNode';
 
 const nodeTypes: NodeTypes = { person: PersonNode, item: ItemNode };
 const edgeTypes: EdgeTypes = { floating: FloatingEdge };
-const fitViewOptions = { padding: 0.2, maxZoom: 1 };
+// Room for the floating header above and a little air around; React Flow takes px here.
+const fitViewOptions = {
+  padding: { top: '128px', right: '40px', bottom: '40px', left: '40px' } as const,
+  maxZoom: 1,
+};
 /** How close a dragged card must get to a person's avatar centre to count as a drop. */
 const DROP_RADIUS = PERSON_NODE.ringRadius + 30;
 
