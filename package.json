@@ -18,7 +18,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "coverage": "vitest run --coverage",
-    "shots": "node scripts/landing-shots.mjs"
+    "shots": "node scripts/landing-shots.mjs",
+    "icons": "node scripts/icons.mjs"
   },
   "dependencies": {
     "@radix-ui/react-context-menu": "^2.3.7",

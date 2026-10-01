@@ -61,7 +61,13 @@ export function Header() {
             title="Back to the running 1:1"
           >
             <span className={styles.liveDot} aria-hidden="true" />
-            1:1 with {people.find((p) => p.id === meeting.personId)?.name ?? '…'}
+            {/* the space stays outside the hideable span: screen readers read "1:1 with …" */}
+            <span>
+              1:1{' '}
+              <span className={styles.pillName}>
+                with {people.find((p) => p.id === meeting.personId)?.name ?? '…'}
+              </span>
+            </span>
           </button>
         )}
       </div>

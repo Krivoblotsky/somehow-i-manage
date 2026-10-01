@@ -79,6 +79,10 @@ the app lives at <https://somehowimanage.app>. Enable Pages in the repository se
 (`/<repo>/` for a project site, `/` with a custom domain), so no code changes when the domain
 does. Any static host works too: build with `BASE_PATH=/ npm run build` and serve `dist/`.
 
+Two assets are generated with the installed Chrome: `npm run shots` re-takes the landing page's
+product screenshots from the dev server (`public/landing`), and `npm run icons` renders the PNG app
+icons (favicon, PWA, Apple touch) from `assets/icon-source.png`, cut to Apple's icon shape.
+
 Static pages next to the app live in `public/` and are served as real documents, outside the
 service worker's app-shell fallback: `public/privacy/index.html` is the privacy policy at
 `/privacy/`, linked from the landing page (Google's OAuth brand verification needs it).

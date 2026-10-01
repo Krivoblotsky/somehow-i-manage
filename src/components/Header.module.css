@@ -9,11 +9,14 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
+  /* one row: when the window is tight the people strip gives way (and scrolls) before anything
+     wraps; phones get a wrapping header below */
+  flex-wrap: nowrap;
   pointer-events: none;
 }
 .island {
   pointer-events: auto;
+  flex: none;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -47,14 +50,7 @@
   width: 24px;
   height: 24px;
   border-radius: 8px;
-  background: conic-gradient(
-    from 210deg,
-    var(--person-0),
-    var(--person-1),
-    var(--person-2),
-    var(--person-4),
-    var(--person-0)
-  );
+  background: url(/icons/icon-192.png) center / cover no-repeat;
   flex: none;
 }
 
@@ -124,7 +120,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  width: 240px;
+  /* narrows with the window before the people strip has to */
+  width: clamp(150px, 20vw, 240px);
   height: 40px;
   padding: 0 8px 0 12px;
   border-radius: 999px;
@@ -168,12 +165,16 @@
   gap: 6px;
   /* 5px + the 1px border = the same 6px the avatars get above and below */
   padding: 0 5px;
+  /* the one island allowed to shrink: its strip scrolls, the "+" keeps its size */
+  flex: 0 1 auto;
+  min-width: 148px; /* two avatars + the "+" */
 }
 .people {
   display: flex;
   align-items: center;
   gap: 6px;
-  max-width: 40vw;
+  flex: 1 1 auto;
+  min-width: 92px; /* two avatars, whatever else is on the row */
   overflow-x: auto;
   /* a scroller clips on both axes: give the rings and the raised avatar some slack, then pull
      the margins back in so nothing moves and the island keeps its height */
@@ -226,16 +227,15 @@
 }
 
 @media (max-width: 1100px) {
-  .search {
-    width: 170px;
-  }
-  .people {
-    max-width: 30vw;
+  /* the running-1:1 pill keeps its dot and "1:1"; the name would cost the people strip its room */
+  .pillName {
+    display: none;
   }
 }
 @media (max-width: 860px) {
   .header {
     gap: 8px;
+    flex-wrap: wrap;
   }
   .spacer {
     display: none;

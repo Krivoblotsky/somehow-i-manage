@@ -81,18 +81,67 @@ const emily = await personId('Emily Carter');
 const james = await personId('James Patel');
 if (!emily || !james) throw new Error('sample people not found on the map');
 
-// 1. The team on the map, zoomed in a little so the clusters read and the people past the
-// edge show up as edge markers.
-await page.click('.react-flow__controls-fitview');
-await sleep(700);
-for (let i = 0; i < 2; i++) {
-  await page.click('.react-flow__controls-zoomin');
-  await sleep(350);
+/** Fit everyone, then zoom in `steps` and pan the canvas down a little, out from under the header. */
+async function frameMap(steps) {
+  await page.click('.react-flow__controls-fitview');
+  await sleep(700);
+  for (let i = 0; i < steps; i++) {
+    await page.click('.react-flow__controls-zoomin');
+    await sleep(350);
+  }
+  // pan down a touch by dragging an empty bit of canvas
+  const spot = await page.evaluate(() => {
+    for (const [x, y] of [
+      [1180, 760],
+      [1300, 700],
+      [900, 760],
+      [700, 300],
+    ]) {
+      const el = document.elementFromPoint(x, y);
+      if (el && el.classList.contains('react-flow__pane')) return { x, y };
+    }
+    return null;
+  });
+  if (spot) {
+    await page.mouse.move(spot.x, spot.y);
+    await page.mouse.down();
+    await page.mouse.move(spot.x, spot.y + 110, { steps: 8 });
+    await page.mouse.up();
+  } else console.log('no empty canvas spot found to pan from');
+  await sleep(600);
 }
-await sleep(600);
+const centerOf = async (selector, text) =>
+  page.evaluate(
+    (sel, t) => {
+      const el = [...document.querySelectorAll(sel)].find((n) => n.textContent.includes(t));
+      if (!el) return null;
+      const target =
+        el.querySelector('[class*=avatarWrap]') ?? el.querySelector('[class*=card]') ?? el;
+      const r = target.getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    },
+    selector,
+    text,
+  );
+
+// 1. The team on the map, close enough to read.
+await frameMap(2);
 await shot('map');
-await page.click('.react-flow__controls-fitview');
-await sleep(900);
+
+// 2. Handing a card over: mid-drag, the receiving hub lit up.
+const card = await centerOf('.react-flow__node-item', 'Business Trip');
+const hub = await centerOf('.react-flow__node-person', 'Marcus Johnson');
+if (card && hub) {
+  await page.mouse.move(card.x, card.y);
+  await page.mouse.down();
+  await page.mouse.move(hub.x + 64, hub.y - 56, { steps: 14 }); // over the hub, not on top of it
+  await sleep(400);
+  await shot('map-drag');
+  await page.mouse.move(card.x, card.y, { steps: 10 }); // back where it came from, nothing changes
+  await sleep(200);
+  await page.mouse.up();
+  await sleep(400);
+} else console.log('drag shot skipped: card or hub not on screen');
 
 // 2. One cluster in the spotlight, with a card open.
 await page.evaluate((id) => window.__dev.useUI.getState().focusPerson(id), james);
@@ -106,6 +155,13 @@ await page.evaluate((id) => {
 await sleep(700);
 await shot('map-focus');
 await page.evaluate(() => window.__dev.useUI.getState().closePanel());
+await sleep(400);
+
+// 2b. Closer still: the people past the edge become markers.
+await frameMap(3);
+await shot('map-edges');
+await page.click('.react-flow__controls-fitview');
+await sleep(800);
 
 // 3. A 1:1 in progress.
 await page.evaluate((id) => window.__dev.actions.startOneOnOne(id), emily);

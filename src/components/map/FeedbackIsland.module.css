@@ -1,0 +1,46 @@
+/* bottom-right of the canvas: a glass island in the action colour, above the map's layers */
+.island {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  z-index: 15;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px 0 13px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--action) 80%, transparent);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  backdrop-filter: blur(24px) saturate(170%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    inset 0 1px 0 var(--glass-shine),
+    0 10px 30px rgba(0, 0, 0, 0.35);
+  transition:
+    background 120ms,
+    opacity 180ms,
+    transform 180ms;
+}
+.island:hover {
+  background: color-mix(in srgb, var(--action) 92%, #fff);
+}
+/* out of the way while the side pane covers this corner */
+.hidden {
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .island {
+    transition: background 120ms;
+  }
+}
+
+/* the send button is a link, so it must not look like one */
+.send {
+  text-decoration: none;
+}

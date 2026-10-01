@@ -1,6 +1,7 @@
-import { Component, lazy, Suspense, useState, type ReactNode } from 'react';
+import { Component, lazy, Suspense, useState, type CSSProperties, type ReactNode } from 'react';
 import { syncActions, type SyncActions } from '../sync/controller';
 import { useSync } from '../sync/store';
+import { feedbackMailto } from '../model/feedback';
 import { GoogleIcon } from './icons';
 import styles from './LandingPage.module.css';
 
@@ -44,6 +45,7 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
             <a href="#map">People Map</a>
             <a href="#person">1:1s</a>
             <a href="#how">How it works</a>
+            <a href={feedbackMailto()}>Feedback</a>
           </nav>
           <div className={styles.navActions}>
             <button type="button" className={styles.navGhost} onClick={() => void signIn()}>
@@ -59,6 +61,14 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
       <main id="top">
         <section className={styles.hero}>
           <div className={styles.inner}>
+            <img
+              className={styles.heroIcon}
+              src={`${import.meta.env.BASE_URL}icons/icon-512.png`}
+              width={160}
+              height={160}
+              alt=""
+              aria-hidden="true"
+            />
             <h1 className={styles.title}>Work with people, not&nbsp;tasks.</h1>
             <p className={styles.lead}>
               Every task, note and 1:1 lives with the person it’s about. The map below is the real
@@ -194,6 +204,10 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
             <p className={styles.ctaNote}>
               Only your email address. Export or delete everything, any time.
             </p>
+            <p className={styles.ctaNote}>
+              Something missing? <a href={feedbackMailto()}>Send feedback</a> — it goes straight to
+              the person who built this.
+            </p>
           </div>
         </section>
       </main>
@@ -213,6 +227,7 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
           </div>
           <div className={styles.footerCol}>
             <h3>Company</h3>
+            <a href={feedbackMailto()}>Feedback</a>
             <a href={`${import.meta.env.BASE_URL}privacy/`}>Privacy</a>
             <a href="mailto:hello@somehowimanage.app">hello@somehowimanage.app</a>
           </div>
@@ -259,72 +274,107 @@ function Principle({ title, text }: { title: string; text: string }) {
   );
 }
 
-/** All shots are 1440×900 (npm run shots); the size travels with the entry for `width`/`height`. */
 const MAP_POINTS = [
   {
     title: 'People, not projects',
     text: 'Every task and note hangs off the person it’s about. The map is the plan.',
     shot: 'map',
-    size: [1440, 900],
+    alt: 'The People Map: people as hubs, their tasks and notes as cards around them',
   },
   {
     title: 'Hand things over by dragging',
     text: 'Drop a card onto someone else and it’s theirs, history included.',
-    shot: 'map-focus',
-    size: [1440, 900],
+    shot: 'map-drag',
+    alt: 'A card being dragged from one person towards another, whose avatar lights up',
   },
   {
     title: 'Spotlight one person',
     text: 'Open a card and the rest of the team steps back, so you can think about one person.',
     shot: 'map-focus',
-    size: [1440, 900],
+    alt: 'One person’s cluster in focus with a card open; everyone else dimmed',
   },
   {
     title: 'Nobody falls off the edge',
     text: 'People outside the view stay pinned to the edge. One click flies to them.',
-    shot: 'map',
-    size: [1440, 900],
+    shot: 'map-edges',
+    alt: 'A zoomed-in map with small avatars pinned to the edges for people out of view',
   },
 ] as const;
 
-/** The map, explained one point at a time: an accordion that swaps the picture. */
+/** A row of captions that act as tabs: the chosen one is lit, and the picture below follows it. */
+function PointTabs({
+  items,
+  active,
+  onChange,
+  prefix,
+  label,
+  accent,
+}: {
+  items: readonly { title: string; text: string }[];
+  active: number;
+  onChange: (index: number) => void;
+  prefix: string;
+  label: string;
+  /** The section's colour: the lit caption's edge, matching its picture frame. */
+  accent: string;
+}) {
+  return (
+    <div
+      className={styles.points}
+      role="tablist"
+      aria-label={label}
+      style={{ '--accent': accent } as CSSProperties}
+    >
+      {items.map((item, i) => (
+        <button
+          key={item.title}
+          type="button"
+          role="tab"
+          id={`${prefix}-tab-${i}`}
+          aria-selected={i === active}
+          aria-controls={`${prefix}-panel`}
+          className={styles.point}
+          onClick={() => onChange(i)}
+        >
+          <span className={styles.pointTitle}>{item.title}</span>
+          <span className={styles.pointText}>{item.text}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** The map, one point at a time, over a full-width picture of that point. */
 function MapSection() {
-  const [open, setOpen] = useState(0);
-  const current = MAP_POINTS[open] ?? MAP_POINTS[0];
+  const [active, setActive] = useState(0);
+  const point = MAP_POINTS[active] ?? MAP_POINTS[0];
   return (
     <section id="map" className={styles.band}>
       <div className={styles.inner}>
         <h2 className={styles.h2}>Your whole team, at a glance.</h2>
-        <div className={styles.split}>
-          <div className={styles.frame} data-tint="map">
-            <img
-              src={shot(current.shot)}
-              width={current.size[0]}
-              height={current.size[1]}
-              alt="The People Map: people as hubs, their tasks and notes as cards around them"
-              loading="lazy"
-              decoding="async"
-            />
-          </div>
-          <div className={styles.accordion}>
-            {MAP_POINTS.map((point, i) => {
-              const isOpen = i === open;
-              return (
-                <div key={point.title} className={styles.accItem} data-open={isOpen}>
-                  <button
-                    type="button"
-                    className={styles.accHead}
-                    aria-expanded={isOpen}
-                    onClick={() => setOpen(i)}
-                  >
-                    {point.title}
-                    <span className={styles.accChevron} aria-hidden="true" />
-                  </button>
-                  {isOpen && <p className={styles.accBody}>{point.text}</p>}
-                </div>
-              );
-            })}
-          </div>
+        <PointTabs
+          items={MAP_POINTS}
+          active={active}
+          onChange={setActive}
+          prefix="map"
+          label="What the map does"
+          accent="var(--person-0)"
+        />
+        <div
+          id="map-panel"
+          role="tabpanel"
+          aria-labelledby={`map-tab-${active}`}
+          className={styles.frame}
+          data-tint="map"
+        >
+          <img
+            src={shot(point.shot)}
+            width={1440}
+            height={900}
+            alt={point.alt}
+            loading="lazy"
+            decoding="async"
+          />
         </div>
       </div>
     </section>
@@ -334,28 +384,28 @@ function MapSection() {
 const PERSON_TABS = [
   {
     id: 'one-on-one',
-    label: '1:1 mode',
-    text: 'The agenda is what’s open. What got done since last time sits next to it. End the meeting and the notes land on the person.',
+    title: '1:1 mode',
+    text: 'The agenda is what’s open, what got done since last time sits next to it, and the notes land on the person.',
     shot: 'one-on-one',
     alt: 'A 1:1 in progress: the agenda on the left, what got done since last time on the right',
   },
   {
     id: 'person',
-    label: 'Person page',
+    title: 'Person page',
     text: 'Tasks, notes and completed work for one person, in the order that matters, with a line to type the next thing.',
     shot: 'person',
     alt: 'One person’s page: open tasks, notes and completed work',
   },
   {
     id: 'capture',
-    label: 'Quick capture',
+    title: 'Quick capture',
     text: '⌘K from anywhere: jump to a person, find a task, or type “Vira: prepare the review”.',
     shot: 'capture',
     alt: 'The command palette over the map, listing people and commands',
   },
 ] as const;
 
-/** Everything about one person, shown as tabs over a framed product shot. */
+/** Everything about one person: the three views as captions over a framed product shot. */
 function PersonSection() {
   const [active, setActive] = useState(0);
   const tab = PERSON_TABS[active] ?? PERSON_TABS[0];
@@ -363,39 +413,29 @@ function PersonSection() {
     <section id="person" className={styles.band}>
       <div className={styles.inner}>
         <h2 className={styles.h2}>Everything about someone, when you need it.</h2>
-        <div className={styles.tabs} role="tablist" aria-label="Views">
-          {PERSON_TABS.map((t, i) => (
-            <button
-              key={t.id}
-              type="button"
-              role="tab"
-              id={`tab-${t.id}`}
-              aria-selected={i === active}
-              aria-controls={`panel-${t.id}`}
-              className={styles.tab}
-              onClick={() => setActive(i)}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+        <PointTabs
+          items={PERSON_TABS}
+          active={active}
+          onChange={setActive}
+          prefix="person"
+          label="Views"
+          accent="var(--person-2)"
+        />
         <div
+          id="person-panel"
           role="tabpanel"
-          id={`panel-${tab.id}`}
-          aria-labelledby={`tab-${tab.id}`}
-          className={styles.tabPanel}
+          aria-labelledby={`person-tab-${active}`}
+          className={styles.frame}
+          data-tint="person"
         >
-          <p className={styles.tabText}>{tab.text}</p>
-          <div className={styles.frame} data-tint={tab.id}>
-            <img
-              src={shot(tab.shot)}
-              width={1440}
-              height={900}
-              alt={tab.alt}
-              loading="lazy"
-              decoding="async"
-            />
-          </div>
+          <img
+            src={shot(tab.shot)}
+            width={1440}
+            height={900}
+            alt={tab.alt}
+            loading="lazy"
+            decoding="async"
+          />
         </div>
       </div>
     </section>

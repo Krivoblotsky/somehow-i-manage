@@ -41,6 +41,7 @@ import menu from '../menu.module.css';
 import { FloatingEdge } from './FloatingEdge';
 import { ItemNode } from './ItemNode';
 import { MapTips } from './MapTips';
+import { FeedbackIsland } from './FeedbackIsland';
 import { OffscreenMarkers } from './OffscreenMarkers';
 import styles from './PeopleMap.module.css';
 import { PersonNode } from './PersonNode';
@@ -351,6 +352,7 @@ function Canvas({ people, items, focusPersonId }: PeopleMapProps) {
             onPaneContextMenu={() => setMenuTarget({ kind: 'pane' })}
             fitView={!focusPersonId}
             fitViewOptions={fit}
+            attributionPosition="bottom-center"
             panOnScroll
             // our own stacking: edges (0) under hubs (1) under cards (2); React Flow would lift
             // an edge to its card's level and draw it over the hub's name
@@ -371,6 +373,7 @@ function Canvas({ people, items, focusPersonId }: PeopleMapProps) {
             <OffscreenMarkers onPick={focusPerson} coveredRight={covered} />
           </ReactFlow>
           {!demo && <MapTips />}
+          {!demo && <FeedbackIsland hidden={paneOpen} />}
         </div>
       </ContextMenu.Trigger>
 
