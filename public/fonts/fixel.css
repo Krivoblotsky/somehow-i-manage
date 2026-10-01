@@ -1,0 +1,50 @@
+/* Fixel by MacPaw, SIL Open Font License 1.1 (OFL.txt next to this file). */
+@font-face {
+  font-family: 'Fixel Display';
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url(FixelDisplay-Regular.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Fixel Display';
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  src: url(FixelDisplay-Medium.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Fixel Display';
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+  src: url(FixelDisplay-SemiBold.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Fixel Display';
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url(FixelDisplay-Bold.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Fixel Text';
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url(FixelText-Regular.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Fixel Text';
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  src: url(FixelText-Medium.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Fixel Text';
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+  src: url(FixelText-SemiBold.woff2) format('woff2');
+}

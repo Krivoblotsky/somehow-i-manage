@@ -1,13 +1,19 @@
 import { Component, lazy, Suspense, useState, type ReactNode } from 'react';
 import { syncActions, type SyncActions } from '../sync/controller';
 import { useSync } from '../sync/store';
-import { CloudIcon, GoogleIcon } from './icons';
+import { GoogleIcon } from './icons';
 import styles from './LandingPage.module.css';
 
 // The live demo brings React Flow and the database with it; the page shows first, then it wakes up.
 const LiveDemo = lazy(() => import('./LiveDemo'));
 
-/** The front door: one line on what this is, the real map to play with, and the one way in. */
+/** Product shots live in public/landing (npm run shots). */
+const shot = (name: string) => `${import.meta.env.BASE_URL}landing/${name}.webp`;
+
+/**
+ * The front door. One idea, told the way the best product pages tell it: a line, the real thing
+ * to play with, how it works, each part of the product with a picture, what we believe, one way in.
+ */
 export function LandingPage({ actions = syncActions }: { actions?: SyncActions }) {
   const authError = useSync((s) => s.authError);
   const [busy, setBusy] = useState(false);
@@ -25,86 +31,378 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
   }
 
   const problem = error ?? authError;
-  const googleButton = (
-    <button type="button" className={styles.google} disabled={busy} onClick={() => void signIn()}>
-      <GoogleIcon />
-      {busy ? 'Opening Google…' : 'Continue with Google'}
-    </button>
-  );
 
   return (
     <div className={styles.page}>
-      <div className={styles.inner}>
-        <header className={styles.nav}>
-          <div className={styles.brand}>
+      <header className={styles.nav}>
+        <div className={styles.navInner}>
+          <a className={styles.brand} href="#top">
             <span className={styles.mark} aria-hidden="true" />
             Somehow I Manage
+          </a>
+          <nav className={styles.navLinks} aria-label="Sections">
+            <a href="#map">People Map</a>
+            <a href="#person">1:1s</a>
+            <a href="#how">How it works</a>
+          </nav>
+          <div className={styles.navActions}>
+            <button type="button" className={styles.navGhost} onClick={() => void signIn()}>
+              Sign in
+            </button>
+            <button type="button" className={styles.navPill} onClick={() => void signIn()}>
+              Get started
+            </button>
           </div>
-          <button type="button" className={styles.navBtn} onClick={() => void signIn()}>
-            Sign in
-          </button>
-        </header>
+        </div>
+      </header>
 
+      <main id="top">
         <section className={styles.hero}>
-          <div className={styles.kicker}>A task manager for managers</div>
-          <h1 className={styles.title}>Work with people, not&nbsp;tasks.</h1>
-          <p className={styles.lead}>
-            Every task, note and 1:1 lives with the person it’s about. This is the real thing — go
-            ahead and poke it.
-          </p>
-          <div className={styles.cta}>
-            {googleButton}
-            <span className={styles.ctaNote}>Free while in beta · only your email address</span>
-          </div>
-          {problem && (
-            <p className={styles.error} role="alert">
-              {problem}
+          <div className={styles.inner}>
+            <p className={styles.kicker}>A task manager for managers</p>
+            <h1 className={styles.title}>Work with people, not&nbsp;tasks.</h1>
+            <p className={styles.lead}>
+              Every task, note and 1:1 lives with the person it’s about. The map below is the real
+              thing — go ahead and poke it.
             </p>
-          )}
+            <div className={styles.cta}>
+              <button
+                type="button"
+                className={styles.google}
+                disabled={busy}
+                onClick={() => void signIn()}
+              >
+                <GoogleIcon />
+                {busy ? 'Opening Google…' : 'Continue with Google'}
+              </button>
+              <span className={styles.ctaNote}>Free while in beta · nothing to set up</span>
+            </div>
+            {problem && (
+              <p className={styles.error} role="alert">
+                {problem}
+              </p>
+            )}
+          </div>
+          <div className={`${styles.inner} ${styles.demo}`} aria-label="Live demo">
+            <DemoBoundary fallback={<StillDemo />}>
+              <Suspense fallback={<StillDemo />}>
+                <LiveDemo />
+              </Suspense>
+            </DemoBoundary>
+          </div>
+          <ul className={`${styles.inner} ${styles.proof}`} aria-label="In short">
+            <Proof title="Offline-first" text="Works on a plane. Syncs when you’re back." />
+            <Proof title="Private by design" text="Only your email. Your data stays yours." />
+            <Proof title="No setup" text="Add a person, type a line. That’s onboarding." />
+          </ul>
         </section>
 
-        <section className={styles.demo} aria-label="Live demo">
-          <DemoBoundary fallback={<StillDemo />}>
-            <Suspense fallback={<StillDemo />}>
-              <LiveDemo />
-            </Suspense>
-          </DemoBoundary>
+        <section id="how" className={`${styles.band} ${styles.light}`}>
+          <div className={styles.inner}>
+            <p className={styles.kicker}>How it works</p>
+            <h2 className={styles.h2}>Three habits, one place.</h2>
+            <ul className={styles.steps}>
+              <Step
+                title="Add your people"
+                text="Direct reports, peers, clients. Press + or paste a whole list."
+              />
+              <Step
+                title="Capture as it happens"
+                text="Type a line on their card, hit ⌘K from anywhere, or drag a card to hand it over."
+              />
+              <Step
+                title="Walk into the 1:1 prepared"
+                text="The agenda builds itself from what’s open. Tick what got done, note what came up."
+              />
+            </ul>
+          </div>
         </section>
 
-        <section className={styles.features} aria-label="What you get">
-          <Feature
-            color="var(--person-1)"
-            icon={<MapGlyph />}
-            title="The People Map"
-            text="Your team at a glance. Hand a card over by dragging it."
-          />
-          <Feature
-            color="var(--person-2)"
-            icon={<MeetingGlyph />}
-            title="1:1 mode"
-            text="Walk in prepared: agenda, what got done, what came up."
-          />
-          <Feature
-            color="var(--person-4)"
-            icon={<CloudIcon size={20} />}
-            title="Yours, everywhere"
-            text="Offline, installable, synced. Export any time."
-          />
+        <MapSection />
+        <PersonSection />
+
+        <section id="author" className={`${styles.band} ${styles.light}`}>
+          <div className={`${styles.inner} ${styles.author}`}>
+            <img
+              className={styles.authorPhoto}
+              src={`${import.meta.env.BASE_URL}landing/author.jpg`}
+              width={800}
+              height={800}
+              alt="Sergii Kryvoblotskyi, who made Somehow I Manage"
+              loading="lazy"
+              decoding="async"
+            />
+            <div>
+              <p className={styles.kicker}>From the author</p>
+              <div className={styles.story}>
+                <p>
+                  I’ve managed teams for a long time. For most of it, everything I knew about my
+                  people lived in notes: one note per person, their name as the title, a wall of
+                  unstructured text underneath.
+                </p>
+                <p>
+                  It worked, somehow — because the idea behind it was right. You work with people.
+                  That’s what matters. The tasks come with them.
+                </p>
+                <p className={styles.storyEnd}>
+                  Somehow I Manage is that habit, turned into a tool.
+                </p>
+              </div>
+              <p className={styles.signature}>
+                <strong>Sergii Kryvoblotskyi</strong>
+                <span>Manages a team. Built this to do it better.</span>
+              </p>
+            </div>
+          </div>
         </section>
 
-        <footer className={styles.footer}>
-          <span>Somehow I Manage · built by a manager, for managers.</span>
-          <span className={styles.footerLinks}>
-            <a className={styles.footerBtn} href={`${import.meta.env.BASE_URL}privacy/`}>
-              Privacy
-            </a>
-            <button type="button" className={styles.footerBtn} onClick={() => void signIn()}>
+        <section className={styles.band}>
+          <div className={styles.inner}>
+            <h2 className={`${styles.h2} ${styles.statement}`}>
+              Managers don’t have tasks.
+              <br />
+              They have people.
+            </h2>
+            <div className={styles.principles}>
+              <Principle
+                title="Tasks belong to people"
+                text="A to-do without a face is a to-do you’ll ignore. Here every item hangs off someone."
+              />
+              <Principle
+                title="Prepared beats busy"
+                text="Ten minutes before a 1:1 should be enough. The app does the remembering."
+              />
+              <Principle
+                title="Your data is yours"
+                text="Offline-first, synced through your own account, exported in one click, deleted in one more."
+              />
+            </div>
+          </div>
+        </section>
+
+        <section className={styles.band}>
+          <div className={`${styles.inner} ${styles.final}`}>
+            <h2 className={styles.h2}>Start with your team.</h2>
+            <p className={styles.lead}>It takes a minute. Free while in beta.</p>
+            <button
+              type="button"
+              className={styles.google}
+              disabled={busy}
+              onClick={() => void signIn()}
+            >
+              <GoogleIcon />
+              Get started with Google
+            </button>
+            <p className={styles.ctaNote}>
+              Only your email address. Export or delete everything, any time.
+            </p>
+          </div>
+        </section>
+      </main>
+
+      <footer className={styles.footer}>
+        <div className={`${styles.inner} ${styles.footerGrid}`}>
+          <div className={styles.footerBrand}>
+            <span className={styles.mark} aria-hidden="true" />
+            Somehow I Manage
+            <p>Built by a manager, for managers.</p>
+          </div>
+          <div className={styles.footerCol}>
+            <h3>Product</h3>
+            <a href="#map">People Map</a>
+            <a href="#person">1:1 mode</a>
+            <a href="#how">How it works</a>
+          </div>
+          <div className={styles.footerCol}>
+            <h3>Company</h3>
+            <a href={`${import.meta.env.BASE_URL}privacy/`}>Privacy</a>
+            <a href="mailto:hello@somehowimanage.app">hello@somehowimanage.app</a>
+          </div>
+          <div className={styles.footerCol}>
+            <h3>Account</h3>
+            <button type="button" onClick={() => void signIn()}>
               Sign in with Google →
             </button>
-          </span>
-        </footer>
-      </div>
+          </div>
+        </div>
+        <div className={`${styles.inner} ${styles.footerLine}`}>© 2026 Somehow I Manage</div>
+      </footer>
     </div>
+  );
+}
+
+function Proof({ title, text }: { title: string; text: string }) {
+  return (
+    <li className={styles.proofItem}>
+      <span className={styles.proofDot} aria-hidden="true" />
+      <div>
+        <strong>{title}</strong>
+        <span>{text}</span>
+      </div>
+    </li>
+  );
+}
+
+function Step({ title, text }: { title: string; text: string }) {
+  return (
+    <li className={styles.step}>
+      <h3>{title}</h3>
+      <p>{text}</p>
+    </li>
+  );
+}
+
+function Principle({ title, text }: { title: string; text: string }) {
+  return (
+    <div className={styles.principle}>
+      <h3>{title}</h3>
+      <p>{text}</p>
+    </div>
+  );
+}
+
+/** All shots are 1440×900 (npm run shots); the size travels with the entry for `width`/`height`. */
+const MAP_POINTS = [
+  {
+    title: 'People, not projects',
+    text: 'Every task and note hangs off the person it’s about. The map is the plan.',
+    shot: 'map',
+    size: [1440, 900],
+  },
+  {
+    title: 'Hand things over by dragging',
+    text: 'Drop a card onto someone else and it’s theirs, history included.',
+    shot: 'map-focus',
+    size: [1440, 900],
+  },
+  {
+    title: 'Spotlight one person',
+    text: 'Open a card and the rest of the team steps back, so you can think about one person.',
+    shot: 'map-focus',
+    size: [1440, 900],
+  },
+  {
+    title: 'Nobody falls off the edge',
+    text: 'People outside the view stay pinned to the edge. One click flies to them.',
+    shot: 'map',
+    size: [1440, 900],
+  },
+] as const;
+
+/** The map, explained one point at a time: an accordion that swaps the picture. */
+function MapSection() {
+  const [open, setOpen] = useState(0);
+  const current = MAP_POINTS[open] ?? MAP_POINTS[0];
+  return (
+    <section id="map" className={styles.band}>
+      <div className={styles.inner}>
+        <p className={styles.kicker}>The People Map</p>
+        <h2 className={styles.h2}>Your whole team, at a glance.</h2>
+        <div className={styles.split}>
+          <div className={styles.frame} data-tint="map">
+            <img
+              src={shot(current.shot)}
+              width={current.size[0]}
+              height={current.size[1]}
+              alt="The People Map: people as hubs, their tasks and notes as cards around them"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+          <div className={styles.accordion}>
+            {MAP_POINTS.map((point, i) => {
+              const isOpen = i === open;
+              return (
+                <div key={point.title} className={styles.accItem} data-open={isOpen}>
+                  <button
+                    type="button"
+                    className={styles.accHead}
+                    aria-expanded={isOpen}
+                    onClick={() => setOpen(i)}
+                  >
+                    {point.title}
+                    <span className={styles.accChevron} aria-hidden="true" />
+                  </button>
+                  {isOpen && <p className={styles.accBody}>{point.text}</p>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const PERSON_TABS = [
+  {
+    id: 'one-on-one',
+    label: '1:1 mode',
+    text: 'The agenda is what’s open. What got done since last time sits next to it. End the meeting and the notes land on the person.',
+    shot: 'one-on-one',
+    alt: 'A 1:1 in progress: the agenda on the left, what got done since last time on the right',
+  },
+  {
+    id: 'person',
+    label: 'Person page',
+    text: 'Tasks, notes and completed work for one person, in the order that matters, with a line to type the next thing.',
+    shot: 'person',
+    alt: 'One person’s page: open tasks, notes and completed work',
+  },
+  {
+    id: 'capture',
+    label: 'Quick capture',
+    text: '⌘K from anywhere: jump to a person, find a task, or type “Vira: prepare the review”.',
+    shot: 'capture',
+    alt: 'The command palette over the map, listing people and commands',
+  },
+] as const;
+
+/** Everything about one person, shown as tabs over a framed product shot. */
+function PersonSection() {
+  const [active, setActive] = useState(0);
+  const tab = PERSON_TABS[active] ?? PERSON_TABS[0];
+  return (
+    <section id="person" className={styles.band}>
+      <div className={styles.inner}>
+        <p className={styles.kicker}>One place per person</p>
+        <h2 className={styles.h2}>Everything about someone, when you need it.</h2>
+        <div className={styles.tabs} role="tablist" aria-label="Views">
+          {PERSON_TABS.map((t, i) => (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              id={`tab-${t.id}`}
+              aria-selected={i === active}
+              aria-controls={`panel-${t.id}`}
+              className={styles.tab}
+              onClick={() => setActive(i)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <div
+          role="tabpanel"
+          id={`panel-${tab.id}`}
+          aria-labelledby={`tab-${tab.id}`}
+          className={styles.tabPanel}
+        >
+          <p className={styles.tabText}>{tab.text}</p>
+          <div className={styles.frame} data-tint={tab.id}>
+            <img
+              src={shot(tab.shot)}
+              width={1440}
+              height={900}
+              alt={tab.alt}
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -129,53 +427,6 @@ class DemoBoundary extends Component<
   render() {
     return this.state.failed ? this.props.fallback : this.props.children;
   }
-}
-
-function Feature({
-  color,
-  icon,
-  title,
-  text,
-}: {
-  color: string;
-  icon: ReactNode;
-  title: string;
-  text: string;
-}) {
-  return (
-    <article className={styles.feature}>
-      <div className={styles.featureIcon} style={{ background: color }}>
-        {icon}
-      </div>
-      <h3 className={styles.featureTitle}>{title}</h3>
-      <p className={styles.featureText}>{text}</p>
-    </article>
-  );
-}
-
-const glyph = { width: 20, height: 20, viewBox: '0 0 20 20', fill: 'none', stroke: 'currentColor' };
-
-function MapGlyph() {
-  return (
-    <svg {...glyph} strokeWidth="1.8" aria-hidden="true">
-      <circle cx="10" cy="10" r="3" />
-      <circle cx="3.5" cy="4.5" r="1.6" fill="currentColor" stroke="none" />
-      <circle cx="16.5" cy="5" r="1.6" fill="currentColor" stroke="none" />
-      <circle cx="15.5" cy="16" r="1.6" fill="currentColor" stroke="none" />
-      <path d="M7.8 8.2 4.8 5.6M12.6 8.3l2.7-2.4M12.2 12.2l2.3 2.6" strokeLinecap="round" />
-    </svg>
-  );
-}
-function MeetingGlyph() {
-  return (
-    <svg {...glyph} strokeWidth="1.8" aria-hidden="true">
-      <path d="M3 5.5A2.5 2.5 0 0 1 5.5 3h6A2.5 2.5 0 0 1 14 5.5v3a2.5 2.5 0 0 1-2.5 2.5H8l-3.5 3v-3A2.5 2.5 0 0 1 3 8.5v-3Z" />
-      <path
-        d="M16.5 8.5a2.5 2.5 0 0 1 .5 1.5v3a2.5 2.5 0 0 1-2.5 2.5h-1l-2 2"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
 }
 
 const CARD_W = 150;

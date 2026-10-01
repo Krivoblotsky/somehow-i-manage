@@ -23,7 +23,7 @@ describe('LandingPage', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
       'Work with people, not tasks.',
     );
-    expect(screen.getByText('1:1 mode')).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: '1:1 mode' })).toBeInTheDocument();
 
     // the real map, live, seeded with the sample team
     const demo = await screen.findByTestId('people-map', {}, { timeout: 8000 });

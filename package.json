@@ -17,7 +17,8 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "shots": "node scripts/landing-shots.mjs"
   },
   "dependencies": {
     "@radix-ui/react-context-menu": "^2.3.7",
@@ -55,6 +56,7 @@
     "globals": "^17.12.0",
     "jsdom": "^30.1.1",
     "prettier": "^3.9.9",
+    "puppeteer-core": "^25.12.0",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.71.0",
     "vite": "^8.3.1",
