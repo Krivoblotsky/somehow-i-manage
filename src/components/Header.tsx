@@ -92,26 +92,29 @@ export function Header() {
       </div>
 
       <div className={`${styles.island} ${styles.peopleIsland}`}>
-        <div className={styles.people} aria-label="People">
-          {people.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              className={
-                p.id === selectedPersonId
-                  ? `${styles.personBtn} ${styles.personBtnActive}`
-                  : styles.personBtn
-              }
-              onClick={() => pickPerson(p.id)}
-              title={p.name}
-              aria-label={p.name}
-              aria-pressed={p.id === selectedPersonId}
-            >
-              {/* 32px photo + 2px gap + 2px ring = the same 40px footprint as the "+" */}
-              <Avatar person={p} size={32} ring={2} gapColor="transparent" />
-            </button>
-          ))}
-        </div>
+        {/* Rendered only with people in it: an empty strip would still take a gap before "+" */}
+        {people.length > 0 && (
+          <div className={styles.people} aria-label="People">
+            {people.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                className={
+                  p.id === selectedPersonId
+                    ? `${styles.personBtn} ${styles.personBtnActive}`
+                    : styles.personBtn
+                }
+                onClick={() => pickPerson(p.id)}
+                title={p.name}
+                aria-label={p.name}
+                aria-pressed={p.id === selectedPersonId}
+              >
+                {/* 32px photo + 2px gap + 2px ring = the same 40px footprint as the "+" */}
+                <Avatar person={p} size={32} ring={2} gapColor="transparent" />
+              </button>
+            ))}
+          </div>
+        )}
         <button
           type="button"
           className={styles.round}

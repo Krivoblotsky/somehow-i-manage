@@ -73,7 +73,8 @@ Dock”. It keeps working offline; new versions apply on the next launch.
 
 ## Deploy
 
-`.github/workflows/deploy.yml` builds and publishes to GitHub Pages on every push to `main`.
-Enable Pages in the repository settings with **Source: GitHub Actions**. The workflow sets
-`BASE_PATH=/<repo>/`; for a `<user>.github.io` repository set it to `/`. Any static host works
-too: build with `npm run build` and serve `dist/`.
+`.github/workflows/deploy.yml` builds and publishes to GitHub Pages on every push to `main`;
+the app lives at <https://somehowimanage.app>. Enable Pages in the repository settings with
+**Source: GitHub Actions**. The workflow reads the site's base path from the Pages settings
+(`/<repo>/` for a project site, `/` with a custom domain), so no code changes when the domain
+does. Any static host works too: build with `BASE_PATH=/ npm run build` and serve `dist/`.

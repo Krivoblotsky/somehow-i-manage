@@ -47,7 +47,7 @@ notice instead of the app.
      Secret, save.
 
    Then *Authentication → URL Configuration*: Site URL = where the app lives
-   (`https://<user>.github.io/somehow-i-manage/`), and Redirect URLs for it and for
+   (`https://somehowimanage.app`), and Redirect URLs for `https://somehowimanage.app/**` and
    `http://localhost:5173/**`.
 4. **Keys.** *Project Settings → API*: copy the Project URL and the `anon` `public` key.
 5. **Local dev.** Copy `.env.example` to `.env.local`, fill both values, restart `npm run dev`.

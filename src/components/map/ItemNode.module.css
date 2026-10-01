@@ -172,3 +172,12 @@
 .dimmed:hover {
   opacity: 0.9;
 }
+
+/* iOS-style continuous corners where the browser can draw them; everyone else keeps the plain
+   12px radius above. The squircle turns tighter at the apex, so the radius grows to compensate. */
+@supports (corner-shape: squircle) {
+  .card {
+    corner-shape: squircle;
+    border-radius: 16px;
+  }
+}

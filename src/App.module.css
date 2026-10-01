@@ -25,6 +25,21 @@
   margin: calc(var(--header-h) + 14px) 24px 24px 0;
   min-height: 0;
   z-index: 5;
+  /* slides in from the right edge: quick, with a long soft landing (the iOS sheet curve) */
+  animation: aside-in 280ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+@keyframes aside-in {
+  from {
+    transform: translateX(calc(100% + 24px));
+  }
+  to {
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .aside {
+    animation: none;
+  }
 }
 @media (max-width: 960px) {
   .aside {
