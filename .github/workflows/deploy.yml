@@ -24,10 +24,13 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      # Reads the Pages settings: base_path is "/<repo>" for the project site and "" once a
+      # custom domain (somehowimanage.app) is configured, so the build follows the switch.
+      - id: pages
+        uses: actions/configure-pages@v5
       - run: npm run build
         env:
-          # Project sites live under /<repo>/. For a <user>.github.io repo set this to "/".
-          BASE_PATH: /${{ github.event.repository.name }}/
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}/
           # Sync (optional): repository variables, see docs/SYNC.md. Empty = local-only build.
           VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
