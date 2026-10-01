@@ -518,7 +518,8 @@ describe('App — polish', () => {
     const row = screen.getByText('Salary Review').closest('[role="button"]') as HTMLElement;
     expect(await within(row).findByText(/Due |overdue/)).toBeInTheDocument();
 
-    await user.click(within(panel).getByRole('button', { name: 'Clear due date' }));
+    // the row and the panel each follow their own live query; wait for the panel's turn
+    await user.click(await within(panel).findByRole('button', { name: 'Clear due date' }));
     await vi.waitFor(() => expect(within(row).queryByText(/Due |overdue/)).not.toBeInTheDocument());
   });
 

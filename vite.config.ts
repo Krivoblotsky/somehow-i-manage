@@ -57,7 +57,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,webmanifest}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,woff2,webmanifest}'],
         navigateFallback: 'index.html',
         // static pages next to the app (public/privacy) are real documents, not app routes
         navigateFallbackDenylist: [/^\/privacy/],
