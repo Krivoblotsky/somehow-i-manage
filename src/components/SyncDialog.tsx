@@ -1,5 +1,6 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { useState } from 'react';
+import { clearAllData } from '../data/repository';
 import { formatRelativeTime } from '../model/format';
 import { useNow } from '../state/now';
 import { useUI } from '../state/ui';
@@ -7,7 +8,6 @@ import { syncActions, type SyncActions } from '../sync/controller';
 import { useSync } from '../sync/store';
 import dlg from './dialog.module.css';
 import styles from './SyncDialog.module.css';
-import { CloudIcon } from './icons';
 import ui from './ui.module.css';
 
 /** How sync is doing for the signed-in account, and the way out. */
@@ -46,6 +46,14 @@ function SignedIn({ actions, email }: { actions: SyncActions; email?: string }) 
   const error = useSync((s) => s.error);
   const now = useNow();
   const [busy, setBusy] = useState(false);
+  const selectPerson = useUI((s) => s.selectPerson);
+
+  async function deleteAll() {
+    if (!window.confirm('Delete ALL people and items, here and in sync? This cannot be undone.'))
+      return;
+    await clearAllData();
+    selectPerson(null);
+  }
 
   let line: string;
   let isError = false;
@@ -78,10 +86,14 @@ function SignedIn({ actions, email }: { actions: SyncActions; email?: string }) 
         <div className={isError ? styles.lineError : styles.line}>{line}</div>
       </div>
       <p className={styles.note}>
-        Signing out keeps everything on this device; it only stops syncing. “Delete all data” in the
-        ⋯ menu removes it from this device and from sync.
+        Signing out leaves this device’s copy in place for when you sign back in. Another account
+        signing in here starts from its own data. “Delete all data” removes everything from this
+        device and from sync.
       </p>
       <div className={dlg.footer}>
+        <button type="button" className={ui.btnDanger} onClick={() => void deleteAll()}>
+          Delete all data…
+        </button>
         <button type="button" className={ui.btn} disabled={busy} onClick={() => void signOut()}>
           Sign out
         </button>
@@ -101,55 +113,5 @@ function SignedIn({ actions, email }: { actions: SyncActions; email?: string }) 
         </Dialog.Close>
       </div>
     </div>
-  );
-}
-
-type BadgeState = 'off' | 'offline' | 'error' | 'busy' | 'ok';
-
-/** Header cloud: colour says how sync is doing; click opens the dialog. Hidden without a backend. */
-export function SyncButton({
-  className,
-  dotClassName,
-}: {
-  className: string;
-  dotClassName: string;
-}) {
-  const configured = useSync((s) => s.configured);
-  const user = useSync((s) => s.user);
-  const phase = useSync((s) => s.phase);
-  const online = useSync((s) => s.online);
-  const pending = useSync((s) => s.pending);
-  const error = useSync((s) => s.error);
-  const openDialog = useUI((s) => s.openDialog);
-  if (!configured) return null;
-
-  const state: BadgeState = !user
-    ? 'off'
-    : !online
-      ? 'offline'
-      : phase === 'error'
-        ? 'error'
-        : phase === 'syncing' || pending > 0
-          ? 'busy'
-          : 'ok';
-  const title: Record<BadgeState, string> = {
-    off: 'Sync is off — sign in to sync across devices',
-    offline: 'Offline — changes wait here until you’re back online',
-    error: `Sync failed: ${error ?? 'unknown error'}`,
-    busy: 'Syncing…',
-    ok: 'Synced',
-  };
-  return (
-    <button
-      type="button"
-      className={className}
-      data-state={state}
-      onClick={() => openDialog({ type: 'sync' })}
-      title={title[state]}
-      aria-label={title[state]}
-    >
-      <CloudIcon />
-      <span className={dotClassName} aria-hidden="true" />
-    </button>
   );
 }

@@ -26,6 +26,9 @@ export interface SyncTransport {
 export interface SyncUser {
   id: string;
   email?: string;
+  /** From the Google profile, when present. */
+  name?: string;
+  avatarUrl?: string;
 }
 
 /** Who is signed in and how to sign in: Supabase Auth in production, a fake in tests. */

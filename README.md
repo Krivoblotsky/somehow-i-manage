@@ -44,7 +44,8 @@ src/
   map/        People Map geometry: ring layout, cluster grid, edge endpoints, graph builder — pure, tested
   state/      transient UI state (zustand): view (map/list/1:1), selection, search, open dialog, the running 1:1
   sync/       change-log middleware (outbox), sync engine, Supabase transport/auth, status store — engine tested against a fake server
-  components/ Header (view toggle, people strip, search, menu), PersonView (dossier list),
+  components/ Header (view toggle, people strip, search), UserMenu (Google profile, sync status, data tools,
+              sign out), PersonView (dossier list),
               PersonPanel (person details), ItemPanel (editor), PersonDialog, BulkAddDialog,
               OneOnOne (the 1:1 screen), LandingPage (front door + sign-in), SyncDialog, SearchResults,
               EmptyState, Avatar, BodyEditor (TipTap)

@@ -1,16 +1,10 @@
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../data/db';
-import { clearAllData } from '../data/repository';
-import { loadSampleData } from '../data/seed';
-import { backupToFile, exportMarkdownToFile } from '../state/actions';
-import { useSync } from '../sync/store';
 import { useUI, type ViewMode } from '../state/ui';
 import { Avatar } from './Avatar';
 import styles from './Header.module.css';
 import { SearchIcon } from './icons';
-import menu from './menu.module.css';
-import { SyncButton } from './SyncDialog';
+import { UserMenu } from './UserMenu';
 
 export function Header() {
   const people = useLiveQuery(() => db.people.orderBy('sortOrder').toArray(), []) ?? [];
@@ -23,14 +17,6 @@ export function Header() {
   const selectPerson = useUI((s) => s.selectPerson);
   const focusPerson = useUI((s) => s.focusPerson);
   const openDialog = useUI((s) => s.openDialog);
-
-  async function deleteAll() {
-    const where = useSync.getState().user ? ' from this device and from sync' : '';
-    if (window.confirm(`Delete ALL people and items${where}? This cannot be undone.`)) {
-      await clearAllData();
-      selectPerson(null);
-    }
-  }
 
   function pickPerson(id: string) {
     setSearch('');
@@ -114,48 +100,7 @@ export function Header() {
           ))}
         </div>
 
-        <SyncButton className={styles.syncBtn} dotClassName={styles.syncDot} />
-
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger asChild>
-            <button type="button" className={styles.round} aria-label="More actions">
-              ⋯
-            </button>
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Portal>
-            <DropdownMenu.Content className={menu.menu} align="end" sideOffset={8}>
-              <DropdownMenu.Item className={menu.item} onSelect={() => void loadSampleData()}>
-                Load sample data
-              </DropdownMenu.Item>
-              <DropdownMenu.Item className={menu.item} onSelect={() => void exportMarkdownToFile()}>
-                Export everything as Markdown
-              </DropdownMenu.Item>
-              <DropdownMenu.Separator className={menu.separator} />
-              <DropdownMenu.Item className={menu.item} onSelect={() => void backupToFile()}>
-                Back up to file…
-              </DropdownMenu.Item>
-              <DropdownMenu.Item
-                className={menu.item}
-                onSelect={() => openDialog({ type: 'restore' })}
-              >
-                Restore from file…
-              </DropdownMenu.Item>
-              <DropdownMenu.Item
-                className={menu.item}
-                onSelect={() => openDialog({ type: 'sync' })}
-              >
-                Account &amp; sync…
-              </DropdownMenu.Item>
-              <DropdownMenu.Separator className={menu.separator} />
-              <DropdownMenu.Item
-                className={`${menu.item} ${menu.danger}`}
-                onSelect={() => void deleteAll()}
-              >
-                Delete all data…
-              </DropdownMenu.Item>
-            </DropdownMenu.Content>
-          </DropdownMenu.Portal>
-        </DropdownMenu.Root>
+        <UserMenu />
       </div>
     </header>
   );

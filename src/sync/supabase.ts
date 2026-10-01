@@ -105,8 +105,17 @@ async function authorizeProblem(url: string): Promise<string | null> {
 
 /** Google sign-in through Supabase Auth. */
 export function supabaseAuth(client: SupabaseClient): SyncAuth {
-  const toUser = (u: User | null | undefined): SyncUser | null =>
-    u ? { id: u.id, email: u.email ?? undefined } : null;
+  const toUser = (u: User | null | undefined): SyncUser | null => {
+    if (!u) return null;
+    const meta = u.user_metadata as Record<string, unknown>;
+    const str = (v: unknown): string | undefined => (typeof v === 'string' && v ? v : undefined);
+    return {
+      id: u.id,
+      email: u.email ?? undefined,
+      name: str(meta.full_name) ?? str(meta.name),
+      avatarUrl: str(meta.avatar_url) ?? str(meta.picture),
+    };
+  };
   return {
     async getUser() {
       const { data } = await client.auth.getSession();

@@ -129,10 +129,10 @@ describe('App — sign-in gate', () => {
     expect(screen.getByText('This build has no backend')).toBeInTheDocument();
   });
 
-  it('shows the account badge once signed in', async () => {
+  it('shows the account menu once signed in', async () => {
     render(<App />);
     await screen.findByText(/add your first person/i);
-    expect(screen.getByRole('button', { name: 'Synced' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Account: test@example.com' })).toBeInTheDocument();
   });
 });
 

@@ -1,6 +1,8 @@
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { db } from '../data/db';
+import { createPerson } from '../data/repository';
 import { useUI } from '../state/ui';
 import type { SyncActions } from '../sync/controller';
 import { useSync } from '../sync/store';
@@ -55,5 +57,20 @@ describe('SyncDialog', () => {
     expect(await screen.findByText('3 changes waiting to upload.')).toBeInTheDocument();
     act(() => useSync.setState({ online: false }));
     expect(await screen.findByText(/Offline/)).toBeInTheDocument();
+  });
+
+  it('deletes everything only after a confirmation', async () => {
+    const user = userEvent.setup();
+    await createPerson({ name: 'Vira' });
+    render(<SyncDialog actions={fakeActions()} />);
+
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    await user.click(screen.getByRole('button', { name: 'Delete all data…' }));
+    expect(await db.people.count()).toBe(1);
+
+    confirm.mockReturnValue(true);
+    await user.click(screen.getByRole('button', { name: 'Delete all data…' }));
+    await vi.waitFor(async () => expect(await db.people.count()).toBe(0));
+    confirm.mockRestore();
   });
 });

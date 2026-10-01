@@ -26,8 +26,9 @@ notice instead of the app.
   the email address. The local database is a cache for the signed-in account: data from before
   anyone signed in is uploaded by whoever signs in first; a different account signing in on the
   same device starts from an empty cache and pulls its own data; the same account again continues
-  where it left off. Signing out returns to the front door and leaves the cache in place, so an
-  offline relaunch with a saved session still works. “Delete all data” deletes everywhere.
+  where it left off. Signing out (user menu, top right) returns to the front door and leaves the
+  cache in place, so an offline relaunch with a saved session still works. “Delete all data” in the
+  Account & sync dialog deletes everywhere.
 
 ## Set it up (about ten minutes)
 
