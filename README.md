@@ -78,3 +78,7 @@ the app lives at <https://somehowimanage.app>. Enable Pages in the repository se
 **Source: GitHub Actions**. The workflow reads the site's base path from the Pages settings
 (`/<repo>/` for a project site, `/` with a custom domain), so no code changes when the domain
 does. Any static host works too: build with `BASE_PATH=/ npm run build` and serve `dist/`.
+
+Static pages next to the app live in `public/` and are served as real documents, outside the
+service worker's app-shell fallback: `public/privacy/index.html` is the privacy policy at
+`/privacy/`, linked from the landing page (Google's OAuth brand verification needs it).

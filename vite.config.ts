@@ -1,13 +1,37 @@
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
-import { defineConfig } from 'vitest/config';
+import { defineConfig, type Plugin } from 'vitest/config';
 
 // GitHub Pages serves project sites under /<repo>/; the deploy workflow sets BASE_PATH.
 const base = process.env.BASE_PATH ?? '/';
 
+/**
+ * Static pages under public/<name>/index.html are reachable as /<name>/ in production (GitHub
+ * Pages, `vite preview`); the dev server would hand those URLs to the app instead. Match it.
+ */
+function staticPages(names: string[]): Plugin {
+  return {
+    name: 'static-pages',
+    apply: 'serve',
+    configureServer(server) {
+      server.middlewares.use((req, _res, next) => {
+        const path = req.url?.split('?')[0] ?? '';
+        for (const name of names) {
+          if (path === `${base}${name}` || path === `${base}${name}/`) {
+            req.url = `${base}${name}/index.html`;
+            break;
+          }
+        }
+        next();
+      });
+    },
+  };
+}
+
 export default defineConfig({
   base,
   plugins: [
+    staticPages(['privacy']),
     react(),
     VitePWA({
       registerType: 'autoUpdate',
@@ -35,6 +59,8 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,webmanifest}'],
         navigateFallback: 'index.html',
+        // static pages next to the app (public/privacy) are real documents, not app routes
+        navigateFallbackDenylist: [/^\/privacy/],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
       },
     }),

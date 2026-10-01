@@ -245,10 +245,16 @@
   color: var(--text-subtle);
   font-size: 12px;
 }
+.footerLinks {
+  display: inline-flex;
+  align-items: center;
+  gap: 20px;
+}
 .footerBtn {
   color: var(--text-muted);
   font-weight: 600;
   font-size: 12px;
+  text-decoration: none;
 }
 .footerBtn:hover {
   color: #fff;

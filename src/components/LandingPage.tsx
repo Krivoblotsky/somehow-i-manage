@@ -94,9 +94,14 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
 
         <footer className={styles.footer}>
           <span>Somehow I Manage · built by a manager, for managers.</span>
-          <button type="button" className={styles.footerBtn} onClick={() => void signIn()}>
-            Sign in with Google →
-          </button>
+          <span className={styles.footerLinks}>
+            <a className={styles.footerBtn} href={`${import.meta.env.BASE_URL}privacy/`}>
+              Privacy
+            </a>
+            <button type="button" className={styles.footerBtn} onClick={() => void signIn()}>
+              Sign in with Google →
+            </button>
+          </span>
         </footer>
       </div>
     </div>
