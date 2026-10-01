@@ -6,12 +6,25 @@ import App from './App';
 import { db } from './data/db';
 import { useToast } from './state/toast';
 import { useUI } from './state/ui';
+import { useSync } from './sync/store';
 
 beforeEach(async () => {
   await db.items.clear();
   await db.people.clear();
   localStorage.clear();
   useToast.getState().dismiss();
+  // Tests run as a signed-in account; the backend itself is faked away (see vite.config test.env).
+  useSync.setState({
+    configured: true,
+    ready: true,
+    user: { id: 'test-user', email: 'test@example.com' },
+    authError: null,
+    phase: 'idle',
+    online: true,
+    pending: 0,
+    lastSyncedAt: null,
+    error: null,
+  });
   useUI.setState({
     view: 'list',
     selectedPersonId: null,
@@ -85,6 +98,41 @@ describe('App (list view) — person contacts', () => {
     expect(link).toHaveAttribute('href', 'mailto:sergii@example.com');
     const saved = (await db.people.toArray())[0];
     expect(saved.contacts).toEqual([{ kind: 'email', value: 'sergii@example.com' }]);
+  });
+});
+
+describe('App — sign-in gate', () => {
+  it('asks for a Google sign-in before showing anything', () => {
+    useSync.setState({ user: null });
+    render(<App />);
+    expect(screen.getByRole('button', { name: 'Continue with Google' })).toBeInTheDocument();
+    expect(screen.queryByLabelText('People')).not.toBeInTheDocument();
+    expect(screen.queryByText(/add your first person/i)).not.toBeInTheDocument();
+  });
+
+  it('shows what went wrong when Google sent us back with an error', () => {
+    useSync.setState({ user: null, authError: 'access_denied: the user cancelled' });
+    render(<App />);
+    expect(screen.getByRole('alert')).toHaveTextContent('access_denied');
+  });
+
+  it('waits quietly while the saved session is being checked', () => {
+    useSync.setState({ ready: false, user: null });
+    render(<App />);
+    expect(screen.queryByRole('button', { name: 'Continue with Google' })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('People')).not.toBeInTheDocument();
+  });
+
+  it('tells developers when the build has no backend', () => {
+    useSync.setState({ configured: false });
+    render(<App />);
+    expect(screen.getByText('This build has no backend')).toBeInTheDocument();
+  });
+
+  it('shows the account badge once signed in', async () => {
+    render(<App />);
+    await screen.findByText(/add your first person/i);
+    expect(screen.getByRole('button', { name: 'Synced' })).toBeInTheDocument();
   });
 });
 

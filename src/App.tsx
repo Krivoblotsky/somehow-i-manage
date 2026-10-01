@@ -6,19 +6,23 @@ import { CommandPalette } from './components/CommandPalette';
 import { EmptyState } from './components/EmptyState';
 import { Header } from './components/Header';
 import { ItemPanel } from './components/ItemPanel';
+import { LandingPage, SetupScreen, Splash } from './components/LandingPage';
 import { OneOnOne } from './components/OneOnOne';
 import { PeopleMap } from './components/map/PeopleMap';
 import { PersonDialog } from './components/PersonDialog';
 import { PersonPanel } from './components/PersonPanel';
 import { PersonView } from './components/PersonView';
 import { RestoreDialog } from './components/RestoreDialog';
+import { SyncDialog } from './components/SyncDialog';
 import { SearchResults } from './components/SearchResults';
 import { Toast } from './components/Toast';
 import { db } from './data/db';
 import { createItem, ensureMapPositions } from './data/repository';
 import { useUI } from './state/ui';
+import { startSync } from './sync/controller';
+import { useSync } from './sync/store';
 
-export default function App() {
+function Workspace() {
   const people = useLiveQuery(() => db.people.orderBy('sortOrder').toArray(), []);
   const items = useLiveQuery(() => db.items.toArray(), []);
   const view = useUI((s) => s.view);
@@ -120,8 +124,31 @@ export default function App() {
       <PersonDialog />
       <BulkAddDialog />
       <RestoreDialog />
+      <SyncDialog />
       <CommandPalette />
-      <Toast />
     </div>
+  );
+}
+
+/** Signed in: the workspace. Otherwise the landing page — or, without a backend, the setup notice. */
+export default function App() {
+  const configured = useSync((s) => s.configured);
+  const ready = useSync((s) => s.ready);
+  const user = useSync((s) => s.user);
+
+  useEffect(() => {
+    void startSync();
+  }, []);
+
+  let screen;
+  if (!configured) screen = <SetupScreen />;
+  else if (!ready) screen = <Splash />;
+  else if (!user) screen = <LandingPage />;
+  else screen = <Workspace />;
+  return (
+    <>
+      {screen}
+      <Toast />
+    </>
   );
 }

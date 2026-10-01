@@ -4,11 +4,13 @@ import { db } from '../data/db';
 import { clearAllData } from '../data/repository';
 import { loadSampleData } from '../data/seed';
 import { backupToFile, exportMarkdownToFile } from '../state/actions';
+import { useSync } from '../sync/store';
 import { useUI, type ViewMode } from '../state/ui';
 import { Avatar } from './Avatar';
 import styles from './Header.module.css';
 import { SearchIcon } from './icons';
 import menu from './menu.module.css';
+import { SyncButton } from './SyncDialog';
 
 export function Header() {
   const people = useLiveQuery(() => db.people.orderBy('sortOrder').toArray(), []) ?? [];
@@ -23,7 +25,8 @@ export function Header() {
   const openDialog = useUI((s) => s.openDialog);
 
   async function deleteAll() {
-    if (window.confirm('Delete ALL people and items? This cannot be undone.')) {
+    const where = useSync.getState().user ? ' from this device and from sync' : '';
+    if (window.confirm(`Delete ALL people and items${where}? This cannot be undone.`)) {
       await clearAllData();
       selectPerson(null);
     }
@@ -111,6 +114,8 @@ export function Header() {
           ))}
         </div>
 
+        <SyncButton className={styles.syncBtn} dotClassName={styles.syncDot} />
+
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
             <button type="button" className={styles.round} aria-label="More actions">
@@ -134,6 +139,12 @@ export function Header() {
                 onSelect={() => openDialog({ type: 'restore' })}
               >
                 Restore from file…
+              </DropdownMenu.Item>
+              <DropdownMenu.Item
+                className={menu.item}
+                onSelect={() => openDialog({ type: 'sync' })}
+              >
+                Account &amp; sync…
               </DropdownMenu.Item>
               <DropdownMenu.Separator className={menu.separator} />
               <DropdownMenu.Item

@@ -192,3 +192,47 @@
     opacity: 0.3;
   }
 }
+
+/* sync badge: a cloud with a status dot */
+.syncBtn {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--chrome-2);
+  color: var(--text-muted);
+  display: grid;
+  place-items: center;
+}
+.syncBtn:hover {
+  background: var(--chrome-3);
+  color: #fff;
+}
+.syncDot {
+  position: absolute;
+  right: 6px;
+  bottom: 7px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 2px solid var(--bg);
+  background: var(--chrome-3);
+}
+.syncBtn[data-state='ok'] .syncDot {
+  background: var(--success);
+}
+.syncBtn[data-state='busy'] .syncDot {
+  background: #fbb13c;
+  animation: livePulse 1.2s ease-in-out infinite;
+}
+.syncBtn[data-state='error'] .syncDot {
+  background: var(--danger);
+}
+.syncBtn[data-state='offline'] .syncDot {
+  background: var(--text-subtle);
+}
+.syncBtn[data-state='off'] .syncDot {
+  background: transparent;
+  border-color: var(--text-subtle);
+}

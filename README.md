@@ -43,9 +43,11 @@ src/
   data/       Dexie database, repository (all reads/writes), bulk-paste parser, sample data, Markdown export
   map/        People Map geometry: ring layout, cluster grid, edge endpoints, graph builder — pure, tested
   state/      transient UI state (zustand): view (map/list/1:1), selection, search, open dialog, the running 1:1
+  sync/       change-log middleware (outbox), sync engine, Supabase transport/auth, status store — engine tested against a fake server
   components/ Header (view toggle, people strip, search, menu), PersonView (dossier list),
               PersonPanel (person details), ItemPanel (editor), PersonDialog, BulkAddDialog,
-              OneOnOne (the 1:1 screen), SearchResults, EmptyState, Avatar, BodyEditor (TipTap)
+              OneOnOne (the 1:1 screen), LandingPage (front door + sign-in), SyncDialog, SearchResults,
+              EmptyState, Avatar, BodyEditor (TipTap)
   components/map/ PeopleMap (React Flow canvas + context menus), PersonNode, ItemNode, FloatingEdge
   styles/     design tokens from docs/DESIGN.md, global reset
 ```
@@ -56,6 +58,12 @@ Everything lives in the browser's IndexedDB (database `personal`) on the device 
 ⋯ menu you can **Back up to file** (a JSON file with people, items, positions and avatars),
 **Restore from file** (merge or replace), and **Export everything as Markdown**. Make a backup
 before clearing site data or switching machines; sync is a later milestone.
+
+## Account and sync
+
+The app requires a Google sign-in (Supabase Auth) and syncs across devices through a Supabase
+project. A build without `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` shows a setup notice. See
+[`docs/SYNC.md`](docs/SYNC.md) for the ten-minute setup and how the local-first engine works (`src/sync/`).
 
 ## Install as an app
 

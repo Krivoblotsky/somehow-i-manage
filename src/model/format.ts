@@ -35,3 +35,14 @@ export function formatDuration(ms: number): string {
   if (minutes < 60) return `${minutes} min`;
   return `${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, '0')} min`;
 }
+
+/** "just now", "3 min ago", "2 h ago", then by day — for "last synced". */
+export function formatRelativeTime(ms: number, now: number): string {
+  const seconds = Math.max(0, Math.round((now - ms) / 1000));
+  if (seconds < 45) return 'just now';
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours} h ago`;
+  return formatRelativeDays(ms, now);
+}

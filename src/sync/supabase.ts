@@ -1,0 +1,161 @@
+import type { SupabaseClient, User } from '@supabase/supabase-js';
+import { SYNC_CONFIG } from './config';
+import type { RecordKind, SyncAuth, SyncRow, SyncTransport, SyncUser } from './types';
+
+let clientPromise: Promise<SupabaseClient> | null = null;
+
+/** The supabase-js bundle loads only when sync is configured, and only once. */
+export function getSupabase(): Promise<SupabaseClient> {
+  const config = SYNC_CONFIG;
+  if (!config) return Promise.reject(new Error('Sync is not configured for this build.'));
+  clientPromise ??= import('@supabase/supabase-js').then(({ createClient }) =>
+    createClient(config.url, config.anonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        flowType: 'pkce',
+      },
+    }),
+  );
+  return clientPromise;
+}
+
+interface RawRow {
+  id: string;
+  kind: string;
+  data: unknown;
+  updated_at: number | string;
+  deleted_at: number | string | null;
+  seq: number | string;
+}
+
+const fail = (error: { message: string } | null): void => {
+  if (error) throw new Error(error.message);
+};
+
+/** Reads and writes public.sync_records (see supabase/schema.sql). */
+export function supabaseTransport(client: SupabaseClient): SyncTransport {
+  return {
+    async pull(afterSeq, limit) {
+      const { data, error } = await client
+        .from('sync_records')
+        .select('id, kind, data, updated_at, deleted_at, seq')
+        .gt('seq', afterSeq)
+        .order('seq', { ascending: true })
+        .limit(limit);
+      fail(error);
+      return ((data ?? []) as RawRow[]).map((r) => ({
+        id: String(r.id),
+        kind: r.kind as RecordKind,
+        data: r.data as SyncRow['data'],
+        updated_at: Number(r.updated_at),
+        deleted_at: r.deleted_at === null ? null : Number(r.deleted_at),
+        seq: Number(r.seq),
+      }));
+    },
+    async push(changes) {
+      const { error } = await client.rpc('sync_push', { changes });
+      fail(error);
+    },
+  };
+}
+
+/** Where Google sends the browser back to: this app, at its base path. */
+export function appUrl(): string {
+  return `${window.location.origin}${import.meta.env.BASE_URL}`;
+}
+
+/**
+ * After the round trip to Google the URL carries `?code=` (or an error). Cleans it up and
+ * returns the error message, if any, so the app can show it.
+ */
+export function consumeAuthRedirect(): string | null {
+  const url = new URL(window.location.href);
+  const hash = new URLSearchParams(url.hash.replace(/^#/, ''));
+  const error = url.searchParams.get('error_description') ?? hash.get('error_description');
+  const touched =
+    url.searchParams.has('code') ||
+    url.searchParams.has('error') ||
+    hash.has('access_token') ||
+    hash.has('error');
+  if (touched) {
+    for (const key of ['code', 'error', 'error_code', 'error_description'])
+      url.searchParams.delete(key);
+    url.hash = '';
+    window.history.replaceState(window.history.state, '', url.toString());
+  }
+  return error ? error.replace(/\+/g, ' ') : null;
+}
+
+/**
+ * Fetches the authorize URL without following it. A working provider answers with a redirect
+ * (opaque to us, which is fine); a misconfigured one answers 4xx with a message worth showing.
+ */
+async function authorizeProblem(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url, { redirect: 'manual', credentials: 'omit' });
+    if (response.type === 'opaqueredirect' || response.ok) return null;
+    const body = (await response.json().catch(() => null)) as { msg?: string } | null;
+    return body?.msg ?? `Sign-in is not available (HTTP ${response.status}).`;
+  } catch {
+    return null; // cannot tell from here; let the browser go and see
+  }
+}
+
+/** Google sign-in through Supabase Auth. */
+export function supabaseAuth(client: SupabaseClient): SyncAuth {
+  const toUser = (u: User | null | undefined): SyncUser | null =>
+    u ? { id: u.id, email: u.email ?? undefined } : null;
+  return {
+    async getUser() {
+      const { data } = await client.auth.getSession();
+      return toUser(data.session?.user);
+    },
+    onChange(listener) {
+      const { data } = client.auth.onAuthStateChange((_event, session) =>
+        listener(toUser(session?.user)),
+      );
+      return () => data.subscription.unsubscribe();
+    },
+    async signInWithGoogle() {
+      const { data, error } = await client.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: appUrl(),
+          skipBrowserRedirect: true,
+          queryParams: { prompt: 'select_account' },
+        },
+      });
+      fail(error);
+      if (!data.url) throw new Error('Google sign-in is unavailable right now.');
+      // A provider that is not enabled yet would show a bare JSON page; ask first.
+      const problem = await authorizeProblem(data.url);
+      if (problem) throw new Error(problem);
+      window.location.assign(data.url);
+    },
+    async signOut() {
+      const { error } = await client.auth.signOut();
+      fail(error);
+    },
+  };
+}
+
+/** Tells `onChange` whenever a row of this user's changes on the server. Returns unsubscribe. */
+export function subscribeToChanges(
+  client: SupabaseClient,
+  userId: string,
+  onChange: () => void,
+): () => void {
+  const channel = client
+    .channel(`sync-${userId}`)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'sync_records', filter: `user_id=eq.${userId}` },
+      () => onChange(),
+    )
+    .subscribe();
+  return () => {
+    void client.removeChannel(channel);
+  };
+}

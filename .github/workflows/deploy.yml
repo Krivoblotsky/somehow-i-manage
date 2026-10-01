@@ -28,6 +28,9 @@ jobs:
         env:
           # Project sites live under /<repo>/. For a <user>.github.io repo set this to "/".
           BASE_PATH: /${{ github.event.repository.name }}/
+          # Sync (optional): repository variables, see docs/SYNC.md. Empty = local-only build.
+          VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

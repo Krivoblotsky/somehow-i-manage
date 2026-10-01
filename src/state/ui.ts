@@ -6,6 +6,7 @@ export type DialogState =
   | { type: 'bulk'; personId: string }
   | { type: 'restore' }
   | { type: 'palette' }
+  | { type: 'sync' }
   | null;
 
 /** Map, list, or the screen of the 1:1 that is running. */

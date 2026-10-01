@@ -43,6 +43,8 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     css: false,
+    // Tests run local-only whatever a developer's .env.local says; sync is tested with fakes.
+    env: { VITE_SUPABASE_URL: '', VITE_SUPABASE_ANON_KEY: '' },
     coverage: {
       provider: 'v8',
       include: ['src/**'],

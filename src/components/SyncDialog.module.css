@@ -1,0 +1,41 @@
+.status {
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: var(--bg);
+  border: 1px solid var(--chrome-2);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.who {
+  font-weight: 600;
+}
+.line {
+  color: var(--text-muted);
+}
+.lineError {
+  color: #ff8a8a;
+}
+.error {
+  color: #ff8a8a;
+  font-size: 13px;
+  margin: 8px 0 0;
+}
+.note {
+  color: var(--text-subtle);
+  font-size: 12px;
+  margin: 12px 0 0;
+  line-height: 1.5;
+}
+.linkBtn {
+  color: var(--text-muted);
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.linkBtn:hover {
+  color: #fff;
+}
+.code {
+  letter-spacing: 0.3em;
+  font-variant-numeric: tabular-nums;
+}

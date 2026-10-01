@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDuration, formatRelativeDays, formatTime } from './format';
+import { formatDuration, formatRelativeDays, formatRelativeTime, formatTime } from './format';
 
 const at = (y: number, m: number, d: number, h = 0, min = 0) => new Date(y, m, d, h, min).getTime();
 
@@ -24,5 +24,15 @@ describe('formatDuration / formatTime', () => {
   });
   it('formats a clock time', () => {
     expect(formatTime(at(2026, 8, 30, 16, 5))).toBe('16:05');
+  });
+});
+
+describe('formatRelativeTime', () => {
+  it('goes from seconds to minutes to hours, then days', () => {
+    const now = at(2026, 8, 30, 16, 0);
+    expect(formatRelativeTime(now - 10_000, now)).toBe('just now');
+    expect(formatRelativeTime(now - 3 * 60_000, now)).toBe('3 min ago');
+    expect(formatRelativeTime(now - 2 * 3_600_000, now)).toBe('2 h ago');
+    expect(formatRelativeTime(at(2026, 8, 28, 12), now)).toBe('2 days ago');
   });
 });
