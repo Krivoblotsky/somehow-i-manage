@@ -13,7 +13,14 @@ import { selectFocusPersonId, useUI } from '../../state/ui';
  * edge, with a triangle pointing to where they are. Clicking one flies to that person.
  * Must render inside <ReactFlow>.
  */
-export function OffscreenMarkers({ onPick }: { onPick: (personId: string) => void }) {
+export function OffscreenMarkers({
+  onPick,
+  coveredRight = 0,
+}: {
+  onPick: (personId: string) => void;
+  /** Width of the strip under the side pane: markers stop at its edge, not the container's. */
+  coveredRight?: number;
+}) {
   const focus = useUI(selectFocusPersonId);
   const viewport = useViewport();
   const width = useStore((s) => s.width);
@@ -29,7 +36,7 @@ export function OffscreenMarkers({ onPick }: { onPick: (personId: string) => voi
       },
     })),
     viewport,
-    { width, height },
+    { width, height, coveredRight },
   );
   if (markers.length === 0) return null;
 

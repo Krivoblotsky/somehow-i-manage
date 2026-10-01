@@ -57,6 +57,28 @@ const demoFitViewOptions = {
   padding: { top: '72px', right: '32px', bottom: '32px', left: '32px' } as const,
   maxZoom: 1,
 };
+
+/** The side pane floats over this much of the canvas's right edge (400px + 24px margin). */
+const PANE_COVER = 424;
+/** ...and only in the desktop layout; below this the pane covers the whole view anyway. */
+const PANE_OVERLAY_MIN_WIDTH = 961;
+/** How long the pane takes to slide in (App.module.css). */
+const PANE_SLIDE_MS = 280;
+
+/**
+ * Follows `value`, but a larger value only lands after `ms`: the covered strip grows when the
+ * pane has finished sliding in, and shrinks the moment it starts leaving.
+ */
+function useLagging(value: number, ms: number): number {
+  const [shown, setShown] = useState(value);
+  if (value < shown) setShown(value);
+  useEffect(() => {
+    if (value <= shown) return;
+    const t = window.setTimeout(() => setShown(value), ms);
+    return () => window.clearTimeout(t);
+  }, [value, shown, ms]);
+  return shown;
+}
 /** How close a dragged card must get to a person's avatar centre to count as a drop. */
 const DROP_RADIUS = PERSON_NODE.ringRadius + 30;
 
@@ -82,7 +104,6 @@ export function PeopleMap(props: PeopleMapProps) {
 function Canvas({ people, items, focusPersonId }: PeopleMapProps) {
   const database = useDatabase();
   const demo = useIsDemo();
-  const fit = demo ? demoFitViewOptions : fitViewOptions;
   const selectedItemId = useUI((s) => s.selectedItemId);
   const selectedPersonId = useUI((s) => s.selectedPersonId);
   const personPanelOpen = useUI((s) => s.personPanelOpen);
@@ -96,6 +117,27 @@ function Canvas({ people, items, focusPersonId }: PeopleMapProps) {
     MapNode,
     FloatingEdgeType
   >();
+  // The side pane floats over the right edge: fits and edge markers treat that strip as hidden.
+  const flowWidth = useStore((st) => st.width);
+  const flowHeight = useStore((st) => st.height);
+  const paneOpen = !demo && (selectedItemId !== null || personPanelOpen);
+  const covered = useLagging(
+    paneOpen && flowWidth >= PANE_OVERLAY_MIN_WIDTH ? PANE_COVER : 0,
+    PANE_SLIDE_MS,
+  );
+  const fit = useMemo(() => {
+    const base = demo ? demoFitViewOptions : fitViewOptions;
+    if (covered === 0) return base;
+    const right = `${parseInt(base.padding.right, 10) + covered}px` as const;
+    return { ...base, padding: { ...base.padding, right } };
+  }, [demo, covered]);
+  // Framing one cluster: 15% of the shorter side around it, plus the covered strip.
+  const clusterPadding = useMemo(() => {
+    const side = `${Math.round(Math.min(flowWidth, flowHeight) * 0.15)}px` as const;
+    const right = `${Math.round(Math.min(flowWidth, flowHeight) * 0.15) + covered}px` as const;
+    return { top: side, bottom: side, left: side, right };
+  }, [flowWidth, flowHeight, covered]);
+
   // How this map frames itself: on one person's cluster when asked, otherwise on everyone.
   const frame = useCallback(() => {
     if (focusPersonId) {
@@ -105,14 +147,12 @@ function Canvas({ people, items, focusPersonId }: PeopleMapProps) {
             n.id === focusPersonId || (n.type === 'item' && n.data.item.personId === focusPersonId),
         )
         .map((n) => ({ id: n.id }));
-      if (ids.length > 0) return fitView({ nodes: ids, padding: 0.3, maxZoom: 1 });
+      if (ids.length > 0) return fitView({ nodes: ids, padding: clusterPadding, maxZoom: 1 });
     }
     return fitView(fit);
-  }, [focusPersonId, getNodes, fitView, fit]);
+  }, [focusPersonId, getNodes, fitView, fit, clusterPadding]);
 
   // The demo's frame changes size with the page (phones, rotations): keep it framed.
-  const flowWidth = useStore((st) => st.width);
-  const flowHeight = useStore((st) => st.height);
   useEffect(() => {
     if (demo && flowWidth > 0 && flowHeight > 0) void frame();
   }, [demo, flowWidth, flowHeight, frame]);
@@ -145,10 +185,15 @@ function Canvas({ people, items, focusPersonId }: PeopleMapProps) {
       ...itemsRef.current.filter((i) => i.personId === focusRequest.personId).map((i) => i.id),
     ];
     const timer = window.setTimeout(() => {
-      void fitView({ nodes: ids.map((id) => ({ id })), duration: 400, padding: 0.3, maxZoom: 1 });
+      void fitView({
+        nodes: ids.map((id) => ({ id })),
+        duration: 400,
+        padding: clusterPadding,
+        maxZoom: 1,
+      });
     }, 50);
     return () => window.clearTimeout(timer);
-  }, [focusRequest, fitView, getNodes]);
+  }, [focusRequest, fitView, getNodes, clusterPadding]);
 
   // Re-fit when people are added or removed so a new cluster is never off-screen.
   const peopleCount = people.length;
@@ -323,7 +368,7 @@ function Canvas({ people, items, focusPersonId }: PeopleMapProps) {
           >
             <Background variant={BackgroundVariant.Dots} gap={36} size={1} />
             <Controls showInteractive={false} position="bottom-left" fitViewOptions={fit} />
-            <OffscreenMarkers onPick={focusPerson} />
+            <OffscreenMarkers onPick={focusPerson} coveredRight={covered} />
           </ReactFlow>
           {!demo && <MapTips />}
         </div>

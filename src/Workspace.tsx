@@ -7,6 +7,7 @@ import { EmptyState } from './components/EmptyState';
 import { Header } from './components/Header';
 import { ItemPanel } from './components/ItemPanel';
 import { OneOnOne } from './components/OneOnOne';
+import { Pane } from './components/Pane';
 import { PeopleMap } from './components/map/PeopleMap';
 import { PersonDialog } from './components/PersonDialog';
 import { PersonPanel } from './components/PersonPanel';
@@ -127,8 +128,16 @@ export default function Workspace() {
     <div className={styles.app}>
       <Header />
       <div className={styles.body}>
-        <main className={isMap ? styles.mainMap : styles.main}>{main}</main>
-        {aside && <aside className={styles.aside}>{aside}</aside>}
+        <main
+          className={
+            isMap ? styles.mainMap : aside ? `${styles.main} ${styles.mainWithPane}` : styles.main
+          }
+        >
+          {main}
+        </main>
+        <Pane className={styles.aside} closingClassName={styles.asideClosing}>
+          {aside}
+        </Pane>
       </div>
       <PersonDialog />
       <BulkAddDialog />

@@ -9,6 +9,8 @@ export interface ViewportTransform {
 export interface Size {
   width: number;
   height: number;
+  /** Width of a strip along the right edge hidden under the side pane (0 = none). */
+  coveredRight?: number;
 }
 
 export interface TrackedPerson {
@@ -50,18 +52,19 @@ export function computeEdgeMarkers(
   size: Size,
   inset = MARKER_INSET,
 ): EdgeMarker[] {
-  if (size.width < inset * 2 || size.height < inset * 2) return [];
+  const width = size.width - (size.coveredRight ?? 0);
+  if (width < inset * 2 || size.height < inset * 2) return [];
   const avatarRadius = PERSON_NODE.ringRadius * viewport.zoom;
   const markers: EdgeMarker[] = [];
   for (const person of people) {
     const s = toScreen(person.center, viewport);
     const visible =
       s.x >= -avatarRadius &&
-      s.x <= size.width + avatarRadius &&
+      s.x <= width + avatarRadius &&
       s.y >= -avatarRadius &&
       s.y <= size.height + avatarRadius;
     if (visible) continue;
-    const x = clamp(s.x, inset, size.width - inset);
+    const x = clamp(s.x, inset, width - inset);
     const y = clamp(s.y, inset, size.height - inset);
     const angle = (Math.atan2(s.y - y, s.x - x) * 180) / Math.PI;
     markers.push({ id: person.id, x, y, angle, distance: Math.hypot(s.x - x, s.y - y) });
