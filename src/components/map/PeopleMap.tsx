@@ -321,7 +321,7 @@ function Canvas({ people, items, focusPersonId }: PeopleMapProps) {
             multiSelectionKeyCode={null}
             nodeDragThreshold={4}
           >
-            <Background variant={BackgroundVariant.Dots} gap={28} size={1.4} />
+            <Background variant={BackgroundVariant.Dots} gap={36} size={1} />
             <Controls showInteractive={false} position="bottom-left" fitViewOptions={fit} />
             <OffscreenMarkers onPick={focusPerson} />
           </ReactFlow>

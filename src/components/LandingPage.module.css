@@ -47,8 +47,12 @@
   content: '';
   position: absolute;
   inset: -40px -200px 0;
-  background: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.08) 1px, transparent 1.6px) 0
-    0 / 22px 22px;
+  background: radial-gradient(
+      circle at 1px 1px,
+      color-mix(in srgb, var(--canvas-dot) 55%, transparent) 1px,
+      transparent 1.5px
+    )
+    0 0 / 28px 28px;
   mask-image: linear-gradient(to bottom, #000 55%, transparent);
   pointer-events: none;
 }

@@ -1,10 +1,16 @@
 .canvas {
   position: absolute;
   inset: 0;
-
-  /* React Flow theming (v12 CSS variables) */
+}
+/*
+ * React Flow theming (v12 CSS variables). The library declares its defaults on .react-flow
+ * itself, so these must sit on that element too: set on the wrapper, they would never reach
+ * the canvas (the dots stayed React Flow's #91919a for a while because of exactly that).
+ */
+.canvas :global(.react-flow) {
   --xy-background-color-default: var(--bg);
-  --xy-background-pattern-dots-color-default: #2c2c2e;
+  /* a faint warm-grey grid: a sense of scale, not something to read */
+  --xy-background-pattern-dots-color-default: var(--canvas-dot);
   --xy-edge-stroke-default: #555;
   --xy-node-boxshadow-selected-default: none;
   --xy-controls-button-background-color-default: var(--chrome);
@@ -14,8 +20,6 @@
   --xy-controls-button-border-color-default: var(--chrome-2);
   --xy-controls-box-shadow-default: none;
   --xy-attribution-background-color-default: transparent;
-}
-.canvas :global(.react-flow) {
   background: var(--bg);
 }
 .canvas :global(.react-flow__node) {

@@ -5,6 +5,8 @@
   --bg: #1c1c1e;
   --chrome: #2a2a2c;
   --chrome-2: #3e3e40;
+  /* canvas grid dots: a warm, brownish grey, a notch dimmer than React Flow's cool default */
+  --canvas-dot: #7a6d62;
   --chrome-3: #4a4a4c;
   --card: #ffffff;
   --completed-card: #5a5a5c;
