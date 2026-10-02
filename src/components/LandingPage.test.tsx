@@ -7,6 +7,7 @@ import { LandingPage } from './LandingPage';
 
 const actions = (): SyncActions => ({
   signInWithGoogle: vi.fn(async () => {}),
+  signInWithMicrosoft: vi.fn(async () => {}),
   signInWithPasskey: vi.fn(async () => {}),
   registerPasskey: vi.fn(async () => ({
     id: 'pk1',
@@ -40,10 +41,13 @@ describe('LandingPage', () => {
     ).toBeInTheDocument();
     expect(within(demo).getByText('Marcus Johnson')).toBeInTheDocument();
 
-    // every sign-in button is the same door; once one is pressed the main one shows it is busy
+    // the nav's Sign in opens the ways in; picking Google is the same door as the hero button
     await user.click(screen.getByRole('button', { name: 'Sign in' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Continue with Google' }));
     expect(a.signInWithGoogle).toHaveBeenCalledTimes(1);
-    expect(await screen.findByRole('button', { name: 'Opening Google…' })).toBeDisabled();
+    // the hero and the final call share the state: both doors show it
+    for (const b of await screen.findAllByRole('button', { name: 'Opening Google…' }))
+      expect(b).toBeDisabled();
   });
 
   it('shows the problem and lets you try again', async () => {
@@ -83,5 +87,16 @@ describe('LandingPage', () => {
     expect(
       screen.queryByRole('button', { name: 'Sign in with a passkey' }),
     ).not.toBeInTheDocument();
+  });
+
+  it('also opens the door through Microsoft', async () => {
+    const user = userEvent.setup();
+    const a = actions();
+    render(<LandingPage actions={a} />);
+    await user.click(screen.getAllByRole('button', { name: 'Continue with Microsoft' })[0]);
+    expect(a.signInWithMicrosoft).toHaveBeenCalledTimes(1);
+    expect(a.signInWithGoogle).not.toHaveBeenCalled();
+    for (const b of await screen.findAllByRole('button', { name: 'Opening Microsoft…' }))
+      expect(b).toBeDisabled();
   });
 });

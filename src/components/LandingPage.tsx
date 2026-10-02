@@ -1,10 +1,12 @@
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Component, lazy, Suspense, useState, type CSSProperties, type ReactNode } from 'react';
 import { syncActions, type SyncActions } from '../sync/controller';
 import { passkeysSupported } from '../sync/passkeys';
 import { useSync } from '../sync/store';
 import { feedbackMailto } from '../model/feedback';
-import { GoogleIcon } from './icons';
+import { GoogleIcon, MicrosoftIcon } from './icons';
 import styles from './LandingPage.module.css';
+import menu from './menu.module.css';
 
 // The live demo brings React Flow and the database with it; the page shows first, then it wakes up.
 const LiveDemo = lazy(() => import('./LiveDemo'));
@@ -18,18 +20,20 @@ const shot = (name: string) => `${import.meta.env.BASE_URL}landing/${name}.webp`
  */
 export function LandingPage({ actions = syncActions }: { actions?: SyncActions }) {
   const authError = useSync((s) => s.authError);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<Provider | null>(null);
   const [passkeyBusy, setPasskeyBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function signIn() {
-    setBusy(true);
+  // The browser leaves for the provider and comes back signed in; "busy" lasts until it leaves.
+  async function signInWith(provider: Provider) {
+    setBusy(provider);
     setError(null);
     try {
-      await actions.signInWithGoogle(); // the browser leaves for Google and comes back signed in
+      if (provider === 'google') await actions.signInWithGoogle();
+      else await actions.signInWithMicrosoft();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
-      setBusy(false);
+      setBusy(null);
     }
   }
 
@@ -63,12 +67,11 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
             <a href={feedbackMailto()}>Feedback</a>
           </nav>
           <div className={styles.navActions}>
-            <button type="button" className={styles.navGhost} onClick={() => void signIn()}>
-              Sign in
-            </button>
-            <button type="button" className={styles.navPill} onClick={() => void signIn()}>
-              Get started
-            </button>
+            <SignInMenu
+              busy={busy !== null || passkeyBusy}
+              onPick={(p) => void signInWith(p)}
+              onPasskey={() => void signInWithPasskey()}
+            />
           </div>
         </div>
       </header>
@@ -89,16 +92,8 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
               Every task, note and 1:1 lives with the person it’s about. The map below is the real
               thing — go ahead and poke it.
             </p>
-            <div className={styles.cta}>
-              <button
-                type="button"
-                className={styles.google}
-                disabled={busy}
-                onClick={() => void signIn()}
-              >
-                <GoogleIcon />
-                {busy ? 'Opening Google…' : 'Continue with Google'}
-              </button>
+            <div id="signin" className={styles.cta}>
+              <ProviderButtons busy={busy} verb="Continue" onPick={(p) => void signInWith(p)} />
             </div>
             {passkeysSupported() && (
               <button
@@ -217,15 +212,9 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
           <div className={`${styles.inner} ${styles.final}`}>
             <h2 className={styles.h2}>Start with your team.</h2>
             <p className={styles.lead}>It takes a minute.</p>
-            <button
-              type="button"
-              className={styles.google}
-              disabled={busy}
-              onClick={() => void signIn()}
-            >
-              <GoogleIcon />
-              Get started with Google
-            </button>
+            <div className={styles.cta}>
+              <ProviderButtons busy={busy} verb="Get started" onPick={(p) => void signInWith(p)} />
+            </div>
             <p className={styles.ctaNote}>
               Only your email address. Export or delete everything, any time.
             </p>
@@ -258,14 +247,91 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
           </div>
           <div className={styles.footerCol}>
             <h3>Account</h3>
-            <button type="button" onClick={() => void signIn()}>
-              Sign in with Google →
-            </button>
+            <a href="#signin">Sign in →</a>
           </div>
         </div>
         <div className={`${styles.inner} ${styles.footerLine}`}>© 2026 Somehow I Manage</div>
       </footer>
     </div>
+  );
+}
+
+type Provider = 'google' | 'microsoft';
+
+/** The nav's one button: a menu of the ways in, so no provider is chosen for the visitor. */
+function SignInMenu({
+  busy,
+  onPick,
+  onPasskey,
+}: {
+  busy: boolean;
+  onPick: (provider: Provider) => void;
+  onPasskey: () => void;
+}) {
+  return (
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger asChild>
+        <button type="button" className={styles.navPill} disabled={busy}>
+          {busy ? 'Opening…' : 'Sign in'}
+          <span className={styles.navChevron} aria-hidden="true" />
+        </button>
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content className={menu.menu} align="end" sideOffset={8}>
+          <DropdownMenu.Item className={menu.item} onSelect={() => onPick('google')}>
+            <GoogleIcon size={16} />
+            Continue with Google
+          </DropdownMenu.Item>
+          <DropdownMenu.Item className={menu.item} onSelect={() => onPick('microsoft')}>
+            <MicrosoftIcon size={16} />
+            Continue with Microsoft
+          </DropdownMenu.Item>
+          {passkeysSupported() && (
+            <>
+              <DropdownMenu.Separator className={menu.separator} />
+              <DropdownMenu.Item className={menu.item} onSelect={onPasskey}>
+                <KeyGlyph />
+                Sign in with a passkey
+              </DropdownMenu.Item>
+            </>
+          )}
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
+  );
+}
+
+/** The two doors, side by side: Google and Microsoft, each a white pill with its mark. */
+function ProviderButtons({
+  busy,
+  verb,
+  onPick,
+}: {
+  busy: Provider | null;
+  verb: string;
+  onPick: (provider: Provider) => void;
+}) {
+  return (
+    <>
+      <button
+        type="button"
+        className={styles.provider}
+        disabled={busy !== null}
+        onClick={() => onPick('google')}
+      >
+        <GoogleIcon />
+        {busy === 'google' ? 'Opening Google…' : `${verb} with Google`}
+      </button>
+      <button
+        type="button"
+        className={styles.provider}
+        disabled={busy !== null}
+        onClick={() => onPick('microsoft')}
+      >
+        <MicrosoftIcon />
+        {busy === 'microsoft' ? 'Opening Microsoft…' : `${verb} with Microsoft`}
+      </button>
+    </>
   );
 }
 

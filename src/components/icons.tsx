@@ -198,3 +198,15 @@ export function CalendarIcon({ className, size = 12 }: IconProps) {
     </svg>
   );
 }
+
+/** The four squares, in Microsoft's colours. */
+export function MicrosoftIcon({ className, size = 18 }: IconProps) {
+  return (
+    <svg className={className} width={size} height={size} viewBox="0 0 16 16" aria-hidden="true">
+      <rect x="1" y="1" width="6.5" height="6.5" fill="#f25022" />
+      <rect x="8.5" y="1" width="6.5" height="6.5" fill="#7fba00" />
+      <rect x="1" y="8.5" width="6.5" height="6.5" fill="#00a4ef" />
+      <rect x="8.5" y="8.5" width="6.5" height="6.5" fill="#ffb900" />
+    </svg>
+  );
+}

@@ -70,26 +70,32 @@
   align-items: center;
   gap: 8px;
 }
-.navGhost,
 .navPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   height: 36px;
-  padding: 0 14px;
+  padding: 0 14px 0 16px;
   border-radius: 999px;
   font-weight: 600;
   font-size: 13px;
-}
-.navGhost {
-  color: var(--text-muted);
-}
-.navGhost:hover {
-  color: var(--text);
-}
-.navPill {
   background: #fff;
   color: #111;
 }
 .navPill:hover {
   background: #e8e8ed;
+}
+.navPill:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.navChevron {
+  width: 7px;
+  height: 7px;
+  border-right: 1.8px solid currentColor;
+  border-bottom: 1.8px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+  opacity: 0.7;
 }
 
 /* ---- hero ---- */
@@ -154,10 +160,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 12px;
   flex-wrap: wrap;
 }
-.google {
+.provider {
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -170,10 +176,10 @@
   font-weight: 600;
   transition: background 120ms;
 }
-.google:hover {
+.provider:hover {
   background: #e8e8ed;
 }
-.google:disabled {
+.provider:disabled {
   opacity: 0.6;
   cursor: default;
 }
@@ -465,7 +471,7 @@
 .final .h2 {
   max-width: none;
 }
-.final .google {
+.final .provider {
   margin-top: 30px;
 }
 .final .ctaNote {
@@ -642,8 +648,7 @@
   }
 }
 @media (max-width: 720px) {
-  .navLinks,
-  .navGhost {
+  .navLinks {
     display: none;
   }
   .points {

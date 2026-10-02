@@ -49,6 +49,14 @@ notice instead of the app.
    Then *Authentication → URL Configuration*: Site URL = where the app lives
    (`https://somehowimanage.app`), and Redirect URLs for `https://somehowimanage.app/**` and
    `http://localhost:5173/**`.
+   **Microsoft sign-in**, the same shape: *Azure portal → Microsoft Entra ID → App registrations
+   → New registration*: name “Somehow I Manage”, supported account types **“Accounts in any
+   organizational directory and personal Microsoft accounts”**, platform Web with the redirect URI
+   `https://<project-ref>.supabase.co/auth/v1/callback`. Copy the *Application (client) ID*; under
+   *Certificates & secrets* add a client secret and copy its **Value** (it expires, 24 months at
+   most, so put the date in your calendar). Then *Supabase → Authentication → Providers → Azure*:
+   enable, paste both, leave the tenant URL empty so work, school and personal accounts all work.
+   The app asks Microsoft for the `email` scope; Supabase needs an email to make the account.
 4. **Keys.** *Project Settings → API*: copy the Project URL and the `anon` `public` key.
 5. **Local dev.** Copy `.env.example` to `.env.local`, fill both values, restart `npm run dev`.
 6. **GitHub Pages.** Repository *Settings → Secrets and variables → Actions → Variables*: add
@@ -63,7 +71,7 @@ notice instead of the app.
    gets them in with Face ID, Touch ID or a security key, no trip to Google. WebAuthn ties the
    passkey to that domain, so `localhost` cannot register or use one; test on the live site.
 
-Then open the app and continue with Google. Do the same on the next device.
+Then open the app and continue with Google or Microsoft. Do the same on the next device.
 
 ## Good to know
 

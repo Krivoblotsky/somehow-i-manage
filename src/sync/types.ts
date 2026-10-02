@@ -46,6 +46,8 @@ export interface SyncAuth {
   onChange(listener: (user: SyncUser | null) => void): () => void;
   /** Sends the browser to Google; it comes back to the app signed in. */
   signInWithGoogle(): Promise<void>;
+  /** The same round trip through Microsoft (work, school or personal accounts). */
+  signInWithMicrosoft(): Promise<void>;
   /** The browser's passkey prompt; resolves once the session is set (no round trip). */
   signInWithPasskey(): Promise<void>;
   /** Registers a passkey for the signed-in account; the account must already exist. */

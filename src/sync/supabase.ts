@@ -112,8 +112,26 @@ interface RawPasskey {
   last_used_at?: string;
 }
 
-/** Google and passkey sign-in through Supabase Auth. */
+/** Google, Microsoft and passkey sign-in through Supabase Auth. */
 export function supabaseAuth(client: SupabaseClient): SyncAuth {
+  /** The OAuth round trip: the browser leaves for the provider and comes back signed in. */
+  async function oauth(provider: 'google' | 'azure', label: string, scopes?: string) {
+    const { data, error } = await client.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: appUrl(),
+        skipBrowserRedirect: true,
+        scopes,
+        queryParams: { prompt: 'select_account' },
+      },
+    });
+    fail(error);
+    if (!data.url) throw new Error(`${label} sign-in is unavailable right now.`);
+    // A provider that is not enabled yet would show a bare JSON page; ask first.
+    const problem = await authorizeProblem(data.url);
+    if (problem) throw new Error(problem);
+    window.location.assign(data.url);
+  }
   const toPasskey = (p: RawPasskey): Passkey => ({
     id: p.id,
     name: p.friendly_name || undefined,
@@ -145,22 +163,9 @@ export function supabaseAuth(client: SupabaseClient): SyncAuth {
       );
       return () => data.subscription.unsubscribe();
     },
-    async signInWithGoogle() {
-      const { data, error } = await client.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: appUrl(),
-          skipBrowserRedirect: true,
-          queryParams: { prompt: 'select_account' },
-        },
-      });
-      fail(error);
-      if (!data.url) throw new Error('Google sign-in is unavailable right now.');
-      // A provider that is not enabled yet would show a bare JSON page; ask first.
-      const problem = await authorizeProblem(data.url);
-      if (problem) throw new Error(problem);
-      window.location.assign(data.url);
-    },
+    signInWithGoogle: () => oauth('google', 'Google'),
+    // Azure only returns an email when asked, and Supabase needs one to make the account.
+    signInWithMicrosoft: () => oauth('azure', 'Microsoft', 'email'),
     async signInWithPasskey() {
       // The authenticator picks the account from the credential; the session is set on success.
       const { error } = await client.auth.signInWithPasskey();

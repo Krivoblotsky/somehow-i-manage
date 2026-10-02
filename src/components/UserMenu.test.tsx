@@ -7,6 +7,7 @@ import { UserMenu } from './UserMenu';
 
 const actions = (): SyncActions => ({
   signInWithGoogle: vi.fn(async () => {}),
+  signInWithMicrosoft: vi.fn(async () => {}),
   signInWithPasskey: vi.fn(async () => {}),
   registerPasskey: vi.fn(async () => ({
     id: 'pk1',
