@@ -216,7 +216,7 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
         <section className={styles.band}>
           <div className={`${styles.inner} ${styles.final}`}>
             <h2 className={styles.h2}>Start with your team.</h2>
-            <p className={styles.lead}>It takes a minute. Free while in beta.</p>
+            <p className={styles.lead}>It takes a minute.</p>
             <button
               type="button"
               className={styles.google}
