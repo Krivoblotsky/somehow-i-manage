@@ -99,7 +99,6 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
                 <GoogleIcon />
                 {busy ? 'Opening Google…' : 'Continue with Google'}
               </button>
-              <span className={styles.ctaNote}>Free while in beta · nothing to set up</span>
             </div>
             {passkeysSupported() && (
               <button
