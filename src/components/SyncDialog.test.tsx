@@ -11,6 +11,14 @@ import { SyncDialog } from './SyncDialog';
 function fakeActions(): SyncActions {
   return {
     signInWithGoogle: vi.fn(async () => {}),
+    signInWithPasskey: vi.fn(async () => {}),
+    registerPasskey: vi.fn(async () => ({
+      id: 'pk1',
+      name: 'iCloud Keychain',
+      createdAt: Date.now(),
+    })),
+    listPasskeys: vi.fn(async () => []),
+    deletePasskey: vi.fn(async () => {}),
     signOut: vi.fn(async () => {
       useSync.setState({ user: null });
     }),
@@ -72,5 +80,44 @@ describe('SyncDialog', () => {
     await user.click(screen.getByRole('button', { name: 'Delete all data…' }));
     await vi.waitFor(async () => expect(await db.people.count()).toBe(0));
     confirm.mockRestore();
+  });
+
+  it('lists passkeys, adds one, and removes one', async () => {
+    const user = userEvent.setup();
+    const actions = fakeActions();
+    actions.listPasskeys = vi.fn(async () => [
+      {
+        id: 'old',
+        name: 'MacBook',
+        createdAt: Date.now() - 86_400_000 * 3,
+        lastUsedAt: Date.now(),
+      },
+    ]);
+    vi.stubGlobal('PublicKeyCredential', class {});
+    render(<SyncDialog actions={actions} />);
+    expect(await screen.findByText('MacBook')).toBeInTheDocument();
+    expect(screen.getByText(/added 3 days ago · used just now/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Add a passkey' }));
+    expect(actions.registerPasskey).toHaveBeenCalled();
+    expect(await screen.findByText('iCloud Keychain')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Remove passkey MacBook' }));
+    expect(actions.deletePasskey).toHaveBeenCalledWith('old');
+    expect(screen.queryByText('MacBook')).not.toBeInTheDocument();
+    vi.unstubAllGlobals();
+  });
+
+  it('says why when a passkey cannot be added', async () => {
+    const user = userEvent.setup();
+    const actions = fakeActions();
+    actions.registerPasskey = vi.fn(async () => {
+      throw new Error('No passkey was used — the prompt was closed or timed out.');
+    });
+    vi.stubGlobal('PublicKeyCredential', class {});
+    render(<SyncDialog actions={actions} />);
+    await user.click(await screen.findByRole('button', { name: 'Add a passkey' }));
+    expect(await screen.findByText(/prompt was closed/)).toBeInTheDocument();
+    vi.unstubAllGlobals();
   });
 });

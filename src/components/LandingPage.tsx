@@ -1,5 +1,6 @@
 import { Component, lazy, Suspense, useState, type CSSProperties, type ReactNode } from 'react';
 import { syncActions, type SyncActions } from '../sync/controller';
+import { passkeysSupported } from '../sync/passkeys';
 import { useSync } from '../sync/store';
 import { feedbackMailto } from '../model/feedback';
 import { GoogleIcon } from './icons';
@@ -18,6 +19,7 @@ const shot = (name: string) => `${import.meta.env.BASE_URL}landing/${name}.webp`
 export function LandingPage({ actions = syncActions }: { actions?: SyncActions }) {
   const authError = useSync((s) => s.authError);
   const [busy, setBusy] = useState(false);
+  const [passkeyBusy, setPasskeyBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function signIn() {
@@ -28,6 +30,19 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
       setBusy(false);
+    }
+  }
+
+  // For accounts that added a passkey in Account & sync: the browser's own prompt, no round trip.
+  async function signInWithPasskey() {
+    setPasskeyBusy(true);
+    setError(null);
+    try {
+      await actions.signInWithPasskey(); // on success the session lands and the app takes over
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setPasskeyBusy(false);
     }
   }
 
@@ -86,6 +101,17 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
               </button>
               <span className={styles.ctaNote}>Free while in beta · nothing to set up</span>
             </div>
+            {passkeysSupported() && (
+              <button
+                type="button"
+                className={styles.passkey}
+                disabled={passkeyBusy}
+                onClick={() => void signInWithPasskey()}
+              >
+                <KeyGlyph />
+                {passkeyBusy ? 'Waiting for your passkey…' : 'Sign in with a passkey'}
+              </button>
+            )}
             {problem && (
               <p className={styles.error} role="alert">
                 {problem}
@@ -241,6 +267,20 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
         <div className={`${styles.inner} ${styles.footerLine}`}>© 2026 Somehow I Manage</div>
       </footer>
     </div>
+  );
+}
+
+function KeyGlyph() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <circle cx="5.5" cy="8" r="3" stroke="currentColor" strokeWidth="1.6" />
+      <path
+        d="M8.5 8h6M12 8v2.5M14.5 8v2"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </svg>
   );
 }
 

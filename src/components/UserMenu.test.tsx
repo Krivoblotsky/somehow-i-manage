@@ -7,6 +7,14 @@ import { UserMenu } from './UserMenu';
 
 const actions = (): SyncActions => ({
   signInWithGoogle: vi.fn(async () => {}),
+  signInWithPasskey: vi.fn(async () => {}),
+  registerPasskey: vi.fn(async () => ({
+    id: 'pk1',
+    name: 'iCloud Keychain',
+    createdAt: Date.now(),
+  })),
+  listPasskeys: vi.fn(async () => []),
+  deletePasskey: vi.fn(async () => {}),
   signOut: vi.fn(async () => {}),
   syncNow: vi.fn(async () => {}),
 });

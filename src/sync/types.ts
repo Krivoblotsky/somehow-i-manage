@@ -31,12 +31,27 @@ export interface SyncUser {
   avatarUrl?: string;
 }
 
+/** A passkey registered for the signed-in account (Face ID, Touch ID, a security key). */
+export interface Passkey {
+  id: string;
+  /** What the authenticator calls itself, e.g. "iCloud Keychain"; absent for some keys. */
+  name?: string;
+  createdAt: number;
+  lastUsedAt?: number;
+}
+
 /** Who is signed in and how to sign in: Supabase Auth in production, a fake in tests. */
 export interface SyncAuth {
   getUser(): Promise<SyncUser | null>;
   onChange(listener: (user: SyncUser | null) => void): () => void;
   /** Sends the browser to Google; it comes back to the app signed in. */
   signInWithGoogle(): Promise<void>;
+  /** The browser's passkey prompt; resolves once the session is set (no round trip). */
+  signInWithPasskey(): Promise<void>;
+  /** Registers a passkey for the signed-in account; the account must already exist. */
+  registerPasskey(): Promise<Passkey>;
+  listPasskeys(): Promise<Passkey[]>;
+  deletePasskey(id: string): Promise<void>;
   signOut(): Promise<void>;
 }
 

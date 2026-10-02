@@ -182,6 +182,31 @@
   color: var(--text-subtle);
   line-height: 1.4;
 }
+/* the second way in, for accounts that added a passkey: quiet, under the main button */
+.passkey {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid var(--chrome-2);
+  transition:
+    color 120ms,
+    border-color 120ms;
+}
+.passkey:hover {
+  color: var(--text);
+  border-color: var(--chrome-3);
+}
+.passkey:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
 .ctaNote a {
   color: var(--text-muted);
   text-decoration: underline;

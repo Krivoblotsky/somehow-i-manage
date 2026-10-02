@@ -39,3 +39,53 @@
   letter-spacing: 0.3em;
   font-variant-numeric: tabular-nums;
 }
+
+/* passkeys */
+.passkeys {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--chrome-2);
+}
+.sectionTitle {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.passkeyList {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.passkeyRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--bg);
+  font-size: 13px;
+}
+.passkeyName {
+  font-weight: 600;
+}
+.passkeyMeta {
+  color: var(--text-subtle);
+  font-size: 12px;
+}
+.passkeyRemove {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.passkeyRemove:hover {
+  color: var(--danger);
+}
+.passkeyActions {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}

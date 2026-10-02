@@ -1,11 +1,13 @@
 import * as Dialog from '@radix-ui/react-dialog';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { clearAllData } from '../data/repository';
 import { formatRelativeTime } from '../model/format';
 import { useNow } from '../state/now';
 import { useUI } from '../state/ui';
 import { syncActions, type SyncActions } from '../sync/controller';
+import { passkeysSupported } from '../sync/passkeys';
 import { useSync } from '../sync/store';
+import type { Passkey } from '../sync/types';
 import dlg from './dialog.module.css';
 import styles from './SyncDialog.module.css';
 import ui from './ui.module.css';
@@ -85,6 +87,7 @@ function SignedIn({ actions, email }: { actions: SyncActions; email?: string }) 
         <div className={styles.who}>Signed in as {email ?? 'you'}</div>
         <div className={isError ? styles.lineError : styles.line}>{line}</div>
       </div>
+      <Passkeys actions={actions} />
       <p className={styles.note}>
         Signing out leaves this device’s copy in place for when you sign back in. Another account
         signing in here starts from its own data. “Delete all data” removes everything from this
@@ -113,5 +116,100 @@ function SignedIn({ actions, email }: { actions: SyncActions; email?: string }) 
         </Dialog.Close>
       </div>
     </div>
+  );
+}
+
+/** A faster way back in: Face ID, Touch ID or a security key instead of the trip to Google. */
+function Passkeys({ actions }: { actions: SyncActions }) {
+  const [list, setList] = useState<Passkey[] | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [problem, setProblem] = useState<string | null>(null);
+  const now = useNow();
+  const supported = passkeysSupported();
+
+  useEffect(() => {
+    let cancelled = false;
+    actions
+      .listPasskeys()
+      .then((items) => {
+        if (!cancelled) setList(items);
+      })
+      .catch((e: unknown) => {
+        if (!cancelled) {
+          setList([]);
+          setProblem(e instanceof Error ? e.message : String(e));
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [actions]);
+
+  async function add() {
+    setBusy(true);
+    setProblem(null);
+    try {
+      const created = await actions.registerPasskey();
+      setList((current) => [...(current ?? []), created]);
+    } catch (e) {
+      setProblem(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function remove(id: string) {
+    setProblem(null);
+    try {
+      await actions.deletePasskey(id);
+      setList((current) => (current ?? []).filter((p) => p.id !== id));
+    } catch (e) {
+      setProblem(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  return (
+    <section className={styles.passkeys} aria-labelledby="passkeys-title">
+      <h3 id="passkeys-title" className={styles.sectionTitle}>
+        Passkeys
+      </h3>
+      <p className={styles.note}>
+        Next time, sign in with Face ID, Touch ID or a security key instead of going through Google.
+        A passkey made on a Mac or iPhone follows you through iCloud Keychain.
+      </p>
+      {list && list.length > 0 && (
+        <ul className={styles.passkeyList}>
+          {list.map((p) => (
+            <li key={p.id} className={styles.passkeyRow}>
+              <span className={styles.passkeyName}>{p.name ?? 'Passkey'}</span>
+              <span className={styles.passkeyMeta}>
+                added {formatRelativeTime(p.createdAt, now)}
+                {p.lastUsedAt ? ` · used ${formatRelativeTime(p.lastUsedAt, now)}` : ''}
+              </span>
+              <button
+                type="button"
+                className={styles.passkeyRemove}
+                onClick={() => void remove(p.id)}
+                aria-label={`Remove passkey ${p.name ?? ''}`.trim()}
+              >
+                Remove
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className={styles.passkeyActions}>
+        <button
+          type="button"
+          className={ui.btn}
+          disabled={busy || !supported || list === null}
+          onClick={() => void add()}
+        >
+          {busy ? 'Waiting for your passkey…' : 'Add a passkey'}
+        </button>
+        {!supported && <span className={styles.passkeyMeta}>Not available in this browser.</span>}
+      </div>
+      {problem && <p className={styles.lineError}>{problem}</p>}
+    </section>
   );
 }

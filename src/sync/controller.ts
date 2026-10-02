@@ -105,6 +105,10 @@ function requireAuth(): SyncAuth {
 /** What the sync dialog calls. */
 export const syncActions = {
   signInWithGoogle: () => requireAuth().signInWithGoogle(),
+  signInWithPasskey: () => requireAuth().signInWithPasskey(),
+  registerPasskey: () => requireAuth().registerPasskey(),
+  listPasskeys: () => requireAuth().listPasskeys(),
+  deletePasskey: (id: string) => requireAuth().deletePasskey(id),
   signOut: () => requireAuth().signOut(),
   syncNow,
 };

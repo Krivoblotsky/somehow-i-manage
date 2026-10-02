@@ -1,6 +1,7 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js';
 import { SYNC_CONFIG } from './config';
-import type { RecordKind, SyncAuth, SyncRow, SyncTransport, SyncUser } from './types';
+import { describePasskeyError } from './passkeys';
+import type { Passkey, RecordKind, SyncAuth, SyncRow, SyncTransport, SyncUser } from './types';
 
 let clientPromise: Promise<SupabaseClient> | null = null;
 
@@ -103,8 +104,25 @@ async function authorizeProblem(url: string): Promise<string | null> {
   }
 }
 
-/** Google sign-in through Supabase Auth. */
+/** What Supabase returns for a passkey, in either list or registration shape. */
+interface RawPasskey {
+  id: string;
+  friendly_name?: string;
+  created_at: string;
+  last_used_at?: string;
+}
+
+/** Google and passkey sign-in through Supabase Auth. */
 export function supabaseAuth(client: SupabaseClient): SyncAuth {
+  const toPasskey = (p: RawPasskey): Passkey => ({
+    id: p.id,
+    name: p.friendly_name || undefined,
+    createdAt: Date.parse(p.created_at),
+    lastUsedAt: p.last_used_at ? Date.parse(p.last_used_at) : undefined,
+  });
+  const failPasskey = (error: { name?: string; message: string } | null): void => {
+    if (error) throw new Error(describePasskeyError(error));
+  };
   const toUser = (u: User | null | undefined): SyncUser | null => {
     if (!u) return null;
     const meta = u.user_metadata as Record<string, unknown>;
@@ -142,6 +160,26 @@ export function supabaseAuth(client: SupabaseClient): SyncAuth {
       const problem = await authorizeProblem(data.url);
       if (problem) throw new Error(problem);
       window.location.assign(data.url);
+    },
+    async signInWithPasskey() {
+      // The authenticator picks the account from the credential; the session is set on success.
+      const { error } = await client.auth.signInWithPasskey();
+      failPasskey(error);
+    },
+    async registerPasskey() {
+      const { data, error } = await client.auth.registerPasskey();
+      failPasskey(error);
+      if (!data) throw new Error('No passkey was created.');
+      return toPasskey(data);
+    },
+    async listPasskeys() {
+      const { data, error } = await client.auth.passkey.list();
+      fail(error);
+      return (data ?? []).map(toPasskey);
+    },
+    async deletePasskey(id) {
+      const { error } = await client.auth.passkey.delete({ passkeyId: id });
+      fail(error);
     },
     async signOut() {
       const { error } = await client.auth.signOut();

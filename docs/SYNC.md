@@ -54,8 +54,16 @@ notice instead of the app.
 6. **GitHub Pages.** Repository *Settings → Secrets and variables → Actions → Variables*: add
    `SUPABASE_URL` and `SUPABASE_ANON_KEY`. The deploy workflow passes them to the build.
 
-Then open the app, click the cloud in the header (or ⋯ → *Sync across devices…*) and continue
-with Google. Do the same on the next device.
+7. **Passkeys.** Supabase turns them on by default and derives the relying party from the Site
+   URL, so the project already answers passkey challenges for `somehowimanage.app`. Check
+   *Authentication → Passkeys*: display name “Somehow I Manage”, **ID `somehowimanage.app`** (bare
+   domain, no scheme), origin `https://somehowimanage.app`. The ID is forever: changing it later
+   invalidates every passkey anyone has registered. Passkeys never create an account; a signed-in
+   user adds one in *Account & sync*, and from then on the landing page's “Sign in with a passkey”
+   gets them in with Face ID, Touch ID or a security key, no trip to Google. WebAuthn ties the
+   passkey to that domain, so `localhost` cannot register or use one; test on the live site.
+
+Then open the app and continue with Google. Do the same on the next device.
 
 ## Good to know
 
@@ -64,3 +72,5 @@ with Google. Do the same on the next device.
 - Tombstones stay on the server, so a deletion reaches a device that was off for months.
 - Two devices editing the same record: the later edit wins as a whole; there is no field merge.
 - Clocks matter for “later”. A device with a badly wrong clock can lose edits.
+- Supabase marks passkeys as experimental; the calls live in one place (`supabaseAuth` in
+  `src/sync/supabase.ts`) so a renamed API is a small fix.

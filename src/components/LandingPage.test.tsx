@@ -7,6 +7,14 @@ import { LandingPage } from './LandingPage';
 
 const actions = (): SyncActions => ({
   signInWithGoogle: vi.fn(async () => {}),
+  signInWithPasskey: vi.fn(async () => {}),
+  registerPasskey: vi.fn(async () => ({
+    id: 'pk1',
+    name: 'iCloud Keychain',
+    createdAt: Date.now(),
+  })),
+  listPasskeys: vi.fn(async () => []),
+  deletePasskey: vi.fn(async () => {}),
   signOut: vi.fn(async () => {}),
   syncNow: vi.fn(async () => {}),
 });
@@ -54,5 +62,26 @@ describe('LandingPage', () => {
     useSync.setState({ authError: 'access_denied: the user cancelled' });
     render(<LandingPage actions={actions()} />);
     expect(screen.getByRole('alert')).toHaveTextContent('access_denied');
+  });
+
+  it('offers a passkey where the browser supports it, and shows what went wrong', async () => {
+    const user = userEvent.setup();
+    const a = actions();
+    a.signInWithPasskey = vi.fn(async () => {
+      throw new Error('No passkey was used — the prompt was closed or timed out.');
+    });
+    vi.stubGlobal('PublicKeyCredential', class {});
+    render(<LandingPage actions={a} />);
+    await user.click(screen.getByRole('button', { name: 'Sign in with a passkey' }));
+    expect(a.signInWithPasskey).toHaveBeenCalledTimes(1);
+    expect(await screen.findByRole('alert')).toHaveTextContent('prompt was closed');
+    vi.unstubAllGlobals();
+  });
+
+  it('hides the passkey button when the browser has no WebAuthn', () => {
+    render(<LandingPage actions={actions()} />);
+    expect(
+      screen.queryByRole('button', { name: 'Sign in with a passkey' }),
+    ).not.toBeInTheDocument();
   });
 });
