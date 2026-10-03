@@ -1,7 +1,9 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Component, lazy, Suspense, useState, type CSSProperties, type ReactNode } from 'react';
+import { FAQ } from '../content/faq';
 import { syncActions, type SyncActions } from '../sync/controller';
-import { passkeysSupported } from '../sync/passkeys';
+import { useHydrated } from '../state/hydrated';
+import { usePasskeysSupported } from '../state/passkeys';
 import { useSync } from '../sync/store';
 import { feedbackMailto } from '../model/feedback';
 import { GoogleIcon, MicrosoftIcon } from './icons';
@@ -23,6 +25,8 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
   const [busy, setBusy] = useState<Provider | null>(null);
   const [passkeyBusy, setPasskeyBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const passkeys = usePasskeysSupported(); // false until hydrated: the pre-render has no browser
+  const hydrated = useHydrated(); // the live demo is browser-only; the pre-render shows the still
 
   // The browser leaves for the provider and comes back signed in; "busy" lasts until it leaves.
   async function signInWith(provider: Provider) {
@@ -69,6 +73,7 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
           <div className={styles.navActions}>
             <SignInMenu
               busy={busy !== null || passkeyBusy}
+              passkeys={passkeys}
               onPick={(p) => void signInWith(p)}
               onPasskey={() => void signInWithPasskey()}
             />
@@ -95,7 +100,7 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
             <div id="signin" className={styles.cta}>
               <ProviderButtons busy={busy} verb="Continue" onPick={(p) => void signInWith(p)} />
             </div>
-            {passkeysSupported() && (
+            {passkeys && (
               <button
                 type="button"
                 className={styles.passkey}
@@ -113,11 +118,15 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
             )}
           </div>
           <div className={`${styles.inner} ${styles.demo}`} aria-label="Live demo">
-            <DemoBoundary fallback={<StillDemo />}>
-              <Suspense fallback={<StillDemo />}>
-                <LiveDemo />
-              </Suspense>
-            </DemoBoundary>
+            {hydrated ? (
+              <DemoBoundary fallback={<StillDemo />}>
+                <Suspense fallback={<StillDemo />}>
+                  <LiveDemo />
+                </Suspense>
+              </DemoBoundary>
+            ) : (
+              <StillDemo />
+            )}
           </div>
           <ul className={`${styles.inner} ${styles.proof}`} aria-label="In short">
             <Proof title="Offline-first" text="Works on a plane. Syncs when you’re back." />
@@ -208,6 +217,22 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
           </div>
         </section>
 
+        <section id="faq" className={`${styles.band} ${styles.light}`}>
+          <div className={styles.inner}>
+            <h2 className={styles.h2}>Questions, answered.</h2>
+            <dl className={styles.faq}>
+              {FAQ.map((item) => (
+                <div key={item.q} className={styles.faqItem}>
+                  <dt>
+                    <h3>{item.q}</h3>
+                  </dt>
+                  <dd>{item.a}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </section>
+
         <section className={styles.band}>
           <div className={`${styles.inner} ${styles.final}`}>
             <h2 className={styles.h2}>Start with your team.</h2>
@@ -226,6 +251,12 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
         </section>
       </main>
 
+      <script
+        type="application/ld+json"
+        // What search and answer engines read about the app, the author and the FAQ above.
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData()) }}
+      />
+
       <footer className={styles.footer}>
         <div className={`${styles.inner} ${styles.footerGrid}`}>
           <div className={styles.footerBrand}>
@@ -238,6 +269,7 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
             <a href="#map">People Map</a>
             <a href="#person">1:1 mode</a>
             <a href="#how">How it works</a>
+            <a href="#faq">FAQ</a>
           </div>
           <div className={styles.footerCol}>
             <h3>Company</h3>
@@ -258,13 +290,73 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
 
 type Provider = 'google' | 'microsoft';
 
+const SITE = 'https://somehowimanage.app';
+const DESCRIPTION =
+  'A task manager for managers: every task, note and 1:1 lives with the person it’s about.';
+
+/** Schema.org JSON-LD: the site, the app, the author, and the FAQ, all from one place. */
+function structuredData() {
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebSite',
+        '@id': `${SITE}/#website`,
+        url: `${SITE}/`,
+        name: 'Somehow I Manage',
+        description: DESCRIPTION,
+        publisher: { '@id': `${SITE}/#author` },
+      },
+      {
+        '@type': 'SoftwareApplication',
+        '@id': `${SITE}/#app`,
+        name: 'Somehow I Manage',
+        url: `${SITE}/`,
+        description: DESCRIPTION,
+        applicationCategory: 'BusinessApplication',
+        operatingSystem: 'Web browser; installable on macOS, iOS, iPadOS and Windows',
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+        featureList: [
+          'People Map: the team as hubs with their tasks and notes around them',
+          '1:1 mode with an agenda built from open items',
+          'Quick capture from anywhere',
+          'Offline-first, synced through your own account',
+          'Export to Markdown, JSON backup and restore',
+        ],
+        image: `${SITE}/og.jpg`,
+        screenshot: `${SITE}/landing/map.webp`,
+        author: { '@id': `${SITE}/#author` },
+      },
+      {
+        '@type': 'Person',
+        '@id': `${SITE}/#author`,
+        name: 'Sergii Kryvoblotskyi',
+        description: 'Manages a team. Built Somehow I Manage to do it better.',
+        url: 'https://github.com/Krivoblotsky',
+        sameAs: ['https://github.com/Krivoblotsky'],
+      },
+      {
+        '@type': 'FAQPage',
+        '@id': `${SITE}/#faq`,
+        mainEntity: FAQ.map((item) => ({
+          '@type': 'Question',
+          name: item.q,
+          acceptedAnswer: { '@type': 'Answer', text: item.a },
+        })),
+      },
+    ],
+  };
+}
+
 /** The nav's one button: a menu of the ways in, so no provider is chosen for the visitor. */
 function SignInMenu({
   busy,
+  passkeys,
   onPick,
   onPasskey,
 }: {
   busy: boolean;
+  passkeys: boolean;
   onPick: (provider: Provider) => void;
   onPasskey: () => void;
 }) {
@@ -286,7 +378,7 @@ function SignInMenu({
             <MicrosoftIcon size={16} />
             Continue with Microsoft
           </DropdownMenu.Item>
-          {passkeysSupported() && (
+          {passkeys && (
             <>
               <DropdownMenu.Separator className={menu.separator} />
               <DropdownMenu.Item className={menu.item} onSelect={onPasskey}>

@@ -84,6 +84,11 @@ product screenshots from the dev server (`public/landing`), `npm run icons` rend
 icons (favicon, PWA, Apple touch) from `assets/icon-source.png`, cut to Apple's icon shape, and
 `npm run og` composes the social preview image (`public/og.jpg`) for shared links.
 
+The build pre-renders the landing page into `dist/index.html` (`scripts/prerender.mjs`, after
+`vite build`): crawlers and AI agents read the real content, a newcomer sees the page before
+JavaScript, and `main.tsx` hydrates it. The FAQ in `src/content/faq.ts` feeds both the page and the
+FAQ structured data; `public/` also holds `robots.txt`, `sitemap.xml` and `llms.txt`.
+
 Static pages next to the app live in `public/` and are served as real documents, outside the
 service worker's app-shell fallback: `public/privacy/index.html` is the privacy policy at
 `/privacy/`, linked from the landing page (Google's OAuth brand verification needs it).

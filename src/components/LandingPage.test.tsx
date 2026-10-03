@@ -76,7 +76,7 @@ describe('LandingPage', () => {
     });
     vi.stubGlobal('PublicKeyCredential', class {});
     render(<LandingPage actions={a} />);
-    await user.click(screen.getByRole('button', { name: 'Sign in with a passkey' }));
+    await user.click(await screen.findByRole('button', { name: 'Sign in with a passkey' }));
     expect(a.signInWithPasskey).toHaveBeenCalledTimes(1);
     expect(await screen.findByRole('alert')).toHaveTextContent('prompt was closed');
     vi.unstubAllGlobals();

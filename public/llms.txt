@@ -1,0 +1,22 @@
+# Somehow I Manage
+
+> A people-first task manager for managers. Every task, note and 1:1 lives with the person it is about, and the People Map shows the whole team at a glance.
+
+Somehow I Manage is a free web app at https://somehowimanage.app/ made by Sergii Kryvoblotskyi, a manager who kept his team in notes titled with people's names and turned that habit into a tool. It is installable (PWA), works offline, and syncs through the user's own Google or Microsoft account; passkeys can be added afterwards. Data lives on the device and in a private database per account (Supabase); there are no ads, no analytics and no data sales, and everything can be exported or deleted by the user.
+
+## What it does
+
+- People Map: each person is a hub on a canvas with their tasks and notes around them; drag a card onto someone else to hand it over; people out of view stay pinned at the edge.
+- 1:1 mode: start a 1:1 from a person's page; the agenda is their open items; tick what got done, mark what was discussed, capture new items; ending the meeting records it and the next one shows what happened since.
+- Person page: tasks, notes and completed work for one person, with a line to type the next thing.
+- Quick capture: ⌘K from anywhere to jump to a person, find a task, or type "Name: task" to add one.
+- Offline-first, syncing, export to Markdown, JSON backup and restore.
+
+## Pages
+
+- [Home](https://somehowimanage.app/): the live demo, how it works, the author's story, FAQ.
+- [Privacy policy](https://somehowimanage.app/privacy/): what is stored, where, and why.
+
+## Contact
+
+- Email: hello@somehowimanage.app

@@ -462,6 +462,27 @@
   font-size: 14px;
 }
 
+/* questions, answered: the headings are the questions people type */
+.faq {
+  margin: 44px 0 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px 48px;
+}
+.faqItem dt h3 {
+  margin: 0 0 8px;
+  font-size: 19px;
+  letter-spacing: -0.01em;
+  color: var(--paper-text);
+}
+.faqItem dd {
+  margin: 0;
+  font-family: var(--font-text);
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--paper-muted);
+}
+
 /* the last word */
 .final {
   text-align: center;
@@ -630,7 +651,8 @@
   .steps,
   .principles,
   .proof,
-  .author {
+  .author,
+  .faq {
     grid-template-columns: 1fr;
   }
   .points {

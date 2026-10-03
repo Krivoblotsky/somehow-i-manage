@@ -2,6 +2,7 @@ import { liveQuery } from 'dexie';
 import { db } from '../data/db';
 import { isSyncConfigured } from './config';
 import { SyncEngine } from './engine';
+import { writeSignedInHint } from './hint';
 import { useSync } from './store';
 import {
   consumeAuthRedirect,
@@ -69,6 +70,7 @@ async function applyUser(user: SyncUser | null): Promise<void> {
   // Token refreshes report the same user; nothing to redo then.
   if (user && previous?.id === user.id && unsubscribeRealtime) return;
   useSync.setState({ user, error: null, phase: 'idle' });
+  writeSignedInHint(user !== null);
   unsubscribeRealtime?.();
   unsubscribeRealtime = null;
   if (!user || !engine) return;

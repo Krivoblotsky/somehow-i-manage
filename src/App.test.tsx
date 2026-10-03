@@ -118,11 +118,21 @@ describe('App — sign-in gate', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('access_denied');
   });
 
-  it('waits quietly while the saved session is being checked', () => {
+  it('shows a newcomer the landing page while the saved session is being checked', () => {
+    localStorage.removeItem('personal.signedIn');
+    useSync.setState({ ready: false, user: null });
+    render(<App />);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Work with people');
+    expect(screen.queryByLabelText('People')).not.toBeInTheDocument();
+  });
+
+  it('waits quietly for someone who signed in here before', () => {
+    localStorage.setItem('personal.signedIn', '1');
     useSync.setState({ ready: false, user: null });
     render(<App />);
     expect(screen.queryByRole('button', { name: 'Continue with Google' })).not.toBeInTheDocument();
     expect(screen.queryByLabelText('People')).not.toBeInTheDocument();
+    localStorage.removeItem('personal.signedIn');
   });
 
   it('tells developers when the build has no backend', () => {
