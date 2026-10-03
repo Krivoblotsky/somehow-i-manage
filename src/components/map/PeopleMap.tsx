@@ -360,7 +360,8 @@ function Canvas({ people, items, focusPersonId }: PeopleMapProps) {
             onPaneContextMenu={() => setMenuTarget({ kind: 'pane' })}
             fitView={!focusPersonId}
             fitViewOptions={fit}
-            attributionPosition="bottom-center"
+            // MIT-licensed; the authors ask for the badge unless you subscribe to Pro. Owner’s call.
+            proOptions={{ hideAttribution: true }}
             panOnScroll
             // our own stacking: edges (0) under hubs (1) under cards (2); React Flow would lift
             // an edge to its card's level and draw it over the hub's name

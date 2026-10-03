@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 import { FAQ } from '../content/faq';
+import { pickQuote } from '../content/quotes';
 import { syncActions, type SyncActions } from '../sync/controller';
 import { useHydrated } from '../state/hydrated';
 import { usePasskeysSupported } from '../state/passkeys';
@@ -840,9 +841,15 @@ function Card({
 
 /** Shown while the saved session is being checked, before we know whether to ask for sign-in. */
 export function Splash() {
+  // chosen once per mount: the quote stays put while the session and the workspace load
+  const [quote] = useState(pickQuote);
   return (
     <div className={styles.splash} aria-busy="true">
-      Somehow I Manage
+      <div className={styles.splashBrand}>Somehow I Manage</div>
+      <figure className={styles.splashQuote}>
+        <blockquote>{quote.text}</blockquote>
+        <figcaption>{quote.by}</figcaption>
+      </figure>
     </div>
   );
 }
