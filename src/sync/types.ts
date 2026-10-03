@@ -55,6 +55,8 @@ export interface SyncAuth {
   listPasskeys(): Promise<Passkey[]>;
   deletePasskey(id: string): Promise<void>;
   signOut(): Promise<void>;
+  /** Removes the account and everything in it on the server; the session ends with it. */
+  deleteAccount(): Promise<void>;
 }
 
 export type SyncPhase = 'idle' | 'syncing' | 'error';

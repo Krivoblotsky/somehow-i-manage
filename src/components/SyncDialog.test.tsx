@@ -23,6 +23,7 @@ function fakeActions(): SyncActions {
     signOut: vi.fn(async () => {
       useSync.setState({ user: null });
     }),
+    deleteAccount: vi.fn(async () => {}),
     syncNow: vi.fn(async () => {}),
   };
 }
@@ -120,5 +121,22 @@ describe('SyncDialog', () => {
     await user.click(await screen.findByRole('button', { name: 'Add a passkey' }));
     expect(await screen.findByText(/prompt was closed/)).toBeInTheDocument();
     vi.unstubAllGlobals();
+  });
+
+  it('deletes the account only after a confirmation', async () => {
+    const user = userEvent.setup();
+    const actions = fakeActions();
+    actions.deleteAccount = vi.fn(async () => {
+      useSync.setState({ user: null });
+    });
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    render(<SyncDialog actions={actions} />);
+    await user.click(screen.getByRole('button', { name: 'Delete your account…' }));
+    expect(actions.deleteAccount).not.toHaveBeenCalled();
+    confirm.mockReturnValue(true);
+    await user.click(screen.getByRole('button', { name: 'Delete your account…' }));
+    expect(actions.deleteAccount).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText(/Signed in as/)).not.toBeInTheDocument();
+    confirm.mockRestore();
   });
 });

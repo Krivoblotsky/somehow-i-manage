@@ -113,6 +113,12 @@ export const syncActions = {
   listPasskeys: () => requireAuth().listPasskeys(),
   deletePasskey: (id: string) => requireAuth().deletePasskey(id),
   signOut: () => requireAuth().signOut(),
+  deleteAccount: async () => {
+    await requireAuth().deleteAccount();
+    await engine?.wipeLocal();
+    writeSignedInHint(false);
+    useSync.setState({ user: null, pending: 0, lastSyncedAt: null });
+  },
   syncNow,
 };
 export type SyncActions = typeof syncActions;

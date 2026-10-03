@@ -77,6 +77,22 @@ function SignedIn({ actions, email }: { actions: SyncActions; email?: string }) 
     }
   }
 
+  async function deleteAccount() {
+    if (
+      !window.confirm(
+        'Delete your account and everything in it, on every device? This cannot be undone.',
+      )
+    )
+      return;
+    setBusy(true);
+    try {
+      await actions.deleteAccount();
+      selectPerson(null);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div>
       <Dialog.Title className={dlg.title}>Account &amp; sync</Dialog.Title>
@@ -91,7 +107,15 @@ function SignedIn({ actions, email }: { actions: SyncActions; email?: string }) 
       <p className={styles.note}>
         Signing out leaves this device’s copy in place for when you sign back in. Another account
         signing in here starts from its own data. “Delete all data” removes everything from this
-        device and from sync.
+        device and from sync. Done with the app?{' '}
+        <button
+          type="button"
+          className={styles.deleteAccount}
+          disabled={busy}
+          onClick={() => void deleteAccount()}
+        >
+          Delete your account…
+        </button>
       </p>
       <div className={dlg.footer}>
         <button type="button" className={ui.btnDanger} onClick={() => void deleteAll()}>

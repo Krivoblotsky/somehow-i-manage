@@ -38,6 +38,19 @@ export class SyncEngine {
    * rewinds so the whole account comes down. A different account than last time starts from an
    * empty cache instead — the previous user's data is not theirs. Same user again: no-op.
    */
+  /** Empties this device's cache without recording the deletions: the account is gone. */
+  async wipeLocal(): Promise<void> {
+    const { db } = this;
+    await withoutChangeTracking(db, [db.people, db.items, db.outbox, db.syncMeta], async () => {
+      await Promise.all([
+        db.people.clear(),
+        db.items.clear(),
+        db.outbox.clear(),
+        db.syncMeta.clear(),
+      ]);
+    });
+  }
+
   async prepareForUser(userId: string): Promise<void> {
     const known = await this.db.syncMeta.get('userId');
     if (known?.value === userId) return;

@@ -34,7 +34,9 @@ export default defineConfig({
     staticPages(['privacy']),
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // the app registers the worker itself (src/pwa.ts) and asks before switching versions
+      registerType: 'prompt',
+      injectRegister: null,
       includeAssets: ['favicon.ico', 'favicon.png', 'icons/apple-touch-icon.png'],
       manifest: {
         name: 'Somehow I Manage',

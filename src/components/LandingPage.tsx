@@ -1,5 +1,13 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { Component, lazy, Suspense, useState, type CSSProperties, type ReactNode } from 'react';
+import {
+  Component,
+  lazy,
+  Suspense,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+  type ReactNode,
+} from 'react';
 import { FAQ } from '../content/faq';
 import { syncActions, type SyncActions } from '../sync/controller';
 import { useHydrated } from '../state/hydrated';
@@ -515,12 +523,27 @@ function PointTabs({
   /** The section's colour: the lit caption's edge, matching its picture frame. */
   accent: string;
 }) {
+  // arrow keys move between captions, as tabs do; only the lit one is in the tab order
+  const move = (to: number) => {
+    const next = (to + items.length) % items.length;
+    onChange(next);
+    document.getElementById(`${prefix}-tab-${next}`)?.focus();
+  };
+  const onKeyDown = (e: KeyboardEvent) => {
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+    if (step !== undefined) move(active + step);
+    else if (e.key === 'Home') move(0);
+    else if (e.key === 'End') move(items.length - 1);
+    else return;
+    e.preventDefault();
+  };
   return (
     <div
       className={styles.points}
       role="tablist"
       aria-label={label}
       style={{ '--accent': accent } as CSSProperties}
+      onKeyDown={onKeyDown}
     >
       {items.map((item, i) => (
         <button
@@ -530,6 +553,7 @@ function PointTabs({
           id={`${prefix}-tab-${i}`}
           aria-selected={i === active}
           aria-controls={`${prefix}-panel`}
+          tabIndex={i === active ? 0 : -1}
           className={styles.point}
           onClick={() => onChange(i)}
         >

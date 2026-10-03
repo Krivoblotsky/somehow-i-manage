@@ -89,3 +89,14 @@
   align-items: center;
   gap: 12px;
 }
+
+/* the way out for good, as quiet text until pressed */
+.deleteAccount {
+  color: var(--text-muted);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.deleteAccount:hover {
+  color: var(--danger);
+}

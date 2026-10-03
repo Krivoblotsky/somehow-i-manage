@@ -35,7 +35,8 @@ notice instead of the app.
 1. **Create a project** at [supabase.com](https://supabase.com) (free plan is fine). Pick a
    region near you.
 2. **Schema.** Open *SQL Editor*, paste [`supabase/schema.sql`](../supabase/schema.sql), run it.
-   Safe to run again later.
+   Safe to run again later. It also creates `delete_my_account()`, behind “Delete your account…”
+   in *Account & sync*; re-run the file after pulling a version that added it.
 3. **Google sign-in.** Two halves:
    - *Google Cloud Console → APIs & Services → Credentials → Create credentials → OAuth client ID*,
      type **Web application**. Add one authorized redirect URI:

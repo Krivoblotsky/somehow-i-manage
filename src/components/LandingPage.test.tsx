@@ -17,6 +17,7 @@ const actions = (): SyncActions => ({
   listPasskeys: vi.fn(async () => []),
   deletePasskey: vi.fn(async () => {}),
   signOut: vi.fn(async () => {}),
+  deleteAccount: vi.fn(async () => {}),
   syncNow: vi.fn(async () => {}),
 });
 

@@ -169,7 +169,15 @@ function Canvas({ people, items, focusPersonId }: PeopleMapProps) {
   );
   const [nodes, setNodes, onNodesChange] = useNodesState<MapNode>(graph.nodes);
   useEffect(() => {
-    setNodes(graph.nodes);
+    // Rebuilt nodes carry no sizes; without the old ones React Flow hides every node until it has
+    // measured it again, a flicker on each selection change. Carry the sizes over.
+    setNodes((current) => {
+      const measured = new Map(current.map((n) => [n.id, n.measured]));
+      return graph.nodes.map((n) => {
+        const size = measured.get(n.id);
+        return size ? { ...n, measured: size } : n;
+      });
+    });
   }, [graph.nodes, setNodes]);
 
   // Bring a person's cluster into view when the header asks for it.

@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot, hydrateRoot } from 'react-dom/client';
 import App from './App';
+import { registerUpdates } from './pwa';
 import { readSignedInHint } from './sync/hint';
 import './styles/tokens.css';
 import './styles/global.css';
@@ -14,6 +15,8 @@ if (import.meta.env.DEV) {
     },
   );
 }
+
+registerUpdates();
 
 const root = document.getElementById('root')!;
 const app = (

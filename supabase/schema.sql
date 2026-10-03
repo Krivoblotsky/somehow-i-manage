@@ -59,3 +59,16 @@ begin
     alter publication supabase_realtime add table public.sync_records;
   end if;
 end $$;
+
+-- Account deletion from inside the app: the signed-in user removes themself; their rows go with
+-- them (sync_records cascades from auth.users). Runs as the function owner, so it may touch auth.
+create or replace function public.delete_my_account()
+returns void
+language sql
+security definer
+set search_path = ''
+as $$
+  delete from auth.users where id = auth.uid();
+$$;
+revoke execute on function public.delete_my_account() from public, anon;
+grant  execute on function public.delete_my_account() to authenticated;

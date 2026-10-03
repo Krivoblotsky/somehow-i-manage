@@ -190,6 +190,12 @@ export function supabaseAuth(client: SupabaseClient): SyncAuth {
       const { error } = await client.auth.signOut();
       fail(error);
     },
+    async deleteAccount() {
+      const { error } = await client.rpc('delete_my_account');
+      fail(error);
+      // the server no longer knows this session; drop it here without asking it to
+      await client.auth.signOut({ scope: 'local' }).catch(() => undefined);
+    },
   };
 }
 
