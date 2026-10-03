@@ -59,8 +59,10 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2,webmanifest}'],
         navigateFallback: 'index.html',
-        // static pages next to the app (public/privacy) are real documents, not app routes
-        navigateFallbackDenylist: [/^\/privacy/],
+        // Only app routes get the app shell. Static pages (public/privacy) and files with an
+        // extension (sitemap.xml, robots.txt, llms.txt, og.jpg) are real documents: typing their
+        // URL into an installed app's browser must show them, not the landing page.
+        navigateFallbackDenylist: [/^\/privacy/, /\.[a-z0-9]+$/i],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
       },
     }),
