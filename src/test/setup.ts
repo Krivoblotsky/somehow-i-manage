@@ -62,3 +62,15 @@ Object.defineProperties(globalThis.HTMLElement.prototype, {
 if (!Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = () => {};
 }
+
+// ProseMirror measures text positions with Range.getClientRects / getBoundingClientRect, which
+// jsdom does not implement; without these, the editor's focus-after-dictation throws after a test
+// has finished and Vitest counts it as an unhandled error (seen in CI, not locally).
+const emptyRect = { x: 0, y: 0, width: 0, height: 0, top: 0, left: 0, right: 0, bottom: 0 };
+const noRects = () =>
+  ({ length: 0, item: () => null, [Symbol.iterator]: function* () {} }) as unknown as DOMRectList;
+if (!Range.prototype.getClientRects) Range.prototype.getClientRects = noRects;
+if (!Range.prototype.getBoundingClientRect) {
+  Range.prototype.getBoundingClientRect = () =>
+    ({ ...emptyRect, toJSON: () => emptyRect }) as unknown as DOMRect;
+}
