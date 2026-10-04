@@ -20,6 +20,10 @@ export const FAQ: readonly { q: string; a: string }[] = [
     a: 'Yes. Tag any task or note with a project; people stay the way in, the project is the thread across them. Cards and rows show the tag, and the Projects panel on the map counts what hangs on each project and, with one click, lights up everything in it, whoever it is with.',
   },
   {
+    q: 'Can my AI assistant use it?',
+    a: 'Yes. Somehow I Manage has an MCP server, so Claude, ChatGPT, Cursor and other assistants can read and update your people, tasks and notes as you: “what is open with Vira”, “prepare my 1:1 with Anton”, “add a task with Emily”. You give the client one address, sign in once and approve it; you can disconnect it any time.',
+  },
+  {
     q: 'Does it work offline?',
     a: 'Yes. Your data is stored on your device and the app works without a connection. When you are back online it syncs to your account, so your other devices catch up.',
   },

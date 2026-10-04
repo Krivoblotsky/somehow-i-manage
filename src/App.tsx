@@ -1,6 +1,8 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { LandingPage, SetupScreen, Splash } from './components/LandingPage';
+import { OAuthConsent } from './components/OAuthConsent';
 import { Toast } from './components/Toast';
+import { pendingConsentId } from './sync/consent';
 import { startSync } from './sync/controller';
 import { readSignedInHint } from './sync/hint';
 import { useSync } from './sync/store';
@@ -21,9 +23,14 @@ export default function App() {
     void startSync();
   }, []);
 
+  // An AI assistant waiting for the user's decision takes over the screen: sign in first if
+  // needed, then approve or deny.
+  const consentId = ready ? pendingConsentId() : null;
+
   let screen;
   if (!configured) screen = <SetupScreen />;
   else if (!ready) screen = likelySignedIn ? <Splash /> : <LandingPage />;
+  else if (consentId) screen = <OAuthConsent id={consentId} signedIn={user !== null} />;
   else if (!user) screen = <LandingPage />;
   else
     screen = (

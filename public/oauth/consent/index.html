@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex" />
+    <title>Somehow I Manage</title>
+    <!-- Supabase sends people here to approve an AI assistant. The app handles it from its root,
+         so this page only carries the query string over (a static host cannot route /oauth/consent
+         to the app by itself). -->
+    <script>
+      location.replace('/' + location.search);
+    </script>
+  </head>
+  <body></body>
+</html>

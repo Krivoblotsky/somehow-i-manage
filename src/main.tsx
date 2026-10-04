@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot, hydrateRoot } from 'react-dom/client';
 import App from './App';
 import { registerUpdates } from './pwa';
+import { captureConsentRequest } from './sync/consent';
 import { readSignedInHint } from './sync/hint';
 import './styles/tokens.css';
 import './styles/global.css';
@@ -17,6 +18,8 @@ if (import.meta.env.DEV) {
 }
 
 registerUpdates();
+// An AI assistant asking to connect arrives with ?authorization_id=…; keep it for the consent screen.
+captureConsentRequest();
 
 const root = document.getElementById('root')!;
 const app = (

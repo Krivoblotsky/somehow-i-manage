@@ -1,0 +1,9 @@
+# Supabase CLI settings for this project. Only what the deploy of the MCP function needs; the
+# rest of the project (auth providers, URLs, the OAuth server) is configured in the dashboard,
+# so do not run `supabase config push`.
+project_id = "mvpbxmlczninyqsyjhqh"
+
+# The MCP server checks the caller's token itself (an OAuth access token from Supabase Auth); the
+# gateway's own check would reject the unauthenticated discovery request MCP clients start with.
+[functions.mcp]
+verify_jwt = false

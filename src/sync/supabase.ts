@@ -1,7 +1,16 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js';
 import { SYNC_CONFIG } from './config';
 import { describePasskeyError } from './passkeys';
-import type { Passkey, RecordKind, SyncAuth, SyncRow, SyncTransport, SyncUser } from './types';
+import type {
+  ConsentRequest,
+  Grant,
+  Passkey,
+  RecordKind,
+  SyncAuth,
+  SyncRow,
+  SyncTransport,
+  SyncUser,
+} from './types';
 
 let clientPromise: Promise<SupabaseClient> | null = null;
 
@@ -195,6 +204,56 @@ export function supabaseAuth(client: SupabaseClient): SyncAuth {
       fail(error);
       // the server no longer knows this session; drop it here without asking it to
       await client.auth.signOut({ scope: 'local' }).catch(() => undefined);
+    },
+    async authorizationDetails(id) {
+      const { data, error } = await client.auth.oauth.getAuthorizationDetails(id);
+      fail(error);
+      if (!data) throw new Error('Supabase returned no details for this request.');
+      if ('authorization_id' in data) {
+        const request: ConsentRequest = {
+          authorizationId: data.authorization_id,
+          client: {
+            id: data.client.id,
+            name: data.client.name,
+            uri: data.client.uri || undefined,
+            logoUri: data.client.logo_uri || undefined,
+          },
+          redirectUri: data.redirect_uri,
+          scope: (data as { scope?: string }).scope || undefined,
+        };
+        return { request };
+      }
+      return { redirectUrl: data.redirect_url };
+    },
+    async approveAuthorization(id) {
+      const { data, error } = await client.auth.oauth.approveAuthorization(id, {
+        skipBrowserRedirect: true,
+      });
+      fail(error);
+      if (!data?.redirect_url) throw new Error('Supabase returned no address to go back to.');
+      return data.redirect_url;
+    },
+    async denyAuthorization(id) {
+      const { data, error } = await client.auth.oauth.denyAuthorization(id, {
+        skipBrowserRedirect: true,
+      });
+      fail(error);
+      if (!data?.redirect_url) throw new Error('Supabase returned no address to go back to.');
+      return data.redirect_url;
+    },
+    async listGrants() {
+      const { data, error } = await client.auth.oauth.listGrants();
+      fail(error);
+      return (data ?? []).map((g): Grant => ({
+        clientId: g.client.id,
+        name: g.client.name,
+        uri: g.client.uri || undefined,
+        grantedAt: Date.parse(g.granted_at) || 0,
+      }));
+    },
+    async revokeGrant(clientId) {
+      const { error } = await client.auth.oauth.revokeGrant({ clientId });
+      fail(error);
     },
   };
 }

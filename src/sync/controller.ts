@@ -129,5 +129,11 @@ export const syncActions = {
     useSync.setState({ user: null, pending: 0, lastSyncedAt: null });
   },
   syncNow,
+  // AI assistants (MCP clients) through Supabase's OAuth 2.1 server
+  authorizationDetails: (id: string) => requireAuth().authorizationDetails(id),
+  approveAuthorization: (id: string) => requireAuth().approveAuthorization(id),
+  denyAuthorization: (id: string) => requireAuth().denyAuthorization(id),
+  listGrants: () => requireAuth().listGrants(),
+  revokeGrant: (clientId: string) => requireAuth().revokeGrant(clientId),
 };
 export type SyncActions = typeof syncActions;

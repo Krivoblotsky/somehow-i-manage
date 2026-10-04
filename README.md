@@ -65,6 +65,9 @@ before clearing site data or switching machines; sync is a later milestone.
 The app requires a Google sign-in (Supabase Auth) and syncs across devices through a Supabase
 project. A build without `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` shows a setup notice. See
 [`docs/SYNC.md`](docs/SYNC.md) for the ten-minute setup and how the local-first engine works (`src/sync/`).
+AI assistants connect through the MCP server in `supabase/functions/mcp/` (Supabase Auth as the
+OAuth 2.1 server, consent screen in the app); [`docs/MCP.md`](docs/MCP.md) has the setup and the
+tools, https://somehowimanage.app/mcp/ the user-facing page.
 
 ## Install as an app
 

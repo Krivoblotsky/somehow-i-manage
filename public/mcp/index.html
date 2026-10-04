@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Connect an AI assistant (MCP) · Somehow I Manage</title>
+    <link rel="canonical" href="https://somehowimanage.app/mcp/" />
+    <meta
+      name="description"
+      content="Somehow I Manage has an MCP server: Claude, ChatGPT, Cursor and other AI assistants can read and update your people, tasks, notes and projects as you. One address, sign in once."
+    />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Somehow I Manage" />
+    <meta property="og:title" content="Connect an AI assistant (MCP) · Somehow I Manage" />
+    <meta
+      property="og:description"
+      content="An MCP server for your people, tasks and notes. Claude, ChatGPT, Cursor and other assistants work as you, after you approve them once."
+    />
+    <meta property="og:url" content="https://somehowimanage.app/mcp/" />
+    <meta property="og:image" content="https://somehowimanage.app/og.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/favicon.png" type="image/png" sizes="128x128" />
+    <link rel="stylesheet" href="/fonts/fixel.css" />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #1c1c1e;
+        --chrome-2: #3e3e40;
+        --text: #ffffff;
+        --text-muted: #9a9a9a;
+        --text-subtle: #8e8e93;
+        --accent: #3debd6;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font:
+          16px/1.55 'Fixel Text',
+          -apple-system,
+          BlinkMacSystemFont,
+          'SF Pro Text',
+          system-ui,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      .page {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 40px 24px 80px;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 48px;
+      }
+      .brand {
+        font-weight: 700;
+        color: var(--text);
+        text-decoration: none;
+        letter-spacing: -0.01em;
+      }
+      .back {
+        color: var(--text-muted);
+        font-size: 14px;
+        text-decoration: none;
+      }
+      .back:hover,
+      .brand:hover {
+        color: var(--accent);
+      }
+      .kicker {
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        margin: 0 0 8px;
+      }
+      h1,
+      h2,
+      .brand,
+      .kicker,
+      .summary p {
+        font-family: 'Fixel Display', system-ui, sans-serif;
+      }
+      h1 {
+        font-size: 36px;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        margin: 0 0 8px;
+      }
+      .date {
+        color: var(--text-subtle);
+        font-size: 14px;
+        margin: 0 0 32px;
+      }
+      .summary {
+        border: 1px solid var(--chrome-2);
+        border-radius: 16px;
+        padding: 20px 24px;
+        margin: 0 0 40px;
+      }
+      .summary p {
+        margin: 0 0 8px;
+        font-weight: 600;
+      }
+      .summary ul {
+        margin: 0;
+        padding-left: 20px;
+        color: var(--text-muted);
+      }
+      h2 {
+        font-size: 20px;
+        letter-spacing: -0.01em;
+        margin: 40px 0 10px;
+      }
+      p,
+      li {
+        color: var(--text-muted);
+      }
+      li {
+        margin: 6px 0;
+      }
+      strong {
+        color: var(--text);
+        font-weight: 600;
+      }
+      a {
+        color: var(--accent);
+      }
+      footer {
+        margin-top: 56px;
+        padding-top: 24px;
+        border-top: 1px solid var(--chrome-2);
+        color: var(--text-subtle);
+        font-size: 14px;
+      }
+    </style>
+    <style>
+      pre {
+        margin: 8px 0 16px;
+        padding: 12px 14px;
+        border-radius: 10px;
+        background: #000;
+        border: 1px solid var(--chrome-2);
+        font:
+          13px/1.5 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          monospace;
+        overflow: auto;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 8px 0 16px;
+        font-size: 15px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 8px 10px 8px 0;
+        border-bottom: 1px solid var(--chrome-2);
+        vertical-align: top;
+      }
+      th {
+        color: var(--text-muted);
+        font-weight: 600;
+      }
+      code {
+        font:
+          0.92em ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <a class="brand" href="/">Somehow I Manage</a>
+        <a class="back" href="/">← Back to the app</a>
+      </header>
+
+      <main>
+        <p class="eyebrow">For AI assistants</p>
+        <h1>Your people, in every assistant you use.</h1>
+        <p>
+          Somehow I Manage has a
+          <a href="https://modelcontextprotocol.io">Model Context Protocol</a>
+          (MCP) server. Connect it to Claude, ChatGPT, Cursor, VS Code or any other MCP client and
+          the assistant can read and update your people, tasks, notes and projects, as you: “what is
+          open with Vira?”, “prepare my 1:1 with Anton”, “add a task with Emily: draft the hiring
+          plan by Friday”.
+        </p>
+
+        <h2>The address</h2>
+        <pre>https://mvpbxmlczninyqsyjhqh.supabase.co/functions/v1/mcp</pre>
+        <p>
+          That is all a client needs. On the first use it sends you to sign in (Google, Microsoft or
+          a passkey) and to a consent screen where you allow that client once. After that it works
+          as you, until you disconnect it in <strong>Account &amp; sync</strong> inside the app.
+        </p>
+
+        <h2>Where to put it</h2>
+        <table>
+          <tr>
+            <th>Claude Code</th>
+            <td>
+              <code
+                >claude mcp add --transport http somehow-i-manage
+                https://mvpbxmlczninyqsyjhqh.supabase.co/functions/v1/mcp</code
+              >, then <code>/mcp</code> to sign in
+            </td>
+          </tr>
+          <tr>
+            <th>Claude (web, desktop, mobile)</th>
+            <td>Settings → Connectors → Add custom connector → paste the address</td>
+          </tr>
+          <tr>
+            <th>ChatGPT</th>
+            <td>Settings → Connectors (developer mode) → add the address</td>
+          </tr>
+          <tr>
+            <th>Cursor</th>
+            <td>
+              <code>.cursor/mcp.json</code>:
+              <code>{ "mcpServers": { "somehow-i-manage": { "url": "…/functions/v1/mcp" } } }</code>
+            </td>
+          </tr>
+          <tr>
+            <th>VS Code</th>
+            <td>
+              <code>.vscode/mcp.json</code>:
+              <code
+                >{ "servers": { "somehow-i-manage": { "type": "http", "url": "…/functions/v1/mcp" }
+                } }</code
+              >
+            </td>
+          </tr>
+        </table>
+
+        <h2>What the assistant can do</h2>
+        <table>
+          <tr>
+            <th>list_people</th>
+            <td>
+              Everyone, with what is open with each of them, their last 1:1 and their projects.
+            </td>
+          </tr>
+          <tr>
+            <th>get_person</th>
+            <td>One person’s page: open tasks (urgent first), notes, what got done recently.</td>
+          </tr>
+          <tr>
+            <th>prepare_one_on_one</th>
+            <td>The agenda for a 1:1, the way the app builds it.</td>
+          </tr>
+          <tr>
+            <th>whats_due</th>
+            <td>Tasks overdue or due in the coming days, across everyone.</td>
+          </tr>
+          <tr>
+            <th>search</th>
+            <td>People, tasks, notes and projects by words.</td>
+          </tr>
+          <tr>
+            <th>add_task, add_note, add_person</th>
+            <td>New things, with a person; tasks take a due date, an urgent flag and a project.</td>
+          </tr>
+          <tr>
+            <th>update_item, complete_task, move_item, delete_item</th>
+            <td>Changes to what is there.</td>
+          </tr>
+          <tr>
+            <th>list_projects, create_project</th>
+            <td>The projects that cut across people.</td>
+          </tr>
+        </table>
+
+        <h2>What it means for your data</h2>
+        <p>
+          The server runs next to your data, in the same Supabase project the app syncs to, and
+          every request carries your own sign-in. It sees exactly what you can see and nothing else;
+          the assistant never gets a key of its own. Changes it makes arrive on your devices through
+          the normal sync, like an edit from another device. You can see every connected assistant
+          and disconnect it at any time in <strong>Account &amp; sync</strong>. The
+          <a href="/privacy/">privacy policy</a> has the rest.
+        </p>
+        <p>
+          The server is open source, like the app:
+          <a
+            href="https://github.com/Krivoblotsky/somehow-i-manage/tree/main/supabase/functions/mcp"
+            >supabase/functions/mcp</a
+          >.
+        </p>
+      </main>
+
+      <footer>Somehow I Manage · <a href="/">somehowimanage.app</a></footer>
+    </div>
+  </body>
+</html>

@@ -40,8 +40,9 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* passkeys */
-.passkeys {
+/* passkeys and assistants sections */
+.passkeys,
+.assistants {
   margin-top: 18px;
   padding-top: 16px;
   border-top: 1px solid var(--chrome-2);
@@ -99,4 +100,38 @@
 }
 .deleteAccount:hover {
   color: var(--danger);
+}
+
+/* the MCP address and the Claude Code line, with a Copy button */
+.copyRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 10px;
+}
+.mono {
+  flex: 1;
+  min-width: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11.5px;
+  line-height: 1.4;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--bg);
+  border: 1px solid var(--chrome-2);
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.copyBtn {
+  flex: none;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+}
+.copyBtn:hover {
+  background: rgba(255, 255, 255, 0.18);
 }

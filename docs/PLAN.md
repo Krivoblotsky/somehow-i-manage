@@ -57,6 +57,17 @@ team carries three: MIPP, Release 2.1, Hiring. Dictation shipped the same day (a
 quick-add field and the body editor). Google Calendar (phase 1) is parked on the `calendar`
 branch, unmerged, waiting on Google's scope verification.
 
+**2026-10-04 addendum: MCP server.** Somehow I Manage speaks to AI assistants: an MCP server as a
+Supabase Edge Function (`supabase/functions/mcp/`, fourteen tools from `list_people` and
+`prepare_one_on_one` to `add_task` and `move_item`), with Supabase Auth as the OAuth 2.1 server
+(dynamic client registration) and the consent screen in the app (`OAuthConsent`, reached through
+`/oauth/consent`). Tools run as the user through `sync_records` and `sync_push()` under RLS, so an
+assistant's changes arrive on devices like any other edit. *Account & sync → AI assistants* shows
+the address, the Claude Code one-liner and connected clients with Disconnect. Public page at
+`/mcp/`, FAQ entry, llms.txt section. Tested end-to-end with the real MCP client under Deno
+(`npx -y deno test`). Design and setup in docs/MCP.md; the project side (enable the OAuth server,
+authorization path, deploy the function) is the user's.
+
 ## Stack — decided 2026-09-29: Option B (web app, resumed), boring core first
 
 Sergii chose the web stack and the "boring core first" order. Consequences:

@@ -5,9 +5,10 @@ import { formatRelativeTime } from '../model/format';
 import { useNow } from '../state/now';
 import { useUI } from '../state/ui';
 import { syncActions, type SyncActions } from '../sync/controller';
+import { claudeCodeCommand, MCP_URL } from '../sync/mcp';
 import { passkeysSupported } from '../sync/passkeys';
 import { useSync } from '../sync/store';
-import type { Passkey } from '../sync/types';
+import type { Grant, Passkey } from '../sync/types';
 import dlg from './dialog.module.css';
 import styles from './SyncDialog.module.css';
 import ui from './ui.module.css';
@@ -104,6 +105,7 @@ function SignedIn({ actions, email }: { actions: SyncActions; email?: string }) 
         <div className={isError ? styles.lineError : styles.line}>{line}</div>
       </div>
       <Passkeys actions={actions} />
+      <Assistants actions={actions} />
       <p className={styles.note}>
         Signing out leaves this device’s copy in place for when you sign back in. Another account
         signing in here starts from its own data. “Delete all data” removes everything from this
@@ -233,6 +235,116 @@ function Passkeys({ actions }: { actions: SyncActions }) {
         </button>
         {!supported && <span className={styles.passkeyMeta}>Not available in this browser.</span>}
       </div>
+      {problem && <p className={styles.lineError}>{problem}</p>}
+    </section>
+  );
+}
+
+/** A value with a Copy button: the MCP address and the one-liner for Claude Code. */
+function Copyable({ value, label }: { value: string; label: string }) {
+  const [copied, setCopied] = useState(false);
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      // no clipboard access: the text is selectable anyway
+    }
+  }
+  return (
+    <div className={styles.copyRow}>
+      <code className={styles.mono} aria-label={label}>
+        {value}
+      </code>
+      <button type="button" className={styles.copyBtn} onClick={() => void copy()}>
+        {copied ? 'Copied' : 'Copy'}
+      </button>
+    </div>
+  );
+}
+
+/** The project has not turned the OAuth server on yet: say so instead of showing a raw error. */
+function describeGrantsError(message: string): string {
+  if (/disabled|not enabled/i.test(message))
+    return 'Connecting assistants isn’t switched on for this project yet (docs/MCP.md has the steps).';
+  return `Connected assistants can’t be listed right now: ${message}`;
+}
+
+/**
+ * AI assistants (MCP clients): the address to give them, and who is connected already. Each
+ * one signs in and gets approved once on the consent screen, then works as the user.
+ */
+function Assistants({ actions }: { actions: SyncActions }) {
+  const [grants, setGrants] = useState<Grant[] | null>(null);
+  const [problem, setProblem] = useState<string | null>(null);
+  const now = useNow();
+
+  useEffect(() => {
+    let cancelled = false;
+    actions
+      .listGrants()
+      .then((list) => {
+        if (!cancelled) setGrants(list);
+      })
+      .catch((e: unknown) => {
+        if (!cancelled) {
+          setGrants([]);
+          setProblem(describeGrantsError(e instanceof Error ? e.message : String(e)));
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [actions]);
+
+  async function disconnect(grant: Grant) {
+    if (!window.confirm(`Disconnect ${grant.name}? It will have to ask again to continue.`)) return;
+    setProblem(null);
+    try {
+      await actions.revokeGrant(grant.clientId);
+      setGrants((current) => (current ?? []).filter((g) => g.clientId !== grant.clientId));
+    } catch (e) {
+      setProblem(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  if (!MCP_URL) return null;
+  return (
+    <section className={styles.assistants} aria-labelledby="assistants-title">
+      <h3 id="assistants-title" className={styles.sectionTitle}>
+        AI assistants
+      </h3>
+      <p className={styles.note}>
+        Claude, ChatGPT, Cursor and other MCP clients can work with your people, tasks and notes as
+        you. Give the client this address; it asks you to sign in and approve it once.
+      </p>
+      <Copyable value={MCP_URL} label="MCP server address" />
+      <p className={styles.note}>In Claude Code, one line does it:</p>
+      <Copyable value={claudeCodeCommand(MCP_URL)} label="Claude Code command" />
+      {grants && grants.length > 0 && (
+        <ul className={styles.passkeyList} aria-label="Connected assistants">
+          {grants.map((g) => (
+            <li key={g.clientId} className={styles.passkeyRow}>
+              <span className={styles.passkeyName}>{g.name}</span>
+              <span className={styles.passkeyMeta}>
+                connected {formatRelativeTime(g.grantedAt, now)}
+              </span>
+              <button
+                type="button"
+                className={styles.passkeyRemove}
+                onClick={() => void disconnect(g)}
+                aria-label={`Disconnect ${g.name}`}
+              >
+                Disconnect
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {grants && grants.length === 0 && !problem && (
+        <p className={styles.note}>Nothing is connected yet.</p>
+      )}
       {problem && <p className={styles.lineError}>{problem}</p>}
     </section>
   );

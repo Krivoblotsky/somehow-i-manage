@@ -19,6 +19,11 @@ const actions = (): SyncActions => ({
   signOut: vi.fn(async () => {}),
   deleteAccount: vi.fn(async () => {}),
   syncNow: vi.fn(async () => {}),
+  authorizationDetails: vi.fn(async () => ({ redirectUrl: 'https://client.test/cb' })),
+  approveAuthorization: vi.fn(async () => 'https://client.test/cb?code=ok'),
+  denyAuthorization: vi.fn(async () => 'https://client.test/cb?error=access_denied'),
+  listGrants: vi.fn(async () => []),
+  revokeGrant: vi.fn(async () => {}),
 });
 
 beforeEach(() => {

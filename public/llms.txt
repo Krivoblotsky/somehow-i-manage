@@ -13,9 +13,14 @@ Somehow I Manage is a free web app at https://somehowimanage.app/ made by Sergii
 - Quick capture: ⌘K from anywhere to jump to a person, find a task, or type "Name: task" to add one.
 - Offline-first, syncing, export to Markdown, JSON backup and restore.
 
+## For AI agents (MCP)
+
+Somehow I Manage has a Model Context Protocol server. Any MCP client (Claude, ChatGPT, Cursor, VS Code, Claude Code) connects to https://mvpbxmlczninyqsyjhqh.supabase.co/functions/v1/mcp ; the user signs in with their own account and approves the client once (OAuth 2.1 through Supabase Auth). Tools: list_people, get_person, prepare_one_on_one, whats_due, search, add_task, add_note, add_person, update_item, complete_task, move_item, delete_item, list_projects, create_project. The server acts as the user under the same access rules as the app; details at https://somehowimanage.app/mcp/.
+
 ## Pages
 
 - [Home](https://somehowimanage.app/): the live demo, how it works, the author's story, FAQ.
+- [Connect an AI assistant](https://somehowimanage.app/mcp/): the MCP server, where to add it, what it can do.
 - [Privacy policy](https://somehowimanage.app/privacy/): what is stored, where, and why.
 
 ## Contact

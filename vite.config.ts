@@ -31,7 +31,7 @@ function staticPages(names: string[]): Plugin {
 export default defineConfig({
   base,
   plugins: [
-    staticPages(['privacy']),
+    staticPages(['privacy', 'mcp', 'oauth/consent']),
     react(),
     VitePWA({
       // the app registers the worker itself (src/pwa.ts) and asks before switching versions
@@ -64,7 +64,7 @@ export default defineConfig({
         // Only app routes get the app shell. Static pages (public/privacy) and files with an
         // extension (sitemap.xml, robots.txt, llms.txt, og.jpg) are real documents: typing their
         // URL into an installed app's browser must show them, not the landing page.
-        navigateFallbackDenylist: [/^\/privacy/, /\.[a-z0-9]+$/i],
+        navigateFallbackDenylist: [/^\/privacy/, /^\/mcp/, /\.[a-z0-9]+$/i],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
       },
     }),

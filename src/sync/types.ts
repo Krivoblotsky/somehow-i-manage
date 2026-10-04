@@ -40,6 +40,23 @@ export interface Passkey {
   lastUsedAt?: number;
 }
 
+/** An OAuth client (an AI assistant) asking to act as the user, as the consent screen shows it. */
+export interface ConsentRequest {
+  authorizationId: string;
+  client: { id: string; name: string; uri?: string; logoUri?: string };
+  /** Where the client is sent back to afterwards. */
+  redirectUri: string;
+  scope?: string;
+}
+
+/** A client the user approved before. Account & sync lists them and can disconnect one. */
+export interface Grant {
+  clientId: string;
+  name: string;
+  uri?: string;
+  grantedAt: number;
+}
+
 /** Who is signed in and how to sign in: Supabase Auth in production, a fake in tests. */
 export interface SyncAuth {
   getUser(): Promise<SyncUser | null>;
@@ -57,6 +74,16 @@ export interface SyncAuth {
   signOut(): Promise<void>;
   /** Removes the account and everything in it on the server; the session ends with it. */
   deleteAccount(): Promise<void>;
+  /**
+   * OAuth 2.1 consent for AI assistants (MCP clients): who is asking, or the URL to go straight
+   * back to when this client was approved before.
+   */
+  authorizationDetails(id: string): Promise<{ request: ConsentRequest } | { redirectUrl: string }>;
+  /** Approve or deny; both give the URL that takes the user back to the client. */
+  approveAuthorization(id: string): Promise<string>;
+  denyAuthorization(id: string): Promise<string>;
+  listGrants(): Promise<Grant[]>;
+  revokeGrant(clientId: string): Promise<void>;
 }
 
 export type SyncPhase = 'idle' | 'syncing' | 'error';
