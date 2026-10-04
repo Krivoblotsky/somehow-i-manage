@@ -1,10 +1,29 @@
 .editor {
+  position: relative;
   min-height: 160px;
 }
 .prose {
   outline: 0;
   min-height: 160px;
-  padding-bottom: 40px;
+  padding: 0 40px 40px 0; /* room on the right for the mic */
+}
+/* the mic sits in the corner, by the first line, like a keyboard's */
+.mic {
+  position: absolute;
+  top: -2px;
+  right: 0;
+}
+.mic button {
+  color: var(--card-muted);
+}
+.mic button:hover {
+  color: var(--card-text);
+  background: #f2f2f7;
+}
+.problem {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--danger);
 }
 .prose :global(p) {
   margin: 0 0 0.6em;

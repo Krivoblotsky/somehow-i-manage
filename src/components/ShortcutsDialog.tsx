@@ -21,6 +21,7 @@ const GROUPS: { title: string; rows: [string, string][] }[] = [
       ['↵', 'Add a task'],
       ['⇧ ↵', 'Add a note'],
       ['⌘ ↵', 'Add and open it'],
+      ['Mic', 'Dictate it: speak, pause, then ↵ (Safari and Chrome)'],
     ],
   },
   {

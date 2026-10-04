@@ -37,6 +37,12 @@
   color: var(--text-subtle);
   white-space: nowrap;
 }
+.problem {
+  flex: none;
+  font-size: 11px;
+  color: #ff8a8a;
+  white-space: nowrap;
+}
 .hint kbd {
   font: inherit;
   font-size: 10px;
@@ -59,12 +65,16 @@
 .light .input::placeholder {
   color: var(--card-muted);
 }
+.light .problem {
+  color: var(--danger);
+}
 .light .hint kbd {
   border-color: #d1d1d6;
   color: #6e6e73;
 }
 @media (max-width: 720px) {
-  .hint {
+  .hint,
+  .problem {
     display: none;
   }
 }

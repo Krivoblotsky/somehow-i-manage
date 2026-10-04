@@ -1,0 +1,40 @@
+.mic {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--text-subtle);
+  transition:
+    color 120ms,
+    background 120ms,
+    box-shadow 120ms;
+}
+.mic:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.08);
+}
+/* listening: the record-red dot everyone knows, breathing */
+.listening,
+.listening:hover {
+  color: #fff;
+  background: var(--danger);
+  animation: breathe 1.4s ease-in-out infinite;
+}
+@keyframes breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(229, 72, 77, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(229, 72, 77, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .listening,
+  .listening:hover {
+    animation: none;
+    box-shadow: 0 0 0 3px rgba(229, 72, 77, 0.35);
+  }
+}
