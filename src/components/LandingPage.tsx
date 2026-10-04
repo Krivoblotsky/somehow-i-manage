@@ -166,6 +166,7 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
 
         <MapSection />
         <PersonSection />
+        <AgentSection />
 
         <section id="author" className={`${styles.band} ${styles.light}`}>
           <div className={`${styles.inner} ${styles.author}`}>
@@ -278,6 +279,7 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
             <a href="#map">People Map</a>
             <a href="#person">1:1 mode</a>
             <a href="#how">How it works</a>
+            <a href="#mcp">AI assistants</a>
             <a href="#faq">FAQ</a>
           </div>
           <div className={styles.footerCol}>
@@ -329,6 +331,7 @@ function structuredData() {
           'People Map: the team as hubs with their tasks and notes around them',
           '1:1 mode with an agenda built from open items',
           'Projects: tag tasks and notes across people and spotlight one on the map',
+          'MCP server: Claude, ChatGPT, Cursor and other AI assistants work with your people as you',
           'Quick capture from anywhere',
           'Offline-first, synced through your own account',
           'Export to Markdown, JSON backup and restore',
@@ -469,6 +472,81 @@ function Step({ title, text }: { title: string; text: string }) {
       <h3>{title}</h3>
       <p>{text}</p>
     </li>
+  );
+}
+
+/**
+ * The MCP section: what an assistant can do here, shown as the one exchange every manager has
+ * before a meeting. Real text, not a picture, so it is read by people and crawlers alike.
+ */
+function AgentSection() {
+  return (
+    <section id="mcp" className={styles.band}>
+      <div className={`${styles.inner} ${styles.agent}`}>
+        <div>
+          <h2 className={styles.h2}>Agentic AI friendly.</h2>
+          <p className={styles.lead}>
+            Somehow I Manage speaks MCP, the open standard assistants use to work with your tools.
+            Connect it to Claude, ChatGPT, Cursor or any agent, and it works with your people the
+            way you do.
+          </p>
+          <ul className={styles.agentPoints}>
+            <li>
+              <h3>One address</h3>
+              <p>Paste it into the assistant. It asks you to sign in and approve it, once.</p>
+            </li>
+            <li>
+              <h3>Works as you</h3>
+              <p>
+                It sees what you see and nothing more, under the same rules as the app. Disconnect
+                it any time.
+              </p>
+            </li>
+            <li>
+              <h3>Your assistant, not ours</h3>
+              <p>Claude, ChatGPT, Cursor, VS Code, Claude Code: anything that speaks MCP.</p>
+            </li>
+          </ul>
+          <a className={styles.agentLink} href={`${import.meta.env.BASE_URL}mcp/`}>
+            Connect an assistant →
+          </a>
+        </div>
+        <figure className={styles.chat} aria-label="An assistant preparing a 1:1">
+          <div className={styles.bubbleUser}>Prepare my 1:1 with Emily</div>
+          <div className={styles.bubbleAssistant}>
+            <div className={styles.agendaHead}>
+              <strong>1:1 with Emily Carter</strong>
+              <span>last 1:1 12 days ago</span>
+            </div>
+            <div className={styles.agendaSection}>To discuss</div>
+            <ul className={styles.agendaList}>
+              <li>
+                <span className={styles.agendaFlag} aria-hidden="true" />
+                Promotion <em>urgent · due Fri</em>
+              </li>
+              <li>
+                Business trip <em>2 days overdue · MIPP</em>
+              </li>
+            </ul>
+            <div className={styles.agendaSection}>Notes to bring up</div>
+            <ul className={styles.agendaList}>
+              <li>
+                Retro takeaways <em>wants more ownership of the roadmap</em>
+              </li>
+            </ul>
+            <div className={styles.agendaSection}>Since last time</div>
+            <ul className={styles.agendaList}>
+              <li>
+                Done: Launch MIPP <em>new: Expense report</em>
+              </li>
+            </ul>
+          </div>
+          <figcaption className={styles.chatCaption}>
+            prepare_one_on_one, one of fourteen tools
+          </figcaption>
+        </figure>
+      </div>
+    </section>
   );
 }
 
