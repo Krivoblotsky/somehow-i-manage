@@ -12,8 +12,8 @@ const DAY = 24 * 60 * 60 * 1000;
 const MINUTE = 60 * 1000;
 
 const MIPP_BODY =
-  '<p>The objective of the MacPaw Innovations Portfolio Program is to continuously generate and implement new ideas by conducting experiments and validating hypotheses that can unlock potential value.</p>' +
-  '<p>Repeated innovation is going to have to be front and center at MacPaw. Primary goal is to help employees identify, develop and move an idea through an organization – an idea that can change your team’s and your unit’s future and jumpstart innovation.</p>';
+  '<p>The Innovation Portfolio Program turns ideas from any team into small, time-boxed experiments, and funds the ones that prove their value.</p>' +
+  '<p>Repeated innovation has to be front and centre. The goal is to help people spot an idea, develop it and move it through the organisation: the kind of idea that changes a team’s future.</p>';
 
 /** One sample item: what to create, plus the dates that make it look lived-in. */
 interface SampleItem extends Omit<NewItem, 'personId'> {

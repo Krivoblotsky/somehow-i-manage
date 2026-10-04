@@ -1,12 +1,9 @@
 # Design spec — Somehow I Manage (from Figma)
 
-Source: https://www.figma.com/design/c1d7ZcNNBiKKnDT2RpKuze/Personal
-Frames (Page 1): `1:2` Task Details (original), `97:2` Task Details (duplicate, same content), `1:157` Person Details.
-Read on 2026-09-29 through the Figma viewer at 50 % zoom. The Figma MCP server cannot read this
-file: it is signed in as krivoblotsky@macpaw.com, which only has a *View* seat in
-"Sergii's Starter team" that owns the file. Give that account edit access (or move the file into a
-MacPaw project) if we ever want pixel-exact values from the MCP; the numbers below are measured from
-the rendered frames (± 5 %).
+Source: the original design frames (a private Figma file). Frames (Page 1): `1:2` Task Details
+(original), `97:2` Task Details (duplicate, same content), `1:157` Person Details. Read on
+2026-09-29 through the Figma viewer at 50 % zoom; the numbers below are measured from the rendered
+frames (± 5 %).
 
 All three frames are the same screen: a dark, full-window **People Map** with a white **detail panel**
 docked on the right. The only difference between frames is what the panel shows.
@@ -64,7 +61,7 @@ docked on the right. The only difference between frames is what the panel shows.
 
 **Edges**
 * One curved bezier per item, from the avatar edge to the card edge, 3–4 pt stroke in the person colour.
-  (The 2024 React code has the exact "floating edge" math in `personalapp/src/App.jsx`.)
+  (The 2024 prototype had the exact "floating edge" math in its `src/App.jsx`.)
 
 **Context menu** (right-click on canvas): `Add new person…`, `Delete…`.
 
@@ -90,7 +87,7 @@ Top → bottom, 24 pt padding:
 
 ## 6. Colours
 
-Person palette (identical to `personalapp/src/store.js`, so it was taken from this design):
+Person palette (identical to the 2024 prototype's `src/store.js`, so it was taken from this design):
 
 | | hex | used by |
 |---|---|---|

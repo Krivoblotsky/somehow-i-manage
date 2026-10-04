@@ -1,97 +1,182 @@
-# Somehow I Manage
+<p align="center">
+  <img src="public/icons/icon-192.png" width="96" height="96" alt="Somehow I Manage icon" />
+</p>
 
-People-centric task manager for managers: **work with people, not tasks.**
+<h1 align="center">Somehow I Manage</h1>
 
-A person is the root object; tasks and notes hang off people and are shown on a **People Map**:
-every person is a hub with a coloured ring, their cards orbit it, edges carry the person's colour.
-Local-first web app (React + TypeScript + Vite, IndexedDB via Dexie, React Flow canvas), designed
-to grow cloud sync.
+<p align="center">
+  <strong>Work with people, not tasks.</strong><br />
+  A people-first task manager for managers. Free, offline-first, open source.
+</p>
 
-## Docs
+<p align="center">
+  <a href="https://somehowimanage.app">somehowimanage.app</a> ·
+  <a href="https://somehowimanage.app/mcp/">connect an AI assistant</a> ·
+  <a href="https://somehowimanage.app/privacy/">privacy</a>
+</p>
 
-- [`docs/PRODUCT.md`](docs/PRODUCT.md) — problem, audience, MVP scope, success criteria
-- [`docs/DESIGN.md`](docs/DESIGN.md) — measured spec of the Figma frames
-- [`docs/PLAN.md`](docs/PLAN.md) — post-mortem of the 2024 attempt, milestones, decisions, data model
+<p align="center">
+  <a href="https://github.com/Krivoblotsky/somehow-i-manage/actions/workflows/ci.yml"><img src="https://github.com/Krivoblotsky/somehow-i-manage/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT licence" /></a>
+</p>
 
-Design: <https://www.figma.com/design/c1d7ZcNNBiKKnDT2RpKuze/Personal>
+<p align="center">
+  <img src="public/launch/demo.gif" width="960" alt="A 30-second tour: opening a person, typing a task, handing a card to someone else, lighting a project, running a 1:1, ⌘K" />
+</p>
 
-## Develop
+## Why
 
-Node 24 (see `.nvmrc`); Node 22+ works.
+Managers don't have tasks. They have people. Most task managers start from a list or a project;
+a manager's week starts from Vira, Anton and Nata: what I owe them, what they told me, what to
+raise on Thursday. So managers keep a dossier per person in Apple Notes, Sheets or Jira, in tools
+never meant for it.
 
-```bash
-npm install
-npm run dev        # http://localhost:5173
+Somehow I Manage is that habit turned into a tool. The **person is the root object**. Tasks are
+things you have to do _with_ someone, notes are things to remember _about_ them, and the whole
+team sits on one map.
+
+## What it does
+
+<table>
+  <tr>
+    <td width="50%"><img src="public/launch/ph-1-map.jpg" alt="The People Map: every person is a hub, their tasks and notes orbit them" /></td>
+    <td width="50%"><img src="public/launch/ph-2-person.jpg" alt="A person's page open over the map: tasks, notes, done, with a line to type the next thing" /></td>
+  </tr>
+  <tr>
+    <td><img src="public/launch/ph-4-one-on-one.jpg" alt="A 1:1 in progress: the agenda built from what is open, what got done since last time on the right" /></td>
+    <td><img src="public/launch/ph-3-projects.jpg" alt="A project in the spotlight across two people, with its page listing the items by person" /></td>
+  </tr>
+</table>
+
+- **People Map.** Every person is a hub with a coloured ring; their tasks and notes are cards
+  around them. Drag a card onto someone else to hand it over. People out of view stay pinned at
+  the edge; one click flies to them.
+- **1:1 mode.** Start a 1:1 from someone's page and the agenda is what's open, urgent first. Tick
+  what got done, mark what you discussed, capture new things as they come up. Ending the meeting
+  records it; the next one shows what happened since.
+- **Capture in five seconds.** A line on the person's card, ⌘K from anywhere (`Vira: ask about
+the offsite` adds a task), paste a whole list, or press the microphone and dictate.
+- **Projects.** An optional tag that cuts across people. Cards show it; the Projects island counts
+  what hangs on each project and spotlights one on the map.
+- **Due dates, urgent flags, rich notes, search, undo**, keyboard shortcuts, a Markdown export
+  and JSON backups.
+- **Agentic AI friendly.** An MCP server lets Claude, ChatGPT, Cursor, VS Code or Claude Code
+  work with your people as you: "what is open with Vira?", "prepare my 1:1 with Anton", "add a
+  task with Emily". One address, approved once. See [docs/MCP.md](docs/MCP.md).
+- **Offline-first.** Your data lives in your browser (IndexedDB) and syncs through your own
+  account (Google, Microsoft or a passkey). Works on a plane, installs as an app, exports in one
+  click, deletes in one more.
+
+## Try it
+
+Open <https://somehowimanage.app>. The map in the hero is the real thing with a sample team: tick
+a task, drag a card, press + on a person. Sign in to keep your own.
+
+## Connect an AI assistant
+
+Give any MCP client this address and it will ask you to sign in and approve it once:
+
+```
+https://mvpbxmlczninyqsyjhqh.supabase.co/functions/v1/mcp
 ```
 
-| Script              | What it does                               |
-| ------------------- | ------------------------------------------ |
-| `npm run dev`       | Vite dev server with HMR                   |
-| `npm test`          | Vitest (jsdom + fake-indexeddb)            |
-| `npm run lint`      | ESLint (typescript-eslint, react-hooks)    |
-| `npm run typecheck` | `tsc -b`                                   |
-| `npm run build`     | type-check + production build into `dist/` |
-| `npm run format`    | Prettier                                   |
+For Claude Code: `claude mcp add --transport http somehow-i-manage <that address>`, then `/mcp`.
+Fourteen tools, from `list_people` and `prepare_one_on_one` to `add_task` and `move_item`; the
+assistant acts as you, under the same access rules as the app. Details and the server's code:
+[docs/MCP.md](docs/MCP.md), [`supabase/functions/mcp/`](supabase/functions/mcp/).
 
-CI (`.github/workflows/ci.yml`) runs lint, typecheck, tests and build on every push and PR.
+## How it is built
 
-## Code map
+- **React 19 + TypeScript**, Vite, Vitest, ESLint, Prettier. Strict types, ~200 tests.
+- **Local-first.** Dexie (IndexedDB) is the only thing the UI reads and writes. A change-log
+  middleware notes every change in an outbox; a small sync engine pulls by sequence number and
+  pushes the outbox to **Supabase** (one JSON row per record, last write wins, row-level security
+  per account, Realtime nudges other devices). The engine is tested against a fake server.
+- **The map** is React Flow with positions stored as data, so nothing jumps when you delete or
+  move a card. Layout, edge geometry and the graph builder are pure modules with tests.
+- **Rich text** is TipTap; **dictation** is the browser's own speech recognition.
+- **Auth** is Supabase Auth: Google, Microsoft, passkeys. Supabase Auth is also the OAuth 2.1
+  server for the MCP clients; the consent screen is in the app.
+- **The MCP server** is a Supabase Edge Function (Deno) using the official MCP SDK and
+  `@supabase/server`; it reads and writes the same records the devices sync.
+- **PWA** with a service worker that asks before switching versions; the landing page is
+  pre-rendered at build time for crawlers and first paint.
 
 ```
 src/
-  model/      types, palette, derived values (stats, initials), formatting — pure, tested
-  data/       Dexie database, repository (all reads/writes), bulk-paste parser, sample data, Markdown export
-  map/        People Map geometry: ring layout, cluster grid, edge endpoints, graph builder — pure, tested
-  state/      transient UI state (zustand): view (map/list/1:1), selection, search, open dialog, the running 1:1
-  sync/       change-log middleware (outbox), sync engine, Supabase transport/auth, status store — engine tested against a fake server
-  components/ Header (view toggle, people strip, search), UserMenu (Google profile, sync status, data tools,
-              sign out), PersonView (dossier list),
-              PersonPanel (person details), ItemPanel (editor), PersonDialog, BulkAddDialog,
-              OneOnOne (the 1:1 screen), LandingPage (front door + sign-in), SyncDialog, SearchResults,
-              EmptyState, Avatar, BodyEditor (TipTap)
-  components/map/ PeopleMap (React Flow canvas + context menus), PersonNode, ItemNode, FloatingEdge
-  styles/     design tokens from docs/DESIGN.md, global reset
+  model/        types, palette, derived values, formatting, projects, calendar logic — pure, tested
+  data/         Dexie database, repository (every read and write), sample data, backups, export
+  map/          People Map geometry: ring layout, cluster grid, edge endpoints, graph builder
+  state/        UI state (zustand), toasts, dictation, projects hooks
+  sync/         outbox middleware, sync engine, Supabase transport and auth, OAuth consent
+  marketing/    first-party attribution and the two in-app questions (no third-party analytics)
+  components/   the app: Header, PeopleMap, PersonPanel, ItemPanel, OneOnOne, ProjectPanel,
+                CommandPalette, LandingPage, SyncDialog, OAuthConsent …
+supabase/
+  schema.sql    tables, functions and policies: run once in the SQL editor
+  functions/mcp the MCP server (Deno)
+docs/           product, design, plan, sync setup, MCP, calendar draft, launch plan
+scripts/        screenshots, icons, social card, launch assets, pre-render
 ```
 
-## Your data
+## Run it yourself
 
-Everything lives in the browser's IndexedDB (database `personal`) on the device you use. From the
-⋯ menu you can **Back up to file** (a JSON file with people, items, positions and avatars),
-**Restore from file** (merge or replace), and **Export everything as Markdown**. Make a backup
-before clearing site data or switching machines; sync is a later milestone.
+You need Node 22 or newer and a free [Supabase](https://supabase.com) project.
 
-## Account and sync
+```bash
+git clone https://github.com/Krivoblotsky/somehow-i-manage.git
+cd somehow-i-manage
+npm install
+cp .env.example .env.local   # fill in VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+npm run dev                  # http://localhost:5173
+```
 
-The app requires a Google sign-in (Supabase Auth) and syncs across devices through a Supabase
-project. A build without `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` shows a setup notice. See
-[`docs/SYNC.md`](docs/SYNC.md) for the ten-minute setup and how the local-first engine works (`src/sync/`).
-AI assistants connect through the MCP server in `supabase/functions/mcp/` (Supabase Auth as the
-OAuth 2.1 server, consent screen in the app); [`docs/MCP.md`](docs/MCP.md) has the setup and the
-tools, https://somehowimanage.app/mcp/ the user-facing page.
+Without the two variables the build shows a setup notice instead of signing anyone in.
+[docs/SYNC.md](docs/SYNC.md) is the ten-minute walkthrough: create the project, run
+`supabase/schema.sql`, enable Google and Microsoft sign-in, set the URLs. [docs/MCP.md](docs/MCP.md)
+adds the OAuth server and deploys the MCP function. The Google Calendar integration is drafted and
+parked on the `calendar` branch ([docs/CALENDAR.md](docs/CALENDAR.md)).
 
-## Install as an app
+| Script                  | What it does                                                       |
+| ----------------------- | ------------------------------------------------------------------ |
+| `npm run dev`           | Vite dev server with HMR                                           |
+| `npm test`              | Vitest (jsdom, fake IndexedDB)                                     |
+| `npm run lint`          | ESLint                                                             |
+| `npm run typecheck`     | `tsc -b`                                                           |
+| `npm run build`         | type-check, production build, pre-rendered landing page in `dist/` |
+| `npm run format`        | Prettier                                                           |
+| `npm run shots`         | re-take the landing page screenshots from the dev server           |
+| `npm run icons`         | render the app icons from `assets/icon-source.png`                 |
+| `npm run og`            | compose the social preview image                                   |
+| `npm run launch-assets` | Product Hunt frames and the demo video                             |
 
-The build is a PWA: open the deployed site in Chrome, Edge or Safari and use “Install” / “Add to
-Dock”. It keeps working offline; new versions apply on the next launch.
+The MCP server has its own tests under Deno (no install needed):
+
+```bash
+npx -y deno test -A --config supabase/functions/deno.json supabase/functions/mcp/
+```
 
 ## Deploy
 
-`.github/workflows/deploy.yml` builds and publishes to GitHub Pages on every push to `main`;
-the app lives at <https://somehowimanage.app>. Enable Pages in the repository settings with
-**Source: GitHub Actions**. The workflow reads the site's base path from the Pages settings
-(`/<repo>/` for a project site, `/` with a custom domain), so no code changes when the domain
-does. Any static host works too: build with `BASE_PATH=/ npm run build` and serve `dist/`.
+Pushing to `main` builds and publishes to GitHub Pages (`.github/workflows/deploy.yml`); the
+Supabase URL and anon key come from repository variables. Any static host works: build with
+`BASE_PATH=/ npm run build` and serve `dist/`. Static pages next to the app (`/privacy/`, `/mcp/`,
+the OAuth consent redirect) live in `public/`.
 
-Two assets are generated with the installed Chrome: `npm run shots` re-takes the landing page's
-product screenshots from the dev server (`public/landing`), `npm run icons` renders the PNG app
-icons (favicon, PWA, Apple touch) from `assets/icon-source.png`, cut to Apple's icon shape, and
-`npm run og` composes the social preview image (`public/og.jpg`) for shared links.
+## Privacy
 
-The build pre-renders the landing page into `dist/index.html` (`scripts/prerender.mjs`, after
-`vite build`): crawlers and AI agents read the real content, a newcomer sees the page before
-JavaScript, and `main.tsx` hydrates it. The FAQ in `src/content/faq.ts` feeds both the page and the
-FAQ structured data; `public/` also holds `robots.txt`, `sitemap.xml` and `llms.txt`.
+Only you can read your data: it lives on your device and in a private database tied to your
+account. There are no ads, no trackers and no third-party analytics; the only measurement is a
+first-party count of landing-page visits by day. The full text is at
+<https://somehowimanage.app/privacy/>.
 
-Static pages next to the app live in `public/` and are served as real documents, outside the
-service worker's app-shell fallback: `public/privacy/index.html` is the privacy policy at
-`/privacy/`, linked from the landing page (Google's OAuth brand verification needs it).
+## Feedback and contributions
+
+Built by [Sergii Kryvoblotskyi](https://github.com/Krivoblotsky), a manager who kept his team in
+notes titled with people's names. Feedback goes to <hello@somehowimanage.app> or the Feedback
+button in the app. Issues and pull requests are welcome; please open an issue first for anything
+bigger than a fix, so the people-first idea stays the idea.
+
+## Licence
+
+[MIT](LICENSE).

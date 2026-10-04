@@ -1,16 +1,15 @@
 # Build plan
 
-Product name: **Somehow I Manage** (decided 2026-09-30, see PRODUCT.md § Name). The repo folder
-is still `personalapp`; rename it when the GitHub repository is created.
+Product name: **Somehow I Manage** (decided 2026-09-30, see PRODUCT.md § Name).
 
 ## What happened in 2024 (post-mortem)
 
-Repo `~/Work/Home/personalapp` (remote github.com/romankolpak/personalapp), 17 commits between
+A first prototype, built with a collaborator in a private repository: 17 commits between
 2024-07-03 and 2024-07-09, two cosmetic commits on 2025-07-01, then nothing.
 Stack: React 18 + Vite + reactflow + antd + zustand, TypeScript removed on day 4 "for speed".
 State: header with avatars, People Map with radial layout and colour-coded floating edges, editable
 card text, **hard-coded demo people, no persistence, no detail panel, no add/edit/delete flows**.
-`~/Work/Home/Persona` is an earlier one-evening vanilla-JS sketch of the same canvas.
+An even earlier one-evening vanilla-JS sketch of the same canvas exists too.
 
 Why it stalled (my reading of the code and history):
 1. **Started with the hardest, least essential part** — the free-form canvas — instead of the loop that
@@ -77,7 +76,7 @@ Sergii chose the web stack and the "boring core first" order. Consequences:
   sync backend (Supabase is the default candidate) plugs in behind that module in M4.
 * TypeScript is back on (strict). Vite 8, Vitest 5, ESLint 10 flat config, Prettier.
 * The mind-map canvas (M2) uses `@xyflow/react` 12. Layout and edge geometry are pure modules in
-  `src/map/` with tests; the 2024 edge math was ported from `git show ca155c1:src/App.jsx`.
+  `src/map/` with tests; the 2024 edge math was ported from the prototype.
   People are parent nodes and their cards child nodes, so dragging a person moves the cluster.
   **Positions are data**: every person and card gets a saved `mapPosition` when created (a card
   goes into the widest free gap around its hub, `placeItem`; a person to the right of the others,
@@ -92,7 +91,7 @@ Options as they were evaluated:
 **Option A — Native Apple app (recommended).** SwiftUI, macOS 15+ first, one multiplatform target so
 iPhone/iPad come later; SwiftData (or Core Data) + CloudKit for sync; StoreKit 2 for Pro; App Store
 under NSBeep. Map view = SwiftUI `Canvas`/`ZStack` with a custom radial layout; edges are `Path`
-beziers (the math is already in `personalapp/src/App.jsx`). Pros: Sergii's strengths, zero backend,
+beziers (the math was already in the 2024 prototype). Pros: Sergii's strengths, zero backend,
 sync and payments are solved by Apple, same distribution channel as the other NSBeep apps. Cons:
 Mac-only reach at first; Windows managers excluded.
 
