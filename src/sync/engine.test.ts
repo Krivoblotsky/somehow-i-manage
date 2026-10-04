@@ -193,3 +193,33 @@ describe('projects', () => {
     expect((await a.items.get(task.id))?.projectId).toBeUndefined();
   });
 });
+
+describe('kinds this build does not know', () => {
+  it('skips a row of an unknown kind instead of failing the sync, then re-pulls after an update', async () => {
+    const vira = await createPerson({ name: 'Vira' }, a);
+    await syncA.sync();
+    // A newer build somewhere wrote a kind of record this one has never heard of.
+    server.rows.set('w1', {
+      id: 'w1',
+      kind: 'widget' as SyncRow['kind'],
+      data: { id: 'w1' } as unknown as SyncRow['data'],
+      updated_at: Date.now(),
+      deleted_at: null,
+      seq: ++server.seq,
+    });
+    await expect(syncB.sync()).resolves.toEqual({ pulled: 1, pushed: 0 });
+    expect((await b.people.get(vira.id))?.name).toBe('Vira');
+    expect(Number((await b.syncMeta.get('cursor'))?.value)).toBe(server.seq);
+
+    // The device is updated to a build that knows more kinds: the cursor rewinds, everything
+    // comes down again (a no-op for what is already here) and nothing was lost on the way.
+    await b.syncMeta.put({ key: 'kinds', value: 'item,person' });
+    await syncB.prepareForUser('u1');
+    expect(Number((await b.syncMeta.get('cursor'))?.value)).toBe(0);
+    await expect(syncB.sync()).resolves.toEqual({ pulled: 0, pushed: 0 });
+    expect(Number((await b.syncMeta.get('cursor'))?.value)).toBe(server.seq);
+    // the same build again: no rewind
+    await syncB.prepareForUser('u1');
+    expect(Number((await b.syncMeta.get('cursor'))?.value)).toBe(server.seq);
+  });
+});

@@ -2,9 +2,13 @@ import Dexie, { type EntityTable, type Table } from 'dexie';
 import type { Item, Person, Project } from '../model/types';
 import { changeLogMiddleware, type OutboxEntry } from '../sync/changeLog';
 
-/** Small key/value facts the sync engine keeps per device: cursor, user, last sync time. */
+/**
+ * Small key/value facts the sync engine keeps per device: cursor, user, last sync time, and the
+ * record kinds the code that last ran here knew about (so a newer version re-pulls what an older
+ * one had to skip).
+ */
 export interface SyncMetaEntry {
-  key: 'cursor' | 'userId' | 'lastSyncedAt';
+  key: 'cursor' | 'userId' | 'lastSyncedAt' | 'kinds';
   value: number | string;
 }
 

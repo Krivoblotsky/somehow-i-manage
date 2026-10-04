@@ -21,6 +21,10 @@ const TABLE_OF: Record<RecordKind, TrackedTable> = {
 
 type SyncRecord = Person | Item | Project;
 
+/** The kinds this build understands, as one string to compare with what ran here before. */
+const KNOWN_KINDS = Object.keys(TABLE_OF).sort().join(',');
+const isKnownKind = (kind: string): kind is RecordKind => Object.hasOwn(TABLE_OF, kind);
+
 /** The synced tables, the account's cache: cleared together when the account changes. */
 const synced = (db: PersonalDB) => [db.people, db.items, db.projects];
 const everything = (db: PersonalDB) => [...synced(db), db.outbox, db.syncMeta];
@@ -63,7 +67,10 @@ export class SyncEngine {
 
   async prepareForUser(userId: string): Promise<void> {
     const known = await this.db.syncMeta.get('userId');
-    if (known?.value === userId) return;
+    if (known?.value === userId) {
+      await this.rewindIfKindsChanged();
+      return;
+    }
     const { db } = this;
     if (known !== undefined) {
       await withoutChangeTracking(db, everything(db), async () => {
@@ -72,6 +79,7 @@ export class SyncEngine {
         await db.syncMeta.bulkPut([
           { key: 'userId', value: userId },
           { key: 'cursor', value: 0 },
+          { key: 'kinds', value: KNOWN_KINDS },
         ]);
       });
       return;
@@ -93,8 +101,23 @@ export class SyncEngine {
       await db.syncMeta.bulkPut([
         { key: 'userId', value: userId },
         { key: 'cursor', value: 0 },
+        { key: 'kinds', value: KNOWN_KINDS },
       ]);
     });
+  }
+
+  /**
+   * An older build skips rows of kinds it does not know (see applyRow) and still moves its cursor
+   * past them. The first run of a build that knows more kinds therefore starts over from the
+   * beginning: re-applying rows it already has is a no-op, and the skipped ones finally land.
+   */
+  private async rewindIfKindsChanged(): Promise<void> {
+    const kinds = await this.db.syncMeta.get('kinds');
+    if (kinds?.value === KNOWN_KINDS) return;
+    await this.db.syncMeta.bulkPut([
+      { key: 'cursor', value: 0 },
+      { key: 'kinds', value: KNOWN_KINDS },
+    ]);
   }
 
   /** One round trip: pull, then push. Rejects on transport errors. */
@@ -127,8 +150,12 @@ export class SyncEngine {
       const cursor = Number((await db.syncMeta.get('cursor'))?.value ?? 0);
       const rows = await this.transport.pull(cursor, PULL_LIMIT);
       if (rows.length === 0) return applied;
+      // A kind this build does not know (a newer build wrote it) is left alone rather than
+      // failing the whole sync; rewindIfKindsChanged() fetches it once this device is updated.
+      // Filtered before the transaction: a row that touches no table would let it auto-commit.
+      const known = rows.filter((row) => isKnownKind(row.kind));
       await withoutChangeTracking(db, everything(db), async () => {
-        for (const row of rows) if (await this.applyRow(row)) applied++;
+        for (const row of known) if (await this.applyRow(row)) applied++;
         await db.syncMeta.put({ key: 'cursor', value: rows[rows.length - 1].seq });
       });
       if (rows.length < PULL_LIMIT) return applied;
@@ -142,7 +169,7 @@ export class SyncEngine {
     return table as unknown as Table<SyncRecord, string>;
   }
 
-  /** Applies one server row locally. Returns whether anything changed. */
+  /** Applies one server row (of a known kind) locally. Returns whether anything changed. */
   private async applyRow(row: SyncRow): Promise<boolean> {
     const pending = await this.db.outbox.get([TABLE_OF[row.kind], row.id]);
     // Edited here after the remote change was made: this device's version wins and uploads next.
