@@ -3,12 +3,14 @@ import {
   Component,
   lazy,
   Suspense,
+  useEffect,
   useState,
   type CSSProperties,
   type KeyboardEvent,
   type ReactNode,
 } from 'react';
 import { FAQ } from '../content/faq';
+import { countPageView } from '../marketing/send';
 import { pickQuote } from '../content/quotes';
 import { syncActions, type SyncActions } from '../sync/controller';
 import { useHydrated } from '../state/hydrated';
@@ -30,6 +32,10 @@ const shot = (name: string) => `${import.meta.env.BASE_URL}landing/${name}.webp`
  * to play with, how it works, each part of the product with a picture, what we believe, one way in.
  */
 export function LandingPage({ actions = syncActions }: { actions?: SyncActions }) {
+  // One row per visit: the path and the campaign tag that brought it, nothing about the visitor.
+  useEffect(() => {
+    void countPageView(window.location.pathname);
+  }, []);
   const authError = useSync((s) => s.authError);
   const [busy, setBusy] = useState<Provider | null>(null);
   const [passkeyBusy, setPasskeyBusy] = useState(false);

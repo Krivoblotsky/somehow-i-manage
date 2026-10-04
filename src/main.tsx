@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot, hydrateRoot } from 'react-dom/client';
 import App from './App';
+import { captureReferral } from './marketing/attribution';
 import { registerUpdates } from './pwa';
 import { captureConsentRequest } from './sync/consent';
 import { readSignedInHint } from './sync/hint';
@@ -20,6 +21,8 @@ if (import.meta.env.DEV) {
 registerUpdates();
 // An AI assistant asking to connect arrives with ?authorization_id=…; keep it for the consent screen.
 captureConsentRequest();
+// A campaign link (?utm_source=…) is remembered on this device and attached to the first answer.
+captureReferral();
 
 const root = document.getElementById('root')!;
 const app = (

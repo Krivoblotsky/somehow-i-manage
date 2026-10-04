@@ -209,6 +209,30 @@
         ]
       }
     </script>
+    <!-- Counts this visit: path, campaign tag and day, nothing about you (see /privacy/). The key
+         is the project's public one, the same the app ships with. -->
+    <script>
+      (function () {
+        try {
+          var q = new URLSearchParams(location.search);
+          var body = JSON.stringify({
+            path: location.pathname,
+            source: q.get('utm_source') || q.get('ref') || null,
+            campaign: q.get('utm_campaign') || null,
+          });
+          fetch('https://mvpbxmlczninyqsyjhqh.supabase.co/rest/v1/page_views', {
+            method: 'POST',
+            headers: {
+              apikey: 'sb_publishable_PPPjVc6INx2OZrIKi7Qvlw_jznBFRvA',
+              'Content-Type': 'application/json',
+              Prefer: 'return=minimal',
+            },
+            body: body,
+            keepalive: true,
+          }).catch(function () {});
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div class="page">

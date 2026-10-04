@@ -4,6 +4,7 @@ import styles from './App.module.css';
 import { BulkAddDialog } from './components/BulkAddDialog';
 import { CommandPalette } from './components/CommandPalette';
 import { EmptyState } from './components/EmptyState';
+import { FeedbackPrompts } from './components/FeedbackPrompts';
 import { Header } from './components/Header';
 import { ItemPanel } from './components/ItemPanel';
 import { OneOnOne } from './components/OneOnOne';
@@ -160,6 +161,7 @@ export default function Workspace() {
       <SyncDialog />
       <ShortcutsDialog />
       <CommandPalette />
+      <FeedbackPrompts />
     </div>
   );
 }

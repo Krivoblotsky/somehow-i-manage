@@ -29,7 +29,7 @@ export const FAQ: readonly { q: string; a: string }[] = [
   },
   {
     q: 'Where is my data stored, and who can see it?',
-    a: 'On your device and in a private database tied to your account, hosted by Supabase. Only you can read it. There are no ads, no analytics and no selling of data, and you can export or delete everything at any time.',
+    a: 'On your device and in a private database tied to your account, hosted by Supabase. Only you can read it. There are no ads, no trackers, no third-party analytics and no selling of data; the only measurement is a first-party count of visits by day. You can export or delete everything at any time.',
   },
   {
     q: 'How do I sign in?',

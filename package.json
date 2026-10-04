@@ -20,7 +20,8 @@
     "coverage": "vitest run --coverage",
     "shots": "node scripts/landing-shots.mjs",
     "icons": "node scripts/icons.mjs",
-    "og": "node scripts/og.mjs"
+    "og": "node scripts/og.mjs",
+    "launch-assets": "node scripts/launch-assets.mjs"
   },
   "dependencies": {
     "@radix-ui/react-context-menu": "^2.3.7",

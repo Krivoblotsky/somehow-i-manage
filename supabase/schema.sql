@@ -65,6 +65,53 @@ begin
   end if;
 end $$;
 
+-- ---------------------------------------------------------------------------------------------
+-- Finding out what works (docs/LAUNCH.md). Two write-only tables the app fills and only the
+-- dashboard reads: answers people give ("where did you hear about us", the week-one survey)
+-- and a first-party count of landing-page visits by day and campaign tag. No cookies, no IP
+-- addresses, no user agents: nothing about a visitor, only that a page was seen.
+-- ---------------------------------------------------------------------------------------------
+
+create table if not exists public.feedback (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  kind       text not null check (kind in ('source', 'survey')),
+  value      text not null default '',
+  note       text not null default '',
+  referral   jsonb,
+  created_at timestamptz not null default now()
+);
+alter table public.feedback enable row level security;
+drop policy if exists "own feedback goes in" on public.feedback;
+create policy "own feedback goes in" on public.feedback
+  for insert to authenticated
+  with check (user_id = auth.uid());
+-- no select policy: clients write, the maker reads in the dashboard
+revoke select, update, delete on public.feedback from anon, authenticated;
+
+create table if not exists public.page_views (
+  id         bigint generated always as identity primary key,
+  path       text not null default '/',
+  source     text,
+  campaign   text,
+  day        date not null default current_date,
+  created_at timestamptz not null default now()
+);
+alter table public.page_views enable row level security;
+drop policy if exists "anyone may count a view" on public.page_views;
+create policy "anyone may count a view" on public.page_views
+  for insert to anon, authenticated
+  with check (true);
+revoke select, update, delete on public.page_views from anon, authenticated;
+
+create or replace view public.page_views_daily
+with (security_invoker = false) as
+  select day, source, campaign, path, count(*) as views
+  from public.page_views
+  group by day, source, campaign, path
+  order by day desc, views desc;
+revoke all on public.page_views_daily from anon, authenticated;
+
 -- Account deletion from inside the app: the signed-in user removes themself; their rows go with
 -- them (sync_records cascades from auth.users). Runs as the function owner, so it may touch auth.
 create or replace function public.delete_my_account()
