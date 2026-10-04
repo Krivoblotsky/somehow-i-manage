@@ -10,7 +10,7 @@ import {
   type PaletteResult,
 } from '../model/commandPalette';
 import { personColor } from '../model/palette';
-import { backupToFile, startOneOnOne } from '../state/actions';
+import { backupToFile, openProject, startOneOnOne } from '../state/actions';
 import { useToast } from '../state/toast';
 import { useUI } from '../state/ui';
 import styles from './CommandPalette.module.css';
@@ -21,6 +21,7 @@ const GROUP_LABEL: Record<PaletteGroup, string> = {
   add: 'Add',
   people: 'People',
   items: 'Tasks & notes',
+  projects: 'Projects',
   commands: 'Commands',
 };
 
@@ -50,16 +51,18 @@ export function CommandPalette() {
 function PaletteBody({ onDone }: { onDone: () => void }) {
   const peopleRows = useLiveQuery(() => db.people.orderBy('sortOrder').toArray(), []);
   const itemRows = useLiveQuery(() => db.items.toArray(), []);
+  const projectRows = useLiveQuery(() => db.projects.toArray(), []);
   const people = useMemo(() => peopleRows ?? [], [peopleRows]);
   const items = useMemo(() => itemRows ?? [], [itemRows]);
+  const projects = useMemo(() => projectRows ?? [], [projectRows]);
   const view = useUI((s) => s.view);
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
 
   const results = useMemo(
-    () => buildResults(query, people, items, view),
-    [query, people, items, view],
+    () => buildResults(query, people, items, view, projects),
+    [query, people, items, view, projects],
   );
   const clamped = Math.min(active, Math.max(results.length - 1, 0));
 
@@ -105,6 +108,10 @@ function PaletteBody({ onDone }: { onDone: () => void }) {
         onDone();
         void startOneOnOne(action.personId);
         return;
+      case 'project':
+        ui.setSearch('');
+        openProject(action.projectId);
+        break;
       case 'command':
         switch (action.command) {
           case 'new-person':

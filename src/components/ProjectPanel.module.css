@@ -1,0 +1,57 @@
+/* the project's "avatar": a disc in its colour with the tag glyph, ringed like a person's */
+.swatch {
+  flex: none;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-text);
+  display: grid;
+  place-items: center;
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 6px var(--accent);
+}
+.rename {
+  width: 100%;
+  font: inherit;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  padding: 0 6px;
+  margin-left: -6px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--card-text);
+  outline: 0;
+}
+/* a person's group header inside the list: avatar, name, how many of their items are in here */
+.group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 14px 0 4px;
+  /* 6px on the left: the avatar's ring is drawn outside its box, and the list clips at its edge */
+  padding: 4px 0 4px 6px;
+  color: var(--card-text);
+  font: inherit;
+  text-align: left;
+}
+.group:first-of-type {
+  margin-top: 4px;
+}
+.group:hover .groupName {
+  color: var(--accent);
+}
+.groupName {
+  font-size: 13px;
+  font-weight: 700;
+}
+.groupCount {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--card-muted);
+  font-variant-numeric: tabular-nums;
+}

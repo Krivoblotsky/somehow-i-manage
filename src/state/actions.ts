@@ -47,6 +47,15 @@ export async function exportMarkdownToFile(): Promise<void> {
   downloadText(`somehow-i-manage-${stamp}.md`, allToMarkdown(people, items, projects));
 }
 
+/** Lights a project on the map and opens its panel. From the list or a 1:1, goes to the map first. */
+export function openProject(projectId: string): void {
+  const ui = useUI.getState();
+  if (ui.view !== 'map') ui.setView('map');
+  ui.selectItem(null);
+  ui.closePanel();
+  ui.focusProject(projectId);
+}
+
 /** Opens the 1:1 screen for a person. A 1:1 still running with someone else ends (and is recorded) first. */
 export async function startOneOnOne(personId: string): Promise<void> {
   const ui = useUI.getState();

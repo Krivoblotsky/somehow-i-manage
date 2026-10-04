@@ -94,4 +94,25 @@ describe('1:1 commands', () => {
     const labels = buildResults('switch', people, items, 'meeting').map((r) => r.label);
     expect(labels).toEqual(expect.arrayContaining(['Switch to Map view', 'Switch to List view']));
   });
+
+  it('finds projects by name, and lists them all for "projects"', () => {
+    const projects = [
+      { id: 'p1', name: 'MIPP', colorIndex: 0, sortOrder: 0, createdAt: 0, updatedAt: 0 },
+      { id: 'p2', name: 'Hiring', colorIndex: 1, sortOrder: 1, createdAt: 0, updatedAt: 0 },
+    ];
+    const tagged = [{ ...items[0], projectId: 'p1' }, items[1]];
+    const hits = buildResults('mi', people, tagged, 'map', projects).filter(
+      (r) => r.group === 'projects',
+    );
+    expect(hits.map((r) => [r.label, r.hint])).toEqual([['MIPP', '1 item']]);
+    expect(hits[0].action).toEqual({ type: 'project', projectId: 'p1' });
+    const all = buildResults('projects', people, tagged, 'map', projects).filter(
+      (r) => r.group === 'projects',
+    );
+    expect(all.map((r) => r.label)).toEqual(['Hiring', 'MIPP']);
+    expect(all[0].hint).toBe('nothing yet');
+    expect(
+      buildResults('', people, tagged, 'map', projects).some((r) => r.group === 'projects'),
+    ).toBe(false);
+  });
 });

@@ -17,7 +17,7 @@ import { ItemContextMenu } from './ItemContextMenu';
 import { PersonMoreMenu } from './PersonMoreMenu';
 import { DueBadge } from './DueBadge';
 import { QuickAdd } from './QuickAdd';
-import { FlagIcon, NoteIcon, TrashIcon } from './icons';
+import { ChevronLeftIcon, FlagIcon, NoteIcon, TrashIcon } from './icons';
 import styles from './PersonPanel.module.css';
 import { ProjectBadge } from './ProjectBadge';
 import ui from './ui.module.css';
@@ -32,6 +32,10 @@ export function PersonPanel({ personId }: { personId: string }) {
   const selectedItemId = useUI((s) => s.selectedItemId);
   const selectItem = useUI((s) => s.selectItem);
   const closePanel = useUI((s) => s.closePanel);
+  // Opened from a project's page: Back returns there (closing this panel shows it again).
+  const from = useUI((s) => s.paneFrom.person);
+  const projectFocusId = useUI((s) => s.projectFocusId);
+  const backProject = useProjectOf(from === 'project' ? (projectFocusId ?? undefined) : undefined);
   const now = useNow();
 
   if (!person || !items) return null;
@@ -47,7 +51,7 @@ export function PersonPanel({ personId }: { personId: string }) {
   }
 
   const row = (item: Item) => (
-    <Row
+    <PanelItemRow
       key={item.id}
       item={item}
       selected={item.id === selectedItemId}
@@ -61,6 +65,17 @@ export function PersonPanel({ personId }: { personId: string }) {
       aria-label="Person details"
       style={{ '--accent': accent, '--accent-text': contrastText(accent) } as CSSProperties}
     >
+      {backProject && (
+        <button
+          type="button"
+          className={styles.back}
+          onClick={closePanel}
+          title={`Back to ${backProject.name}`}
+        >
+          <ChevronLeftIcon size={12} />
+          {backProject.name}
+        </button>
+      )}
       <div className={styles.head}>
         <Avatar person={person} size={60} ring={4} gapColor="#fff" />
         <div className={styles.headText}>
@@ -144,14 +159,18 @@ function Section({
   );
 }
 
-function Row({
+/** One task or note as a row in a white side panel; the project panel borrows it too. */
+export function PanelItemRow({
   item,
   selected,
   onSelect,
+  showProject = true,
 }: {
   item: Item;
   selected: boolean;
   onSelect: () => void;
+  /** Off where every row is the same project. */
+  showProject?: boolean;
 }) {
   const isTask = item.kind === 'task';
   const done = isTask && item.isCompleted;
@@ -181,7 +200,7 @@ function Row({
             {isTask && !item.isCompleted && item.dueDate !== undefined && (
               <DueBadge dueDate={item.dueDate} now={now} />
             )}
-            {project && <ProjectBadge project={project} />}
+            {project && showProject && <ProjectBadge project={project} />}
           </div>
           <div className={styles.rowDate} title={formatDateTime(shownDate)}>
             {formatDayLabel(shownDate, now)}

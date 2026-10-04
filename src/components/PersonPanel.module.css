@@ -16,6 +16,28 @@
   gap: 16px;
   padding-right: 28px;
 }
+/* "‹ Project" above the head when this panel was opened from a project's page */
+.back {
+  align-self: flex-start;
+  margin: -8px 0 8px -6px;
+  height: 26px;
+  max-width: 70%;
+  padding: 0 10px 0 6px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--card-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.back:hover {
+  background: #f2f2f7;
+  color: var(--accent);
+}
 .headText {
   min-width: 0;
 }

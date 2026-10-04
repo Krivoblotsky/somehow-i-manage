@@ -132,7 +132,8 @@ function Canvas({ people, items, projects = NO_PROJECTS, focusPersonId }: People
   // The side pane floats over the right edge: fits and edge markers treat that strip as hidden.
   const flowWidth = useStore((st) => st.width);
   const flowHeight = useStore((st) => st.height);
-  const paneOpen = !demo && (selectedItemId !== null || personPanelOpen);
+  const projectFocusId = useUI((s) => s.projectFocusId);
+  const paneOpen = !demo && (selectedItemId !== null || personPanelOpen || projectFocusId !== null);
   const covered = useLagging(
     paneOpen && flowWidth >= PANE_OVERLAY_MIN_WIDTH ? PANE_COVER : 0,
     PANE_SLIDE_MS,

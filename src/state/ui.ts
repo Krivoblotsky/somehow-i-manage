@@ -13,6 +13,17 @@ export type DialogState =
 /** Map, list, or the screen of the 1:1 that is running. */
 export type ViewMode = 'map' | 'list' | 'meeting';
 
+/**
+ * Where the open panel was opened from, so its Back goes there: the pane behaves like a stack.
+ * `item`: the item panel came from the person's panel, from the project's page, or from
+ * neither (then Back goes to the person). `person`: the person panel came from the project's page.
+ */
+export interface PaneFrom {
+  item: 'person' | 'project' | null;
+  person: 'project' | null;
+}
+const NOWHERE: PaneFrom = { item: null, person: null };
+
 /** A 1:1 that is running right now. Survives reloads; only the user ends it. */
 export interface ActiveMeeting {
   personId: string;
@@ -38,6 +49,7 @@ interface UIState {
   tipsDismissed: boolean;
   /** Map: spotlight one project; everything outside it steps back. null = show all. */
   projectFocusId: string | null;
+  paneFrom: PaneFrom;
   dismissTips: () => void;
   focusProject: (id: string | null) => void;
   startEditing: (id: string, isNew: boolean) => void;
@@ -48,8 +60,9 @@ interface UIState {
   /** Forgets the running 1:1 and goes back to where it was started from. Record it first. */
   endMeeting: () => void;
   setView: (view: ViewMode) => void;
-  selectPerson: (id: string | null) => void;
-  selectItem: (id: string | null, personId?: string) => void;
+  /** `from`: what the panel replaces; left out, it is worked out from what is showing now. */
+  selectPerson: (id: string | null, from?: PaneFrom['person']) => void;
+  selectItem: (id: string | null, personId?: string, from?: PaneFrom['item']) => void;
   closePanel: () => void;
   focusPerson: (personId: string) => void;
   setSearch: (query: string) => void;
@@ -82,6 +95,7 @@ export const useUI = create<UIState>()(
       meeting: null,
       tipsDismissed: false,
       projectFocusId: null,
+      paneFrom: NOWHERE,
       dismissTips: () => set({ tipsDismissed: true }),
       focusProject: (id) => set({ projectFocusId: id }),
       startEditing: (id, isNew) => set({ editingItem: { id, isNew } }),
@@ -98,6 +112,7 @@ export const useUI = create<UIState>()(
           selectedPersonId: personId,
           selectedItemId: null,
           personPanelOpen: false,
+          paneFrom: NOWHERE,
           search: '',
         })),
       endMeeting: () =>
@@ -106,11 +121,34 @@ export const useUI = create<UIState>()(
           view: s.view === 'meeting' ? (s.meeting?.returnView ?? 'list') : s.view,
         })),
       setView: (view) => set({ view }),
-      selectPerson: (id) =>
-        set({ selectedPersonId: id, selectedItemId: null, personPanelOpen: id !== null }),
-      selectItem: (id, personId) =>
-        set((s) => ({ selectedItemId: id, selectedPersonId: personId ?? s.selectedPersonId })),
-      closePanel: () => set({ selectedItemId: null, personPanelOpen: false }),
+      selectPerson: (id, from) =>
+        set((s) => ({
+          selectedPersonId: id,
+          selectedItemId: null,
+          personPanelOpen: id !== null,
+          paneFrom: {
+            item: null,
+            // opened over the project's page (no person panel yet): Back returns to it
+            person:
+              id === null
+                ? null
+                : (from ?? (s.projectFocusId !== null && !s.personPanelOpen ? 'project' : null)),
+          },
+        })),
+      selectItem: (id, personId, from) =>
+        set((s) => ({
+          selectedItemId: id,
+          selectedPersonId: personId ?? s.selectedPersonId,
+          paneFrom: {
+            ...s.paneFrom,
+            item:
+              id === null
+                ? null
+                : (from ??
+                  (s.personPanelOpen ? 'person' : s.projectFocusId !== null ? 'project' : null)),
+          },
+        })),
+      closePanel: () => set({ selectedItemId: null, personPanelOpen: false, paneFrom: NOWHERE }),
       focusPerson: (personId) => set({ focusRequest: { personId, nonce: Date.now() } }),
       setSearch: (search) => set({ search }),
       openDialog: (dialog) => set({ dialog }),

@@ -21,6 +21,7 @@ import { personColor } from '../model/palette';
 import type { Item, ItemKind, Person } from '../model/types';
 import { deleteItemWithUndo } from '../state/actions';
 import { useNow } from '../state/now';
+import { useProjectOf } from '../state/projects';
 import { useUI } from '../state/ui';
 import { Avatar } from './Avatar';
 import { CalendarIcon, ChevronLeftIcon, FlagIcon } from './icons';
@@ -49,6 +50,10 @@ const SAVE_DELAY_MS = 400;
 function ItemEditor({ item, person }: { item: Item; person: Person }) {
   const selectItem = useUI((s) => s.selectItem);
   const selectPerson = useUI((s) => s.selectPerson);
+  // Opened from a project's page: Back returns there (closing this panel shows it again).
+  const from = useUI((s) => s.paneFrom.item);
+  const projectFocusId = useUI((s) => s.projectFocusId);
+  const backProject = useProjectOf(from === 'project' ? (projectFocusId ?? undefined) : undefined);
   const now = useNow();
   const [title, setTitle] = useState(item.title);
   const [synced, setSynced] = useState(item.title);
@@ -100,11 +105,11 @@ function ItemEditor({ item, person }: { item: Item; person: Person }) {
       <button
         type="button"
         className={styles.back}
-        onClick={() => selectPerson(person.id)}
-        title={`Back to ${person.name}`}
+        onClick={() => (backProject ? selectItem(null) : selectPerson(person.id))}
+        title={`Back to ${backProject ? backProject.name : person.name}`}
       >
         <ChevronLeftIcon size={12} />
-        {person.name}
+        {backProject ? backProject.name : person.name}
       </button>
       <div className={styles.date} title={formatDateTime(item.createdAt)}>
         Created {formatDayLabel(item.createdAt, now)}

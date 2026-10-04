@@ -1,16 +1,17 @@
-import type { Item, ItemKind, Person, ViewModeLike } from './types';
+import type { Item, ItemKind, Person, Project, ViewModeLike } from './types';
 
 export type PaletteAction =
   | { type: 'person'; personId: string }
   | { type: 'item'; itemId: string; personId: string }
   | { type: 'add'; personId: string; kind: ItemKind; title: string }
   | { type: 'meeting'; personId: string }
+  | { type: 'project'; projectId: string }
   | { type: 'command'; command: PaletteCommand };
 
 export type PaletteCommand =
   'new-person' | 'view-map' | 'view-list' | 'tidy-map' | 'shortcuts' | 'backup' | 'restore';
 
-export type PaletteGroup = 'add' | 'people' | 'items' | 'commands';
+export type PaletteGroup = 'add' | 'people' | 'items' | 'projects' | 'commands';
 
 export interface PaletteResult {
   id: string;
@@ -43,6 +44,7 @@ const COMMANDS: {
 
 const MAX_PEOPLE = 8;
 const MAX_ITEMS = 8;
+const MAX_PROJECTS = 5;
 
 function rank(text: string, q: string): number {
   const t = text.toLowerCase();
@@ -82,6 +84,7 @@ export function buildResults(
   people: Person[],
   items: Item[],
   view: ViewModeLike,
+  projects: Project[] = [],
 ): PaletteResult[] {
   const q = query.trim().toLowerCase();
   const results: PaletteResult[] = [];
@@ -146,6 +149,26 @@ export function buildResults(
         hint: [owner?.name, i.kind, i.isCompleted ? 'completed' : null].filter(Boolean).join(' · '),
         personId: i.personId,
         action: { type: 'item', itemId: i.id, personId: i.personId },
+      });
+    }
+  }
+
+  // Projects whose name matches; all of them when the query is just "project(s)".
+  if (q !== '') {
+    const aboutProjects = /^projects?$/.test(q);
+    const projectHits = projects
+      .map((p) => ({ p, r: aboutProjects ? 0 : rank(p.name, q) }))
+      .filter((x) => x.r !== -1)
+      .sort((a, b) => a.r - b.r || a.p.name.localeCompare(b.p.name))
+      .slice(0, MAX_PROJECTS);
+    for (const { p } of projectHits) {
+      const n = items.filter((i) => i.projectId === p.id).length;
+      results.push({
+        id: `project-${p.id}`,
+        group: 'projects',
+        label: p.name,
+        hint: n === 0 ? 'nothing yet' : `${n} item${n === 1 ? '' : 's'}`,
+        action: { type: 'project', projectId: p.id },
       });
     }
   }

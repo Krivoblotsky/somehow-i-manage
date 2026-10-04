@@ -12,6 +12,7 @@ import { PeopleMap } from './components/map/PeopleMap';
 import { PersonDialog } from './components/PersonDialog';
 import { PersonPanel } from './components/PersonPanel';
 import { PersonView } from './components/PersonView';
+import { ProjectPanel } from './components/ProjectPanel';
 import { RestoreDialog } from './components/RestoreDialog';
 import { SearchResults } from './components/SearchResults';
 import { ShortcutsDialog } from './components/ShortcutsDialog';
@@ -31,6 +32,7 @@ export default function Workspace() {
   const personPanelOpen = useUI((s) => s.personPanelOpen);
   const search = useUI((s) => s.search);
   const meeting = useUI((s) => s.meeting);
+  const projectFocusId = useUI((s) => s.projectFocusId);
 
   // Data from before positions were stored gets placed once, on startup.
   useEffect(() => {
@@ -103,6 +105,13 @@ export default function Workspace() {
     }
   }, [meeting, people]);
 
+  // A lit project that was deleted (here or on another device) goes dark.
+  useEffect(() => {
+    if (projectFocusId && projects && !projects.some((p) => p.id === projectFocusId)) {
+      useUI.getState().focusProject(null);
+    }
+  }, [projectFocusId, projects]);
+
   if (!people || !items) return null;
 
   const runningMeeting = meeting && people.some((p) => p.id === meeting.personId) ? meeting : null;
@@ -121,11 +130,14 @@ export default function Workspace() {
   else if (activePersonId) main = <PersonView personId={activePersonId} />;
 
   let aside = null;
-  // Only for an item that still exists: an empty panel wrapper would sit over the main area.
+  // The most specific thing wins: an open item, then a person, then the lit project.
+  // Only for records that still exist: an empty panel wrapper would sit over the main area.
   if (selectedItemId && items.some((i) => i.id === selectedItemId))
     aside = <ItemPanel itemId={selectedItemId} />;
   else if (view === 'map' && personPanelOpen && activePersonId)
     aside = <PersonPanel personId={activePersonId} />;
+  else if (view === 'map' && projectFocusId && projects?.some((p) => p.id === projectFocusId))
+    aside = <ProjectPanel projectId={projectFocusId} />;
 
   return (
     <div className={styles.app}>
