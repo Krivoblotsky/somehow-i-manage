@@ -13,7 +13,22 @@ import './styles/global.css';
 if (import.meta.env.DEV) {
   void Promise.all([import('./state/ui'), import('./sync/store'), import('./state/actions')]).then(
     ([ui, sync, actions]) => {
-      Object.assign(window, { __dev: { useUI: ui.useUI, useSync: sync.useSync, actions } });
+      Object.assign(window, {
+        __dev: {
+          useUI: ui.useUI,
+          useSync: sync.useSync,
+          actions,
+          // __dev.fakeSignIn(): review the signed-in screens without an account. Offline on
+          // purpose: a pretend user has no session, and the sync engine would otherwise retry a
+          // failing upload every minute and litter the project's Postgres log.
+          fakeSignIn: (name = 'Dev User') =>
+            sync.useSync.setState({
+              ready: true,
+              user: { id: 'dev-user', email: 'dev@example.com', name },
+              online: false,
+            }),
+        },
+      });
     },
   );
 }

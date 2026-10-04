@@ -31,7 +31,7 @@ const healthy = () =>
       phase: 'idle',
       error: null,
       pending: 0,
-      online: true,
+      online: false, // a pretend account must not try to sync
       lastSyncedAt: Date.now(),
     });
   });

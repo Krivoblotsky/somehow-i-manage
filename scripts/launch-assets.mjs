@@ -36,7 +36,7 @@ async function openApp(browser, viewport) {
       phase: 'idle',
       error: null,
       pending: 0,
-      online: true,
+      online: false, // a pretend account must not try to sync
     });
     window.__dev.useUI.setState({
       view: 'map',
