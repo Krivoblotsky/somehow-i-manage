@@ -173,3 +173,23 @@ describe('SyncEngine · switching accounts on one device', () => {
     expect(server.rows.size).toBe(1); // u1's data is still where it belongs
   });
 });
+
+describe('projects', () => {
+  it('carries projects between devices and untags items when one is deleted', async () => {
+    const { createProject, deleteProject } = await import('../data/repository');
+    const vira = await createPerson({ name: 'Vira' }, a);
+    const mipp = await createProject('MIPP', a);
+    const task = await createItem({ personId: vira.id, title: 'Launch', projectId: mipp.id }, a);
+    expect(await syncA.sync()).toEqual({ pulled: 0, pushed: 3 });
+    expect(await syncB.sync()).toEqual({ pulled: 3, pushed: 0 });
+    expect((await b.projects.get(mipp.id))?.name).toBe('MIPP');
+    expect((await b.items.get(task.id))?.projectId).toBe(mipp.id);
+
+    await tick();
+    await deleteProject(mipp.id, b);
+    await syncB.sync();
+    await syncA.sync();
+    expect(await a.projects.get(mipp.id)).toBeUndefined();
+    expect((await a.items.get(task.id))?.projectId).toBeUndefined();
+  });
+});

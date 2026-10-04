@@ -25,6 +25,7 @@ import { useUI } from '../state/ui';
 import { Avatar } from './Avatar';
 import { CalendarIcon, ChevronLeftIcon, FlagIcon } from './icons';
 import styles from './ItemPanel.module.css';
+import { ProjectPicker } from './ProjectPicker';
 import ui from './ui.module.css';
 
 // TipTap is the heaviest dependency; load it only when a panel is actually opened.
@@ -112,6 +113,7 @@ function ItemEditor({ item, person }: { item: Item; person: Person }) {
       <div className={styles.topRow}>
         <Avatar person={person} size={24} ring={2} gapColor="#fff" />
         <div className={styles.spacer} />
+        <ProjectPicker item={item} />
         {isTask && (
           <>
             <DueField item={item} now={now} />

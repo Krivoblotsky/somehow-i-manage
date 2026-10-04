@@ -36,7 +36,10 @@ interface UIState {
   meeting: ActiveMeeting | null;
   /** The first-run tips island on the map was closed. */
   tipsDismissed: boolean;
+  /** Map: spotlight one project; everything outside it steps back. null = show all. */
+  projectFocusId: string | null;
   dismissTips: () => void;
+  focusProject: (id: string | null) => void;
   startEditing: (id: string, isNew: boolean) => void;
   /** Ends in-place editing. With an id, only if that card is still the one being edited. */
   stopEditing: (id?: string) => void;
@@ -78,7 +81,9 @@ export const useUI = create<UIState>()(
       editingItem: null,
       meeting: null,
       tipsDismissed: false,
+      projectFocusId: null,
       dismissTips: () => set({ tipsDismissed: true }),
+      focusProject: (id) => set({ projectFocusId: id }),
       startEditing: (id, isNew) => set({ editingItem: { id, isNew } }),
       stopEditing: (id) =>
         set((s) => (id !== undefined && s.editingItem?.id !== id ? {} : { editingItem: null })),

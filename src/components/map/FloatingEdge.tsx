@@ -12,7 +12,10 @@ export function FloatingEdge({ id, source, target, data, style }: EdgeProps<Floa
   const sourceNode = useInternalNode<MapNode>(source);
   const targetNode = useInternalNode<MapNode>(target);
   const focus = useUI(selectFocusPersonId);
-  const dimmed = focus !== null && focus !== source;
+  const projectFocus = useUI((s) => s.projectFocusId);
+  const dimmed =
+    (focus !== null && focus !== source) ||
+    (projectFocus !== null && data?.projectId !== projectFocus);
 
   // An edge to a card created in this session draws itself from the hub outwards, once.
   // The creation time rides on the edge data: the edge can mount before its node is looked up.

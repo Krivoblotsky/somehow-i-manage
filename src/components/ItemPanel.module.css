@@ -40,12 +40,15 @@
 }
 .topRow {
   display: flex;
+  flex-wrap: wrap; /* project + due + urgent + completed can outgrow the panel: the tail wraps */
+  justify-content: flex-end;
   align-items: center;
-  gap: 8px;
+  gap: 6px 8px;
   margin-top: 12px;
 }
 .spacer {
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
 }
 .title {
   width: 100%;

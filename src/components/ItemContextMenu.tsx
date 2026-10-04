@@ -2,9 +2,16 @@ import * as ContextMenu from '@radix-ui/react-context-menu';
 import { useLiveQuery } from 'dexie-react-hooks';
 import type { ReactNode } from 'react';
 import { useDatabase } from '../data/DatabaseContext';
-import { moveItem, setItemCompleted, setItemKind, updateItem } from '../data/repository';
+import {
+  moveItem,
+  setItemCompleted,
+  setItemKind,
+  setItemProject,
+  updateItem,
+} from '../data/repository';
 import type { Item } from '../model/types';
 import { deleteItemWithUndo } from '../state/actions';
+import { useProjects } from '../state/projects';
 import { useToast } from '../state/toast';
 import { useUI } from '../state/ui';
 import menu from './menu.module.css';
@@ -28,6 +35,7 @@ export function ItemMenuItems({ item }: { item: Item }) {
   const database = useDatabase();
   const people =
     useLiveQuery(() => database.people.orderBy('sortOrder').toArray(), [database]) ?? [];
+  const projects = useProjects();
   const selectItem = useUI((s) => s.selectItem);
   const show = useToast((s) => s.show);
   const isTask = item.kind === 'task';
@@ -82,6 +90,41 @@ export function ItemMenuItems({ item }: { item: Item }) {
                   {p.name}
                 </ContextMenu.Item>
               ))}
+            </ContextMenu.SubContent>
+          </ContextMenu.Portal>
+        </ContextMenu.Sub>
+      )}
+      {projects.length > 0 && (
+        <ContextMenu.Sub>
+          <ContextMenu.SubTrigger className={`${menu.item} ${menu.subTrigger}`}>
+            Project
+          </ContextMenu.SubTrigger>
+          <ContextMenu.Portal>
+            <ContextMenu.SubContent className={menu.menu} sideOffset={4}>
+              {projects.map((p) => (
+                <ContextMenu.Item
+                  key={p.id}
+                  className={menu.item}
+                  onSelect={() => void setItemProject(item.id, p.id, database)}
+                >
+                  <span className={menu.check} aria-hidden="true">
+                    {p.id === item.projectId ? '✓' : ''}
+                  </span>
+                  {p.name}
+                </ContextMenu.Item>
+              ))}
+              {item.projectId && (
+                <>
+                  <ContextMenu.Separator className={menu.separator} />
+                  <ContextMenu.Item
+                    className={menu.item}
+                    onSelect={() => void setItemProject(item.id, undefined, database)}
+                  >
+                    <span className={menu.check} aria-hidden="true" />
+                    No project
+                  </ContextMenu.Item>
+                </>
+              )}
             </ContextMenu.SubContent>
           </ContextMenu.Portal>
         </ContextMenu.Sub>

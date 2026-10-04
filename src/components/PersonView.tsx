@@ -9,6 +9,7 @@ import { contrastText, personColor } from '../model/palette';
 import type { Item } from '../model/types';
 import { deleteItemWithUndo, startOneOnOne } from '../state/actions';
 import { useNow } from '../state/now';
+import { useProjectOf } from '../state/projects';
 import { useUI } from '../state/ui';
 import { Avatar } from './Avatar';
 import { ContactLinks } from './ContactLinks';
@@ -18,6 +19,7 @@ import { DueBadge } from './DueBadge';
 import { QuickAdd } from './QuickAdd';
 import { FlagIcon, NoteIcon, TrashIcon } from './icons';
 import styles from './PersonView.module.css';
+import { ProjectBadge } from './ProjectBadge';
 import ui from './ui.module.css';
 
 /** One person's dossier: header with stats, then open tasks, notes, completed. */
@@ -155,6 +157,7 @@ function Row({
 }) {
   const preview = stripHtml(item.body);
   const now = useNow();
+  const project = useProjectOf(item.projectId);
   const isTask = item.kind === 'task';
   const shownDate =
     isTask && item.isCompleted && item.completedAt ? item.completedAt : item.updatedAt;
@@ -192,6 +195,7 @@ function Row({
             {isTask && !item.isCompleted && item.dueDate !== undefined && (
               <DueBadge dueDate={item.dueDate} now={now} />
             )}
+            {project && <ProjectBadge project={project} tone="dark" />}
           </div>
           <div className={styles.rowDate} title={formatDateTime(shownDate)}>
             {formatDayLabel(shownDate, now)}

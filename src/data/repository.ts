@@ -7,6 +7,7 @@ import {
 } from '../map/layout';
 import { normalizeContacts } from '../model/contacts';
 import { pickColor } from '../model/palette';
+import { findProjectByName, normalizeProjectName, pickProjectColor } from '../model/projects';
 import type {
   AvatarSource,
   Contact,
@@ -15,6 +16,7 @@ import type {
   MapPosition,
   Meeting,
   Person,
+  Project,
 } from '../model/types';
 import { db as defaultDb, type PersonalDB } from './db';
 import { parseBulkText } from './import';
@@ -110,6 +112,7 @@ export interface NewItem {
   body?: string;
   isCompleted?: boolean;
   isFlagged?: boolean;
+  projectId?: string;
   mapPosition?: MapPosition;
 }
 
@@ -131,6 +134,7 @@ export async function createItem(input: NewItem, database: PersonalDB = defaultD
       isCompleted,
       completedAt: isCompleted ? t : undefined,
       isFlagged: input.isFlagged ?? false,
+      projectId: input.projectId,
       // Placed once, into a free gap around the hub, so later changes never move it.
       mapPosition: input.mapPosition ?? placeItem(placedPositions(siblings)),
       sortOrder: maxOrder + 1,
@@ -302,10 +306,74 @@ export async function ensureMapPositions(database: PersonalDB = defaultDb): Prom
 }
 
 export async function clearAllData(database: PersonalDB = defaultDb): Promise<void> {
-  await database.transaction('rw', database.people, database.items, async () => {
+  await database.transaction('rw', database.people, database.items, database.projects, async () => {
     await database.items.clear();
     await database.people.clear();
+    await database.projects.clear();
   });
+}
+
+// ---- projects ------------------------------------------------------------------------------
+
+/**
+ * A new project, or the existing one with that name (ignoring case): typing a name that is
+ * already there in the picker must not make a twin.
+ */
+export async function createProject(
+  name: string,
+  database: PersonalDB = defaultDb,
+): Promise<Project> {
+  return database.transaction('rw', database.projects, async () => {
+    const existing = await database.projects.toArray();
+    const clean = normalizeProjectName(name);
+    if (!clean) throw new Error('A project needs a name.');
+    const same = findProjectByName(existing, clean);
+    if (same) return same;
+    const t = now();
+    const project: Project = {
+      id: newId(),
+      name: clean,
+      colorIndex: pickProjectColor(existing.map((p) => p.colorIndex)),
+      sortOrder: existing.reduce((m, p) => Math.max(m, p.sortOrder), -1) + 1,
+      createdAt: t,
+      updatedAt: t,
+    };
+    await database.projects.add(project);
+    return project;
+  });
+}
+
+export async function renameProject(
+  id: string,
+  name: string,
+  database: PersonalDB = defaultDb,
+): Promise<void> {
+  const clean = normalizeProjectName(name);
+  if (!clean) return;
+  await database.projects.update(id, { name: clean, updatedAt: now() });
+}
+
+/** Removes the project; its items stay and simply lose the tag (an edit, so it syncs). */
+export async function deleteProject(id: string, database: PersonalDB = defaultDb): Promise<void> {
+  await database.transaction('rw', database.projects, database.items, async () => {
+    const t = now();
+    await database.items
+      .filter((i) => i.projectId === id)
+      .modify((i) => {
+        delete i.projectId;
+        i.updatedAt = t;
+      });
+    await database.projects.delete(id);
+  });
+}
+
+/** Tags an item with a project, or untags it with undefined. */
+export async function setItemProject(
+  itemId: string,
+  projectId: string | undefined,
+  database: PersonalDB = defaultDb,
+): Promise<void> {
+  await updateItem(itemId, { projectId }, database);
 }
 
 /** Appends a finished 1:1 to the person's history. */

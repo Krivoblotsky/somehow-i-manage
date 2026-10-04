@@ -33,7 +33,7 @@ import {
   type PersonNodeType,
 } from '../../map/graph';
 import { CARD, PERSON_NODE } from '../../map/layout';
-import type { Item, ItemKind, Person } from '../../model/types';
+import type { Item, ItemKind, Person, Project } from '../../model/types';
 import { startOneOnOne } from '../../state/actions';
 import { useUI } from '../../state/ui';
 import { ItemMenuItems } from '../ItemContextMenu';
@@ -45,6 +45,7 @@ import { FeedbackIsland } from './FeedbackIsland';
 import { OffscreenMarkers } from './OffscreenMarkers';
 import styles from './PeopleMap.module.css';
 import { PersonNode } from './PersonNode';
+import { ProjectsIsland } from './ProjectsIsland';
 
 const nodeTypes: NodeTypes = { person: PersonNode, item: ItemNode };
 const edgeTypes: EdgeTypes = { floating: FloatingEdge };
@@ -89,9 +90,13 @@ type MenuTarget =
 interface PeopleMapProps {
   people: Person[];
   items: Item[];
+  /** For the project chips on cards and the Projects island. */
+  projects?: Project[];
   /** Open on this person's cluster instead of fitting everyone (the landing-page demo). */
   focusPersonId?: string;
 }
+
+const NO_PROJECTS: Project[] = [];
 
 /** The People Map: every person is a hub, their tasks and notes orbit them. */
 export function PeopleMap(props: PeopleMapProps) {
@@ -102,7 +107,7 @@ export function PeopleMap(props: PeopleMapProps) {
   );
 }
 
-function Canvas({ people, items, focusPersonId }: PeopleMapProps) {
+function Canvas({ people, items, projects = NO_PROJECTS, focusPersonId }: PeopleMapProps) {
   const database = useDatabase();
   const demo = useIsDemo();
   const selectedItemId = useUI((s) => s.selectedItemId);
@@ -112,7 +117,13 @@ function Canvas({ people, items, focusPersonId }: PeopleMapProps) {
   const selectItem = useUI((s) => s.selectItem);
   const selectPerson = useUI((s) => s.selectPerson);
   const closePanel = useUI((s) => s.closePanel);
+  const focusProject = useUI((s) => s.focusProject);
   const openDialog = useUI((s) => s.openDialog);
+  // Clicking the empty canvas clears both spotlights: the person's and the project's.
+  const onPaneClick = useCallback(() => {
+    closePanel();
+    focusProject(null);
+  }, [closePanel, focusProject]);
   const focusPerson = useUI((s) => s.focusPerson);
   const { fitView, getNodes, getInternalNode, updateNodeData, screenToFlowPosition } = useReactFlow<
     MapNode,
@@ -160,12 +171,17 @@ function Canvas({ people, items, focusPersonId }: PeopleMapProps) {
 
   const graph = useMemo(
     () =>
-      buildGraph(people, items, {
-        itemId: selectedItemId,
-        personId: selectedPersonId,
-        personPanelOpen,
-      }),
-    [people, items, selectedItemId, selectedPersonId, personPanelOpen],
+      buildGraph(
+        people,
+        items,
+        {
+          itemId: selectedItemId,
+          personId: selectedPersonId,
+          personPanelOpen,
+        },
+        projects,
+      ),
+    [people, items, projects, selectedItemId, selectedPersonId, personPanelOpen],
   );
   const [nodes, setNodes, onNodesChange] = useNodesState<MapNode>(graph.nodes);
   useEffect(() => {
@@ -353,7 +369,7 @@ function Canvas({ people, items, focusPersonId }: PeopleMapProps) {
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
             onNodeClick={onNodeClick}
-            onPaneClick={closePanel}
+            onPaneClick={onPaneClick}
             onNodeDrag={onNodeDrag}
             onNodeDragStop={onNodeDragStop}
             onNodeContextMenu={onNodeContextMenu}
@@ -381,6 +397,7 @@ function Canvas({ people, items, focusPersonId }: PeopleMapProps) {
             <Controls showInteractive={false} position="bottom-left" fitViewOptions={fit} />
             <OffscreenMarkers onPick={focusPerson} coveredRight={covered} />
           </ReactFlow>
+          <ProjectsIsland items={items} demo={demo} />
           {!demo && <MapTips />}
           {!demo && <FeedbackIsland hidden={paneOpen} />}
         </div>

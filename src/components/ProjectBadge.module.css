@@ -1,0 +1,29 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  padding: 3px 7px 3px 6px;
+  border-radius: 999px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  align-self: center;
+  color: color-mix(in srgb, var(--project) 62%, #000);
+  background: color-mix(in srgb, var(--project) 14%, #fff);
+}
+.dark {
+  color: color-mix(in srgb, var(--project) 78%, #fff);
+  background: color-mix(in srgb, var(--project) 22%, transparent);
+}
+.dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--project);
+}

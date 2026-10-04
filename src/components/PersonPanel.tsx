@@ -9,6 +9,7 @@ import { contrastText, personColor } from '../model/palette';
 import type { Item, ItemKind } from '../model/types';
 import { deleteItemWithUndo, startOneOnOne } from '../state/actions';
 import { useNow } from '../state/now';
+import { useProjectOf } from '../state/projects';
 import { useUI } from '../state/ui';
 import { Avatar } from './Avatar';
 import { ContactLinks } from './ContactLinks';
@@ -18,6 +19,7 @@ import { DueBadge } from './DueBadge';
 import { QuickAdd } from './QuickAdd';
 import { FlagIcon, NoteIcon, TrashIcon } from './icons';
 import styles from './PersonPanel.module.css';
+import { ProjectBadge } from './ProjectBadge';
 import ui from './ui.module.css';
 
 /** Side panel with a person's details and their items (the "Person Details" frame). */
@@ -155,6 +157,7 @@ function Row({
   const done = isTask && item.isCompleted;
   const preview = stripHtml(item.body);
   const now = useNow();
+  const project = useProjectOf(item.projectId);
   const shownDate = done && item.completedAt ? item.completedAt : item.updatedAt;
   return (
     <ItemContextMenu item={item}>
@@ -178,6 +181,7 @@ function Row({
             {isTask && !item.isCompleted && item.dueDate !== undefined && (
               <DueBadge dueDate={item.dueDate} now={now} />
             )}
+            {project && <ProjectBadge project={project} />}
           </div>
           <div className={styles.rowDate} title={formatDateTime(shownDate)}>
             {formatDayLabel(shownDate, now)}

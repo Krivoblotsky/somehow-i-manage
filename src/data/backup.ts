@@ -1,8 +1,9 @@
-import type { Item, Person } from '../model/types';
+import type { Item, Person, Project } from '../model/types';
 import { db as defaultDb, type PersonalDB } from './db';
 
 export const BACKUP_APP = 'somehow-i-manage';
-export const BACKUP_VERSION = 1;
+/** 1: people and items. 2 (2026-10-03): projects too; a v1 file still restores. */
+export const BACKUP_VERSION = 2;
 
 export interface Backup {
   app: typeof BACKUP_APP;
@@ -10,6 +11,7 @@ export interface Backup {
   exportedAt: string;
   people: Person[];
   items: Item[];
+  projects: Project[];
 }
 
 export type RestoreMode = 'merge' | 'replace';
@@ -19,13 +21,18 @@ export type ParseResult =
 
 /** Everything the app knows, as one JSON document. Avatars are included as data URLs. */
 export async function createBackup(database: PersonalDB = defaultDb): Promise<Backup> {
-  const [people, items] = await Promise.all([database.people.toArray(), database.items.toArray()]);
+  const [people, items, projects] = await Promise.all([
+    database.people.toArray(),
+    database.items.toArray(),
+    database.projects.toArray(),
+  ]);
   return {
     app: BACKUP_APP,
     version: BACKUP_VERSION,
     exportedAt: new Date().toISOString(),
     people,
     items,
+    projects,
   };
 }
 
@@ -54,11 +61,24 @@ function isPerson(v: unknown): v is Person {
   );
 }
 
+function isProject(v: unknown): v is Project {
+  return (
+    isRecord(v) &&
+    isString(v.id) &&
+    isString(v.name) &&
+    isNumber(v.colorIndex) &&
+    isNumber(v.sortOrder) &&
+    isNumber(v.createdAt) &&
+    isNumber(v.updatedAt)
+  );
+}
+
 function isItem(v: unknown): v is Item {
   return (
     isRecord(v) &&
     isString(v.id) &&
     isString(v.personId) &&
+    (v.projectId === undefined || isString(v.projectId)) &&
     (v.kind === 'task' || v.kind === 'note') &&
     isString(v.title) &&
     isString(v.body) &&
@@ -96,7 +116,19 @@ export function parseBackup(text: string): ParseResult {
   if (validItems.length !== data.items.length) {
     return { ok: false, error: 'Some items in the backup are malformed.' };
   }
-  const items = validItems.filter((i) => known.has(i.personId));
+  // Projects arrived in version 2; older files have none.
+  const rawProjects = Array.isArray(data.projects) ? data.projects : [];
+  const projects = rawProjects.filter(isProject);
+  if (projects.length !== rawProjects.length) {
+    return { ok: false, error: 'Some projects in the backup are malformed.' };
+  }
+  const knownProjects = new Set(projects.map((p) => p.id));
+  const items = validItems
+    .filter((i) => known.has(i.personId))
+    // a tag pointing at a project the file does not have is dropped, the item kept
+    .map((i) =>
+      i.projectId && !knownProjects.has(i.projectId) ? { ...i, projectId: undefined } : i,
+    );
   return {
     ok: true,
     backup: {
@@ -105,6 +137,7 @@ export function parseBackup(text: string): ParseResult {
       exportedAt: isString(data.exportedAt) ? data.exportedAt : '',
       people,
       items,
+      projects,
     },
     skippedItems: validItems.length - items.length,
   };
@@ -118,14 +151,20 @@ export async function restoreBackup(
   backup: Backup,
   mode: RestoreMode,
   database: PersonalDB = defaultDb,
-): Promise<{ people: number; items: number }> {
-  await database.transaction('rw', database.people, database.items, async () => {
+): Promise<{ people: number; items: number; projects: number }> {
+  await database.transaction('rw', database.people, database.items, database.projects, async () => {
     if (mode === 'replace') {
       await database.items.clear();
       await database.people.clear();
+      await database.projects.clear();
     }
+    await database.projects.bulkPut(backup.projects);
     await database.people.bulkPut(backup.people);
     await database.items.bulkPut(backup.items);
   });
-  return { people: backup.people.length, items: backup.items.length };
+  return {
+    people: backup.people.length,
+    items: backup.items.length,
+    projects: backup.projects.length,
+  };
 }

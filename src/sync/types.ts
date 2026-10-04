@@ -1,13 +1,13 @@
-import type { Item, Person } from '../model/types';
+import type { Item, Person, Project } from '../model/types';
 
-export type RecordKind = 'person' | 'item';
+export type RecordKind = 'person' | 'item' | 'project';
 
 /** One record as the server stores it: the whole object as JSON plus what sync needs. */
 export interface SyncRow {
   id: string;
   kind: RecordKind;
   /** null for a tombstone. */
-  data: Person | Item | null;
+  data: Person | Item | Project | null;
   /** Version: when the device that made the change made it (ms). Last write wins. */
   updated_at: number;
   deleted_at: number | null;

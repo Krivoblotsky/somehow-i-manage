@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable, type Table } from 'dexie';
-import type { Item, Person } from '../model/types';
+import type { Item, Person, Project } from '../model/types';
 import { changeLogMiddleware, type OutboxEntry } from '../sync/changeLog';
 
 /** Small key/value facts the sync engine keeps per device: cursor, user, last sync time. */
@@ -16,6 +16,7 @@ export interface SyncMetaEntry {
 export class PersonalDB extends Dexie {
   declare people: EntityTable<Person, 'id'>;
   declare items: EntityTable<Item, 'id'>;
+  declare projects: EntityTable<Project, 'id'>;
   /** Pending uploads, one per record, written by the change-log middleware. */
   declare outbox: Table<OutboxEntry, [string, string]>;
   declare syncMeta: Table<SyncMetaEntry, SyncMetaEntry['key']>;
@@ -33,6 +34,13 @@ export class PersonalDB extends Dexie {
       items: 'id, personId, updatedAt, sortOrder',
       outbox: '[table+id], queuedAt',
       syncMeta: 'key',
+    });
+    this.version(3).stores({
+      people: 'id, sortOrder, updatedAt',
+      items: 'id, personId, updatedAt, sortOrder',
+      outbox: '[table+id], queuedAt',
+      syncMeta: 'key',
+      projects: 'id, sortOrder, updatedAt',
     });
     this.use(changeLogMiddleware);
   }

@@ -1,5 +1,11 @@
 import { db as defaultDb, type PersonalDB } from './db';
-import { createItem, createPerson, resetMapLayout, type NewItem } from './repository';
+import {
+  createItem,
+  createPerson,
+  createProject,
+  resetMapLayout,
+  type NewItem,
+} from './repository';
 import { SAMPLE_AVATARS } from './sampleAvatars';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -19,6 +25,8 @@ interface SampleItem extends Omit<NewItem, 'personId'> {
   due?: number;
   /** Covered in the previous 1:1 (days before now). */
   discussedAgo?: number;
+  /** Name of the sample project this belongs to (created up front). */
+  project?: string;
 }
 
 /**
@@ -32,7 +40,12 @@ export async function loadSampleData(database: PersonalDB = defaultDb): Promise<
   const dueIn = (days: number) => startOfToday.getTime() + days * DAY;
   const lastOneOnOne = now - 12 * DAY;
 
-  await database.transaction('rw', database.people, database.items, async () => {
+  await database.transaction('rw', database.people, database.items, database.projects, async () => {
+    // Three pieces of work that cut across the team, so the map shows what a project looks like.
+    const projectId = new Map<string, string>();
+    for (const name of ['MIPP', 'Release 2.1', 'Hiring'])
+      projectId.set(name, (await createProject(name, database)).id);
+
     async function person(
       name: string,
       role: string,
@@ -52,9 +65,14 @@ export async function loadSampleData(database: PersonalDB = defaultDb): Promise<
         },
         database,
       );
-      for (const { ago = 0, doneAgo, due, discussedAgo, ...input } of items) {
+      for (const { ago = 0, doneAgo, due, discussedAgo, project, ...input } of items) {
         const item = await createItem(
-          { ...input, personId: created.id, isCompleted: doneAgo !== undefined },
+          {
+            ...input,
+            personId: created.id,
+            isCompleted: doneAgo !== undefined,
+            projectId: project ? projectId.get(project) : undefined,
+          },
           database,
         );
         const at = now - ago * DAY;
@@ -98,8 +116,8 @@ export async function loadSampleData(database: PersonalDB = defaultDb): Promise<
           body: '<p>Berlin, 14–16 Oct. Needs a budget code.</p>',
         },
         { title: 'Expense report', ago: 20, due: -4 },
-        { title: 'Launch MIPP', ago: 20, doneAgo: 3, body: MIPP_BODY },
-        { title: 'Complete Job Description', ago: 20, doneAgo: 1 },
+        { title: 'Launch MIPP', project: 'MIPP', ago: 20, doneAgo: 3, body: MIPP_BODY },
+        { title: 'Complete Job Description', project: 'Hiring', ago: 20, doneAgo: 1 },
         {
           kind: 'note',
           title: 'Retro takeaways',
@@ -130,11 +148,17 @@ export async function loadSampleData(database: PersonalDB = defaultDb): Promise<
         },
         {
           title: 'Approve Focus Areas',
+          project: 'MIPP',
           ago: 6,
           due: 1,
           body: '<p>The Q4 draft is in the shared doc; two areas still overlap.</p>',
         },
-        { title: 'Patents Agreement', ago: 4, body: '<p>Legal needs the final inventor list.</p>' },
+        {
+          title: 'Patents Agreement',
+          project: 'MIPP',
+          ago: 4,
+          body: '<p>Legal needs the final inventor list.</p>',
+        },
         {
           title: 'Team Restructuring',
           ago: 2,
@@ -162,6 +186,7 @@ export async function loadSampleData(database: PersonalDB = defaultDb): Promise<
       [
         {
           title: 'Hire a junior designer',
+          project: 'Hiring',
           isFlagged: true,
           ago: 14,
           due: -7,
@@ -191,6 +216,7 @@ export async function loadSampleData(database: PersonalDB = defaultDb): Promise<
       [
         {
           title: 'Postmortem write-up',
+          project: 'Release 2.1',
           ago: 2,
           due: 1,
           body: '<p>The Tuesday outage. Blameless, two pages, one action list.</p>',
@@ -208,15 +234,21 @@ export async function loadSampleData(database: PersonalDB = defaultDb): Promise<
       [
         {
           title: 'Regression suite for 2.1',
+          project: 'Release 2.1',
           isFlagged: true,
           ago: 3,
           due: 2,
           body: '<p>Blocks the release train. Needs the new device lab images.</p>',
         },
-        { title: 'Release checklist v2', ago: 4, body: '<p>Fold the App Store steps in.</p>' },
-        { title: 'Device lab budget', ago: 9, due: -3 },
+        {
+          title: 'Release checklist v2',
+          project: 'Release 2.1',
+          ago: 4,
+          body: '<p>Fold the App Store steps in.</p>',
+        },
+        { title: 'Device lab budget', project: 'Release 2.1', ago: 9, due: -3 },
         { title: 'Shadow Olivia on the on-call rota', ago: 2, due: 9 },
-        { title: 'Flaky test audit', ago: 12, doneAgo: 5 },
+        { title: 'Flaky test audit', project: 'Release 2.1', ago: 12, doneAgo: 5 },
         {
           kind: 'note',
           title: 'Wants to move into SDET',
@@ -240,6 +272,7 @@ export async function loadSampleData(database: PersonalDB = defaultDb): Promise<
       [
         {
           title: 'Offer for the designer role',
+          project: 'Hiring',
           isFlagged: true,
           ago: 1,
           due: 0,

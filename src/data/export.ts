@@ -2,10 +2,16 @@ import { CONTACT_LABEL, contactDisplay } from '../model/contacts';
 import { stripHtml } from '../model/derive';
 import { formatDateTime } from '../model/format';
 import { lastMeeting } from '../model/oneOnOne';
-import type { Item, Person } from '../model/types';
+import type { Item, Person, Project } from '../model/types';
 
 /** A person's dossier as Markdown — the escape hatch out of the app. */
-export function personToMarkdown(person: Person, items: Item[]): string {
+export function personToMarkdown(person: Person, items: Item[], projects: Project[] = []): string {
+  const projectName = new Map(projects.map((p) => [p.id, p.name]));
+  // " [MIPP]" after a title, when the item carries a project
+  const tag = (item: Item) => {
+    const name = item.projectId ? projectName.get(item.projectId) : undefined;
+    return name ? ` [${name}]` : '';
+  };
   const lines: string[] = [`# ${person.name}`];
   if (person.role) lines.push(`_${person.role}_`);
   for (const c of person.contacts ?? [])
@@ -24,7 +30,7 @@ export function personToMarkdown(person: Person, items: Item[]): string {
     for (const t of tasks) {
       const body = stripHtml(t.body);
       lines.push(
-        `- [${t.isCompleted ? 'x' : ' '}] ${t.isFlagged ? '⚑ ' : ''}${t.title || 'Untitled'}`,
+        `- [${t.isCompleted ? 'x' : ' '}] ${t.isFlagged ? '⚑ ' : ''}${t.title || 'Untitled'}${tag(t)}`,
       );
       if (body) lines.push(`  ${body}`);
     }
@@ -33,7 +39,7 @@ export function personToMarkdown(person: Person, items: Item[]): string {
   if (notes.length > 0) {
     lines.push('## Notes', '');
     for (const n of notes) {
-      lines.push(`### ${n.title || 'Untitled'}`, `_${formatDateTime(n.updatedAt)}_`, '');
+      lines.push(`### ${n.title || 'Untitled'}${tag(n)}`, `_${formatDateTime(n.updatedAt)}_`, '');
       const body = stripHtml(n.body);
       if (body) lines.push(body, '');
     }
@@ -41,12 +47,13 @@ export function personToMarkdown(person: Person, items: Item[]): string {
   return lines.join('\n').trimEnd() + '\n';
 }
 
-export function allToMarkdown(people: Person[], items: Item[]): string {
+export function allToMarkdown(people: Person[], items: Item[], projects: Project[] = []): string {
   return people
     .map((p) =>
       personToMarkdown(
         p,
         items.filter((i) => i.personId === p.id),
+        projects,
       ),
     )
     .join('\n---\n\n');

@@ -9,7 +9,7 @@ import type {
 } from 'dexie';
 import type Dexie from 'dexie';
 
-export const TRACKED_TABLES = ['people', 'items'] as const;
+export const TRACKED_TABLES = ['people', 'items', 'projects'] as const;
 export type TrackedTable = (typeof TRACKED_TABLES)[number];
 export const OUTBOX_TABLE = 'outbox';
 
@@ -31,7 +31,7 @@ function isTracked(name: string): name is TrackedTable {
 }
 
 /**
- * Notes every change to people and items in the outbox, inside the same transaction, so the
+ * Notes every change to people, items and projects in the outbox, inside the same transaction, so the
  * sync engine knows what to upload. Works below Dexie's API, so it sees the repository, the
  * seed, a restore — everything. Changes that come *from* the server are applied with tracking
  * off (see withoutChangeTracking) and are not noted, which is what stops the echo.

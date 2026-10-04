@@ -1,5 +1,6 @@
+import type { Table } from 'dexie';
 import type { PersonalDB } from '../data/db';
-import type { Item, Person } from '../model/types';
+import type { Item, Person, Project } from '../model/types';
 import { withoutChangeTracking, type OutboxEntry, type TrackedTable } from './changeLog';
 import { deepEqual } from './deepEqual';
 import type { RecordKind, SyncChange, SyncRow, SyncTransport } from './types';
@@ -7,8 +8,22 @@ import type { RecordKind, SyncChange, SyncRow, SyncTransport } from './types';
 const PULL_LIMIT = 500;
 const PUSH_CHUNK = 200;
 
-const KIND_OF: Record<TrackedTable, RecordKind> = { people: 'person', items: 'item' };
-const TABLE_OF: Record<RecordKind, TrackedTable> = { person: 'people', item: 'items' };
+const KIND_OF: Record<TrackedTable, RecordKind> = {
+  people: 'person',
+  items: 'item',
+  projects: 'project',
+};
+const TABLE_OF: Record<RecordKind, TrackedTable> = {
+  person: 'people',
+  item: 'items',
+  project: 'projects',
+};
+
+type SyncRecord = Person | Item | Project;
+
+/** The synced tables, the account's cache: cleared together when the account changes. */
+const synced = (db: PersonalDB) => [db.people, db.items, db.projects];
+const everything = (db: PersonalDB) => [...synced(db), db.outbox, db.syncMeta];
 
 export interface SyncReport {
   pulled: number;
@@ -41,13 +56,8 @@ export class SyncEngine {
   /** Empties this device's cache without recording the deletions: the account is gone. */
   async wipeLocal(): Promise<void> {
     const { db } = this;
-    await withoutChangeTracking(db, [db.people, db.items, db.outbox, db.syncMeta], async () => {
-      await Promise.all([
-        db.people.clear(),
-        db.items.clear(),
-        db.outbox.clear(),
-        db.syncMeta.clear(),
-      ]);
+    await withoutChangeTracking(db, everything(db), async () => {
+      await Promise.all(everything(db).map((table) => table.clear()));
     });
   }
 
@@ -56,8 +66,8 @@ export class SyncEngine {
     if (known?.value === userId) return;
     const { db } = this;
     if (known !== undefined) {
-      await withoutChangeTracking(db, [db.people, db.items, db.outbox, db.syncMeta], async () => {
-        await Promise.all([db.people.clear(), db.items.clear(), db.outbox.clear()]);
+      await withoutChangeTracking(db, everything(db), async () => {
+        await Promise.all([...synced(db), db.outbox].map((table) => table.clear()));
         await db.syncMeta.delete('lastSyncedAt');
         await db.syncMeta.bulkPut([
           { key: 'userId', value: userId },
@@ -66,21 +76,18 @@ export class SyncEngine {
       });
       return;
     }
-    await db.transaction('rw', [db.people, db.items, db.outbox, db.syncMeta], async () => {
-      const [people, items] = await Promise.all([db.people.toArray(), db.items.toArray()]);
+    await db.transaction('rw', everything(db), async () => {
+      const [people, items, projects] = await Promise.all([
+        db.people.toArray(),
+        db.items.toArray(),
+        db.projects.toArray(),
+      ]);
+      const queue = (table: TrackedTable, records: SyncRecord[]): OutboxEntry[] =>
+        records.map((r) => ({ table, id: r.id, op: 'put' as const, queuedAt: r.updatedAt }));
       const entries: OutboxEntry[] = [
-        ...people.map((p) => ({
-          table: 'people' as const,
-          id: p.id,
-          op: 'put' as const,
-          queuedAt: p.updatedAt,
-        })),
-        ...items.map((i) => ({
-          table: 'items' as const,
-          id: i.id,
-          op: 'put' as const,
-          queuedAt: i.updatedAt,
-        })),
+        ...queue('people', people),
+        ...queue('items', items),
+        ...queue('projects', projects),
       ];
       await db.outbox.bulkPut(entries);
       await db.syncMeta.bulkPut([
@@ -120,7 +127,7 @@ export class SyncEngine {
       const cursor = Number((await db.syncMeta.get('cursor'))?.value ?? 0);
       const rows = await this.transport.pull(cursor, PULL_LIMIT);
       if (rows.length === 0) return applied;
-      await withoutChangeTracking(db, [db.people, db.items, db.outbox, db.syncMeta], async () => {
+      await withoutChangeTracking(db, everything(db), async () => {
         for (const row of rows) if (await this.applyRow(row)) applied++;
         await db.syncMeta.put({ key: 'cursor', value: rows[rows.length - 1].seq });
       });
@@ -128,32 +135,28 @@ export class SyncEngine {
     }
   }
 
+  /** The local table for a record kind, typed loosely: the three tables share the sync shape. */
+  private tableFor(kind: RecordKind): Table<SyncRecord, string> {
+    const { db } = this;
+    const table = kind === 'person' ? db.people : kind === 'item' ? db.items : db.projects;
+    return table as unknown as Table<SyncRecord, string>;
+  }
+
   /** Applies one server row locally. Returns whether anything changed. */
   private async applyRow(row: SyncRow): Promise<boolean> {
-    const tableName = TABLE_OF[row.kind];
-    const pending = await this.db.outbox.get([tableName, row.id]);
+    const pending = await this.db.outbox.get([TABLE_OF[row.kind], row.id]);
     // Edited here after the remote change was made: this device's version wins and uploads next.
     if (pending && pending.queuedAt >= row.updated_at) return false;
 
-    if (row.kind === 'person') {
-      const current = await this.db.people.get(row.id);
-      if (row.deleted_at !== null || row.data === null) {
-        if (!current) return false;
-        await this.db.people.delete(row.id);
-        return true;
-      }
-      if (current && deepEqual(current, row.data)) return false;
-      await this.db.people.put(row.data as Person);
-      return true;
-    }
-    const current = await this.db.items.get(row.id);
+    const table = this.tableFor(row.kind);
+    const current = await table.get(row.id);
     if (row.deleted_at !== null || row.data === null) {
       if (!current) return false;
-      await this.db.items.delete(row.id);
+      await table.delete(row.id);
       return true;
     }
     if (current && deepEqual(current, row.data)) return false;
-    await this.db.items.put(row.data as Item);
+    await table.put(row.data);
     return true;
   }
 
@@ -166,11 +169,7 @@ export class SyncEngine {
       const changes: SyncChange[] = [];
       for (const entry of chunk) {
         const record =
-          entry.op === 'put'
-            ? entry.table === 'people'
-              ? await db.people.get(entry.id)
-              : await db.items.get(entry.id)
-            : undefined;
+          entry.op === 'put' ? await this.tableFor(KIND_OF[entry.table]).get(entry.id) : undefined;
         changes.push(
           record
             ? {

@@ -43,6 +43,20 @@ Why it stalled (my reading of the code and history):
 
 **2026-10-01/02 addendum (M5 continued):** live at **https://somehowimanage.app** (GoDaddy DNS → GitHub Pages, HTTPS enforced; Google OAuth brand verified, so the consent screen names the app); privacy policy at `/privacy/`; landing redesigned to Asana's level (sticky nav, hero with the live map and the app icon, three habits, map and person sections as caption tabs over full-width shots taken by `npm run shots`, the author's story, FAQ, final call, footer) and **pre-rendered at build** for crawlers and first paint; Fixel shipped as web fonts; the icon is the user's “m” artwork cut to Apple's shape (`npm run icons`); sign-in with **Google, Microsoft or a passkey**; Feedback island + links (mailto); social preview card; robots/sitemap/llms.txt + JSON-LD; the side pane floats over the map and slides in and out; header stays one row down to the phone breakpoint; in-app account deletion (`delete_my_account()`); “new version ready” prompt.
 
+**2026-10-03 addendum (M5 continued): Projects.** A project is a tag that cuts across people: one
+per task or note, with a name and a colour of its own (`PROJECT_PALETTE`, eight colours distinct
+from the person rings). Set from the item panel (a “project” pill opens a find-or-create list:
+type a name, Enter creates it; “No project” takes it off) or from the right-click menu. Cards and
+rows carry a small chip; the **Projects island** (top-left of the map) lists every project with
+how many items hang on it and spotlights one on click (everything outside it steps back; Esc or
+the canvas clears); right-click renames or deletes (items keep their place, lose the tag).
+Projects sync as their own record kind (`projects` table, Dexie v3, `kind = 'project'` on the
+server, so `supabase/schema.sql` must be re-run once), ride in backups (version 2; version 1
+files still restore), show as `[Name]` in the Markdown export and match in search. The sample
+team carries three: MIPP, Release 2.1, Hiring. Dictation shipped the same day (a mic in the
+quick-add field and the body editor). Google Calendar (phase 1) is parked on the `calendar`
+branch, unmerged, waiting on Google's scope verification.
+
 ## Stack — decided 2026-09-29: Option B (web app, resumed), boring core first
 
 Sergii chose the web stack and the "boring core first" order. Consequences:

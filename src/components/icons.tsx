@@ -231,3 +231,25 @@ export function MicIcon({ className, size = 16 }: IconProps) {
     </svg>
   );
 }
+
+/** A luggage-tag outline: the project picker's "no project yet" state. */
+export function TagIcon({ className, size = 12 }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M2 2.75A.75.75 0 0 1 2.75 2h4.69c.2 0 .39.08.53.22l5.81 5.81a1.5 1.5 0 0 1 0 2.12l-3.63 3.63a1.5 1.5 0 0 1-2.12 0L2.22 7.97A.75.75 0 0 1 2 7.44V2.75Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <circle cx="5.5" cy="5.5" r="1" fill="currentColor" />
+    </svg>
+  );
+}

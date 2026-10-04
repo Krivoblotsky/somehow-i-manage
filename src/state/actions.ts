@@ -38,12 +38,13 @@ export async function backupToFile(): Promise<void> {
 }
 
 export async function exportMarkdownToFile(): Promise<void> {
-  const [people, items] = await Promise.all([
+  const [people, items, projects] = await Promise.all([
     db.people.orderBy('sortOrder').toArray(),
     db.items.toArray(),
+    db.projects.toArray(),
   ]);
   const stamp = new Date().toISOString().slice(0, 10);
-  downloadText(`somehow-i-manage-${stamp}.md`, allToMarkdown(people, items));
+  downloadText(`somehow-i-manage-${stamp}.md`, allToMarkdown(people, items, projects));
 }
 
 /** Opens the 1:1 screen for a person. A 1:1 still running with someone else ends (and is recorded) first. */

@@ -7,7 +7,7 @@ create sequence if not exists public.sync_seq;
 create table if not exists public.sync_records (
   user_id    uuid   not null default auth.uid() references auth.users (id) on delete cascade,
   id         text   not null,
-  kind       text   not null check (kind in ('person', 'item')),
+  kind       text   not null check (kind in ('person', 'item', 'project')),
   data       jsonb,                 -- the record as JSON; JSON null for a tombstone
   updated_at bigint not null,       -- version: the device's clock (ms) when it made the change
   deleted_at bigint,                -- set = tombstone
@@ -15,6 +15,11 @@ create table if not exists public.sync_records (
   primary key (user_id, id)
 );
 create index if not exists sync_records_user_seq on public.sync_records (user_id, seq);
+
+-- The kinds grow with the app (projects arrived 2026-10-03); an older table gets the new list.
+alter table public.sync_records drop constraint if exists sync_records_kind_check;
+alter table public.sync_records
+  add constraint sync_records_kind_check check (kind in ('person', 'item', 'project'));
 
 alter table public.sync_records enable row level security;
 drop policy if exists "own rows" on public.sync_records;

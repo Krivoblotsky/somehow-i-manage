@@ -94,9 +94,18 @@ export async function syncNow(): Promise<void> {
     await engine.sync();
     useSync.setState({ phase: 'idle', error: null, lastSyncedAt: Date.now() });
   } catch (e) {
-    useSync.setState({ phase: 'error', error: e instanceof Error ? e.message : String(e) });
+    useSync.setState({ phase: 'error', error: describeSyncError(e) });
     scheduleSync(RETRY_MS);
   }
+}
+
+/** Server messages worth translating; the rest pass through as they are. */
+function describeSyncError(e: unknown): string {
+  const message = e instanceof Error ? e.message : String(e);
+  // A record kind the server does not know yet (e.g. projects before the schema was re-run).
+  if (message.includes('sync_records_kind_check'))
+    return 'The server is behind this version of the app: run supabase/schema.sql again, then sync.';
+  return message;
 }
 
 function requireAuth(): SyncAuth {

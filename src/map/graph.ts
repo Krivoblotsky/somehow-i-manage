@@ -1,11 +1,13 @@
 import type { Edge, Node } from '@xyflow/react';
 import { personColor } from '../model/palette';
-import type { Item, Person } from '../model/types';
+import type { Item, Person, Project } from '../model/types';
 import { CARD, PERSON_NODE, itemRelativePosition, layoutClusters, ringLayout } from './layout';
 
 export type PersonNodeData = {
   person: Person;
   itemCount: number;
+  /** Projects this person has items in; the hub steps back when another project is spotlit. */
+  projectIds: string[];
   color: string;
   isSelected: boolean;
   /** Transient: a card is being dragged over this person. Set through updateNodeData. */
@@ -14,6 +16,8 @@ export type PersonNodeData = {
 
 export type ItemNodeData = {
   item: Item;
+  /** The item's project, when it has one that still exists. */
+  project?: Project;
   color: string;
   isSelected: boolean;
   /** Vector from the card's centre to the owner's avatar centre — where a new card grows from. */
@@ -28,6 +32,8 @@ export type FloatingEdgeData = {
   color: string;
   /** When the target item was created; drives the draw-in effect for new branches. */
   createdAt: number;
+  /** The target item's project, for the project spotlight. */
+  projectId?: string;
 };
 export type FloatingEdgeType = Edge<FloatingEdgeData, 'floating'>;
 
@@ -47,7 +53,13 @@ export interface Graph {
  * dragging a person carries the cards along), one floating edge per item.
  * Saved positions win over the automatic layout.
  */
-export function buildGraph(people: Person[], items: Item[], selection: MapSelection): Graph {
+export function buildGraph(
+  people: Person[],
+  items: Item[],
+  selection: MapSelection,
+  projects: Project[] = [],
+): Graph {
+  const projectById = new Map(projects.map((p) => [p.id, p]));
   const sortedPeople = [...people].sort((a, b) => a.sortOrder - b.sortOrder);
   const itemsByPerson = new Map<string, Item[]>();
   for (const person of sortedPeople) itemsByPerson.set(person.id, []);
@@ -71,6 +83,7 @@ export function buildGraph(people: Person[], items: Item[], selection: MapSelect
       data: {
         person,
         itemCount: personItems.length,
+        projectIds: [...new Set(personItems.flatMap((i) => (i.projectId ? [i.projectId] : [])))],
         color,
         isSelected: selection.personPanelOpen && selection.personId === person.id,
       },
@@ -87,6 +100,7 @@ export function buildGraph(people: Person[], items: Item[], selection: MapSelect
         position,
         data: {
           item,
+          project: item.projectId ? projectById.get(item.projectId) : undefined,
           color,
           isSelected: selection.itemId === item.id,
           hubOffset: {
@@ -101,7 +115,7 @@ export function buildGraph(people: Person[], items: Item[], selection: MapSelect
         source: person.id,
         target: item.id,
         type: 'floating',
-        data: { color, createdAt: item.createdAt },
+        data: { color, createdAt: item.createdAt, projectId: item.projectId },
         // Under the hubs and the cards; React Flow would otherwise lift an edge to its card's level.
         zIndex: 0,
         focusable: false,

@@ -18,18 +18,22 @@ import { useNow } from '../../state/now';
 import { selectFocusPersonId, useUI } from '../../state/ui';
 import { DueBadge } from '../DueBadge';
 import { FlagIcon, NoteIcon, TrashIcon } from '../icons';
+import { ProjectBadge } from '../ProjectBadge';
 import styles from './ItemNode.module.css';
 
 /** A task or note card on the map. Same visual language as the cards in the list view. */
 export function ItemNode({ data }: NodeProps<ItemNodeType>) {
-  const { item, color, isSelected, hubOffset } = data;
+  const { item, project, color, isSelected, hubOffset } = data;
   const isTask = item.kind === 'task';
   const done = isTask && item.isCompleted;
   const preview = stripHtml(item.body);
   const now = useNow();
   const database = useDatabase();
   const focus = useUI(selectFocusPersonId);
-  const dimmed = focus !== null && focus !== item.personId;
+  const projectFocus = useUI((s) => s.projectFocusId);
+  const dimmed =
+    (focus !== null && focus !== item.personId) ||
+    (projectFocus !== null && item.projectId !== projectFocus);
   const editing = useUI((s) => (s.editingItem?.id === item.id ? s.editingItem : null));
   const startEditing = useUI((s) => s.startEditing);
 
@@ -108,9 +112,10 @@ export function ItemNode({ data }: NodeProps<ItemNodeType>) {
           <NoteIcon className={styles.noteMark} size={14} />
         )}
       </div>
-      {item.dueDate !== undefined && !done && (
+      {((item.dueDate !== undefined && !done) || project) && (
         <div className={styles.dueRow}>
-          <DueBadge dueDate={item.dueDate} now={now} />
+          {item.dueDate !== undefined && !done && <DueBadge dueDate={item.dueDate} now={now} />}
+          {project && <ProjectBadge project={project} />}
         </div>
       )}
       {preview && <div className={styles.preview}>{preview}</div>}

@@ -9,6 +9,7 @@ import { contrastText, personColor } from '../model/palette';
 import type { Item } from '../model/types';
 import { finishOneOnOne } from '../state/actions';
 import { useNow } from '../state/now';
+import { useProjectOf } from '../state/projects';
 import { useUI, type ActiveMeeting } from '../state/ui';
 import { Avatar } from './Avatar';
 import { DueBadge } from './DueBadge';
@@ -16,6 +17,7 @@ import { ItemContextMenu } from './ItemContextMenu';
 import { QuickAdd } from './QuickAdd';
 import { FlagIcon, NoteIcon } from './icons';
 import styles from './OneOnOne.module.css';
+import { ProjectBadge } from './ProjectBadge';
 import ui from './ui.module.css';
 
 const MAX_DONE_SHOWN = 8;
@@ -199,6 +201,7 @@ function AgendaCard({
   selected: boolean;
   onOpen: () => void;
 }) {
+  const project = useProjectOf(item.projectId);
   const isTask = item.kind === 'task';
   const discussed = item.discussedAt !== undefined && item.discussedAt >= startedAt;
   const preview = stripHtml(item.body);
@@ -233,6 +236,7 @@ function AgendaCard({
             {isTask && !item.isCompleted && item.dueDate !== undefined && (
               <DueBadge dueDate={item.dueDate} now={now} />
             )}
+            {project && <ProjectBadge project={project} tone="dark" />}
           </div>
           {preview && <div className={styles.preview}>{preview}</div>}
         </div>

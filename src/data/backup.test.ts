@@ -27,7 +27,7 @@ describe('backup round trip', () => {
 
     const target = new PersonalDB(`test-${crypto.randomUUID()}`);
     const counts = await restoreBackup(parsed.backup, 'replace', target);
-    expect(counts).toEqual({ people: 1, items: 1 });
+    expect(counts).toEqual({ people: 1, items: 1, projects: 0 });
     expect(await target.people.get(p.id)).toEqual(await db.people.get(p.id));
   });
 
@@ -103,5 +103,43 @@ describe('backupFilename', () => {
     expect(backupFilename(new Date(Date.UTC(2026, 8, 30)))).toBe(
       'somehow-i-manage-backup-2026-09-30.json',
     );
+  });
+});
+
+describe('projects in backups', () => {
+  it('round-trips projects and drops tags that point nowhere', async () => {
+    const { createProject } = await import('./repository');
+    const p = await createPerson({ name: 'Vira' }, db);
+    const mipp = await createProject('MIPP', db);
+    await createItem({ personId: p.id, title: 'Launch', projectId: mipp.id }, db);
+    await createItem({ personId: p.id, title: 'Orphan', projectId: 'gone' }, db);
+    const parsed = parseBackup(serializeBackup(await createBackup(db)));
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    expect(parsed.backup.version).toBe(2);
+    expect(parsed.backup.projects).toHaveLength(1);
+    const tags = parsed.backup.items.map((i) => i.projectId).sort();
+    expect(tags).toEqual([mipp.id, undefined]);
+
+    const target = new PersonalDB(`test-${crypto.randomUUID()}`);
+    const counts = await restoreBackup(parsed.backup, 'replace', target);
+    expect(counts).toEqual({ people: 1, items: 2, projects: 1 });
+    expect((await target.projects.get(mipp.id))?.name).toBe('MIPP');
+  });
+
+  it('still reads a version 1 file, which has no projects', () => {
+    const parsed = parseBackup(
+      JSON.stringify({
+        app: 'somehow-i-manage',
+        version: 1,
+        exportedAt: '2026-09-30T00:00:00.000Z',
+        people: [
+          { id: 'p1', name: 'Vira', colorIndex: 0, sortOrder: 0, createdAt: 1, updatedAt: 1 },
+        ],
+        items: [],
+      }),
+    );
+    expect(parsed.ok).toBe(true);
+    if (parsed.ok) expect(parsed.backup.projects).toEqual([]);
   });
 });

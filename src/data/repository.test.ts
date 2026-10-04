@@ -218,3 +218,37 @@ describe('1:1 meetings', () => {
     expect((await db.items.get(item.id))?.discussedAt).toBeUndefined();
   });
 });
+
+describe('projects', () => {
+  it('creates once per name, tags items, and untags them when the project goes', async () => {
+    const { createProject, deleteProject, renameProject, setItemProject } =
+      await import('./repository');
+    const vira = await createPerson({ name: 'Vira' }, db);
+    const mipp = await createProject('  MIPP ', db);
+    expect(mipp.name).toBe('MIPP');
+    expect(mipp.colorIndex).toBe(0);
+    // same name again (any case) is the same project
+    expect((await createProject('mipp', db)).id).toBe(mipp.id);
+    const hiring = await createProject('Hiring', db);
+    expect(hiring.colorIndex).toBe(1);
+    expect(hiring.sortOrder).toBe(mipp.sortOrder + 1);
+
+    const task = await createItem({ personId: vira.id, title: 'Launch', projectId: mipp.id }, db);
+    const note = await createItem({ personId: vira.id, kind: 'note', title: 'Notes' }, db);
+    await setItemProject(note.id, mipp.id, db);
+    expect((await db.items.get(note.id))?.projectId).toBe(mipp.id);
+
+    await renameProject(mipp.id, ' MIPP 2026 ', db);
+    expect((await db.projects.get(mipp.id))?.name).toBe('MIPP 2026');
+
+    const before = (await db.items.get(task.id))!.updatedAt;
+    await new Promise((r) => setTimeout(r, 2));
+    await deleteProject(mipp.id, db);
+    expect(await db.projects.get(mipp.id)).toBeUndefined();
+    const after = (await db.items.get(task.id))!;
+    expect(after.projectId).toBeUndefined();
+    expect(after.updatedAt).toBeGreaterThan(before); // an edit, so it syncs
+    expect((await db.items.get(note.id))?.projectId).toBeUndefined();
+    expect(await db.projects.count()).toBe(1);
+  });
+});

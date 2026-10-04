@@ -36,7 +36,9 @@ notice instead of the app.
    region near you.
 2. **Schema.** Open *SQL Editor*, paste [`supabase/schema.sql`](../supabase/schema.sql), run it.
    Safe to run again later. It also creates `delete_my_account()`, behind “Delete your account…”
-   in *Account & sync*; re-run the file after pulling a version that added it.
+   in *Account & sync*; re-run the file after pulling a version that added it. **Re-run it again
+   for projects (2026-10-03):** they sync as a third record kind, and an older table's check
+   constraint would reject them until the file has widened it.
 3. **Google sign-in.** Two halves:
    - *Google Cloud Console → APIs & Services → Credentials → Create credentials → OAuth client ID*,
      type **Web application**. Add one authorized redirect URI:

@@ -24,6 +24,7 @@ import { useUI } from './state/ui';
 export default function Workspace() {
   const people = useLiveQuery(() => db.people.orderBy('sortOrder').toArray(), []);
   const items = useLiveQuery(() => db.items.toArray(), []);
+  const projects = useLiveQuery(() => db.projects.toArray(), []);
   const view = useUI((s) => s.view);
   const selectedPersonId = useUI((s) => s.selectedPersonId);
   const selectedItemId = useUI((s) => s.selectedItemId);
@@ -66,6 +67,7 @@ export default function Workspace() {
       } else if (e.key === 'Escape' && !inDialog && ui.dialog === null) {
         if (ui.selectedItemId) ui.selectItem(null);
         else if (ui.personPanelOpen) ui.closePanel();
+        else if (ui.projectFocusId !== null) ui.focusProject(null);
       } else if (mod && e.shiftKey && e.key.toLowerCase() === 'n') {
         // ⌘⇧N: new task with the current person
         const current = peopleRef.current ?? [];
@@ -114,7 +116,8 @@ export default function Workspace() {
   if (showSearch) main = <SearchResults query={search} />;
   else if (people.length === 0) main = <EmptyState />;
   else if (view === 'meeting' && runningMeeting) main = <OneOnOne meeting={runningMeeting} />;
-  else if (view === 'map') main = <PeopleMap people={people} items={items} />;
+  else if (view === 'map')
+    main = <PeopleMap people={people} items={items} projects={projects ?? []} />;
   else if (activePersonId) main = <PersonView personId={activePersonId} />;
 
   let aside = null;

@@ -1,0 +1,108 @@
+/* the pill on the white panel */
+.pill {
+  gap: 5px;
+}
+.pillSet {
+  color: color-mix(in srgb, var(--project) 62%, #000);
+  background: color-mix(in srgb, var(--project) 14%, #fff);
+}
+.pillName {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--project);
+}
+
+/* the popover: same cloth as the menus */
+.content {
+  width: 264px;
+  padding: 6px;
+  border-radius: 12px;
+  background: var(--chrome);
+  border: 1px solid var(--chrome-2);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  color: #fff;
+  z-index: 40;
+  outline: 0;
+}
+.search {
+  width: 100%;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--chrome-2);
+  background: var(--bg);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  outline: 0;
+}
+.search::placeholder {
+  color: var(--text-subtle);
+}
+.search:focus {
+  border-color: var(--chrome-3);
+}
+.list {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  max-height: 240px;
+  overflow: auto;
+}
+.option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: default;
+  user-select: none;
+}
+.optionActive {
+  background: var(--person-0);
+}
+.optionDot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.optionName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tick {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 12px;
+}
+.plus {
+  flex: none;
+  width: 10px;
+  text-align: center;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+.optionActive .plus {
+  color: #fff;
+}
+.clear {
+  color: var(--text-muted);
+}
+.optionActive .clear {
+  color: #fff;
+}
+.empty {
+  padding: 10px;
+  font-size: 12px;
+  color: var(--text-subtle);
+}

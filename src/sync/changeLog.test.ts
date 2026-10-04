@@ -62,6 +62,7 @@ describe('change log middleware', () => {
         exportedAt: '2026-09-30T00:00:00.000Z',
         people: [{ ...p, name: 'Nata again' }],
         items: [],
+        projects: [],
       },
       'replace',
       db,

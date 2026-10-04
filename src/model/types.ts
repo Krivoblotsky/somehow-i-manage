@@ -45,11 +45,27 @@ export interface Person {
   updatedAt: number;
 }
 
+/**
+ * A piece of work that cuts across people: tasks and notes with different people can carry the
+ * same project. One project per item; the colour comes from PROJECT_PALETTE.
+ */
+export interface Project {
+  id: string;
+  name: string;
+  /** Index into PROJECT_PALETTE. */
+  colorIndex: number;
+  sortOrder: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
 /** A task or a note that belongs to exactly one person. */
 export interface Item {
   id: string;
   personId: string;
   kind: ItemKind;
+  /** The project this belongs to, if any. */
+  projectId?: string;
   title: string;
   /** HTML produced by the editor. '' when empty. */
   body: string;

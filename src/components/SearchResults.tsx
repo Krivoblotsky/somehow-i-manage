@@ -10,6 +10,7 @@ export function SearchResults({ query }: { query: string }) {
     async () => ({
       people: await db.people.orderBy('sortOrder').toArray(),
       items: await db.items.toArray(),
+      projects: await db.projects.toArray(),
     }),
     [],
   );
@@ -25,8 +26,12 @@ export function SearchResults({ query }: { query: string }) {
       (p.role ?? '').toLowerCase().includes(q) ||
       (p.contacts ?? []).some((c) => c.value.toLowerCase().includes(q)),
   );
+  const projectName = new Map(data.projects.map((p) => [p.id, p.name.toLowerCase()]));
   const itemHits = data.items.filter(
-    (i) => i.title.toLowerCase().includes(q) || stripHtml(i.body).toLowerCase().includes(q),
+    (i) =>
+      i.title.toLowerCase().includes(q) ||
+      stripHtml(i.body).toLowerCase().includes(q) ||
+      (i.projectId !== undefined && (projectName.get(i.projectId) ?? '').includes(q)),
   );
   const byId = new Map(data.people.map((p) => [p.id, p]));
   const total = peopleHits.length + itemHits.length;

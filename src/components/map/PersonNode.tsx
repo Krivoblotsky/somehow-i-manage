@@ -9,11 +9,14 @@ import styles from './PersonNode.module.css';
 
 /** A person on the map: ringed avatar, name, and a "+" that adds a task. */
 export function PersonNode({ data }: NodeProps<PersonNodeType>) {
-  const { person, color, isSelected, isDropTarget } = data;
+  const { person, projectIds, color, isSelected, isDropTarget } = data;
   const startEditing = useUI((s) => s.startEditing);
   const database = useDatabase();
   const focus = useUI(selectFocusPersonId);
-  const dimmed = focus !== null && focus !== person.id;
+  const projectFocus = useUI((s) => s.projectFocusId);
+  const dimmed =
+    (focus !== null && focus !== person.id) ||
+    (projectFocus !== null && !projectIds.includes(projectFocus));
   const [pulsing, setPulsing] = useState(false);
 
   // A new branch grows out of the hub and its title is editable right on the card.

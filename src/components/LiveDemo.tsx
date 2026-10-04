@@ -32,6 +32,7 @@ export default function LiveDemo() {
   const [ready, setReady] = useState(false);
   const people = useLiveQuery(() => demoDb.people.orderBy('sortOrder').toArray(), []);
   const items = useLiveQuery(() => demoDb.items.toArray(), []);
+  const projects = useLiveQuery(() => demoDb.projects.toArray(), []);
   const closePanel = useUI((s) => s.closePanel);
 
   useEffect(() => {
@@ -62,6 +63,7 @@ export default function LiveDemo() {
         <PeopleMap
           people={people}
           items={items}
+          projects={projects ?? []}
           // the person in the middle of the sample grid, so the rest show as markers all around
           focusPersonId={(people.find((p) => p.name === DEMO_FOCUS) ?? people[0])?.id}
         />

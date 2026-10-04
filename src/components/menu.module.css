@@ -59,3 +59,10 @@
 .subTrigger[data-state='open'] {
   background: var(--chrome-2);
 }
+/* a fixed slot for a tick in front of the item text, so names line up with or without one */
+.check {
+  width: 12px;
+  flex: none;
+  font-size: 11px;
+  text-align: center;
+}
