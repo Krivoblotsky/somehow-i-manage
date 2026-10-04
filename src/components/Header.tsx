@@ -23,14 +23,24 @@ export function Header() {
   const focusPerson = useUI((s) => s.focusPerson);
   const openDialog = useUI((s) => s.openDialog);
   const ref = useRef<HTMLElement>(null);
+  const brandRef = useRef<HTMLDivElement>(null);
 
+  // --header-h: where the views below start. --brand-w: the brand island's width, which the
+  // Projects island matches when folded so the two line up.
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
-    const observer = new ResizeObserver(([entry]) => {
-      document.documentElement.style.setProperty('--header-h', `${entry.contentRect.height}px`);
+    const brand = brandRef.current;
+    if (!el || !brand) return;
+    const root = document.documentElement.style;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.target === el) root.setProperty('--header-h', `${entry.contentRect.height}px`);
+        else if (entry.target === brand)
+          root.setProperty('--brand-w', `${Math.round(brand.getBoundingClientRect().width)}px`);
+      }
     });
     observer.observe(el);
+    observer.observe(brand);
     return () => observer.disconnect();
   }, []);
 
@@ -44,7 +54,11 @@ export function Header() {
 
   return (
     <header ref={ref} className={styles.header}>
-      <div className={`${styles.island} ${styles.brand}`} title="Work with people, not tasks">
+      <div
+        ref={brandRef}
+        className={`${styles.island} ${styles.brand}`}
+        title="Work with people, not tasks"
+      >
         <span className={styles.mark} aria-hidden="true" />
         Somehow I Manage
       </div>

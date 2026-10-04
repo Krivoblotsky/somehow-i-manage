@@ -1,15 +1,15 @@
 /* top-left of the canvas, under the header islands, in the same glass. The header floats 14px
    from the top and 16px from the left (Header.module.css) and reports only its own height, so
-   the island starts 14px + that height + 12px of air down, flush with the brand island's left. */
+   the island starts 14px + that height + 12px of air down, flush with the brand island's left.
+   Folded, it is exactly as wide as the brand island (--brand-w, measured by the header); open,
+   it grows to its list. Width and height animate together. */
 .island {
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   position: absolute;
   top: calc(var(--header-h) + 26px);
   left: 16px;
   z-index: 15;
-  width: 232px;
-  max-height: calc(100% - var(--header-h) - 108px);
-  display: flex;
-  flex-direction: column;
+  width: var(--brand-w, 184px);
   border-radius: 20px;
   background: var(--glass);
   -webkit-backdrop-filter: blur(24px) saturate(170%);
@@ -20,6 +20,10 @@
     0 10px 30px rgba(0, 0, 0, 0.35);
   color: var(--text);
   overflow: hidden;
+  transition: width 240ms var(--ease);
+}
+.open {
+  width: max(var(--brand-w, 184px), 232px);
 }
 .head {
   display: flex;
@@ -35,6 +39,10 @@
   text-transform: uppercase;
   color: var(--person-1);
   margin-right: auto;
+  padding: 0;
+  font-family: inherit;
+  text-align: left;
+  white-space: nowrap;
 }
 .showAll {
   font-size: 11px;
@@ -43,10 +51,31 @@
   padding: 2px 8px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.1);
+  white-space: nowrap;
 }
 .showAll:hover {
   color: #fff;
   background: rgba(255, 255, 255, 0.18);
+}
+/* the list unfolds: a grid row going from nothing to its content height */
+.body {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 240ms var(--ease),
+    opacity 140ms ease;
+}
+.open .body {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transition:
+    grid-template-rows 240ms var(--ease),
+    opacity 200ms ease 40ms;
+}
+.listWrap {
+  min-height: 0;
+  overflow: hidden;
 }
 .list {
   list-style: none;
@@ -54,6 +83,7 @@
   padding: 0 8px 8px;
   display: grid;
   gap: 2px;
+  max-height: calc(100vh - var(--header-h) - 140px);
   overflow: auto;
 }
 .row {
@@ -118,6 +148,13 @@
   font-size: 13px;
   font-weight: 600;
   outline: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .island,
+  .body,
+  .open .body {
+    transition: none;
+  }
 }
 @media (max-width: 720px) {
   .island {
