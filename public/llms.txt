@@ -9,6 +9,7 @@ Somehow I Manage is a free web app at https://somehowimanage.app/ made by Sergii
 - People Map: each person is a hub on a canvas with their tasks and notes around them; drag a card onto someone else to hand it over; people out of view stay pinned at the edge.
 - 1:1 mode: start a 1:1 from a person's page; the agenda is their open items; tick what got done, mark what was discussed, capture new items; ending the meeting records it and the next one shows what happened since.
 - Person page: tasks, notes and completed work for one person, with a line to type the next thing.
+- Projects: tag any task or note with a project; the tag shows on cards and rows, and the Projects panel on the map counts what hangs on each project and spotlights one across people on click.
 - Quick capture: ⌘K from anywhere to jump to a person, find a task, or type "Name: task" to add one.
 - Offline-first, syncing, export to Markdown, JSON backup and restore.
 

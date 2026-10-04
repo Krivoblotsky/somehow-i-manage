@@ -157,6 +157,18 @@ await shot('map-focus');
 await page.evaluate(() => window.__dev.useUI.getState().closePanel());
 await sleep(400);
 
+// 2a. A project in the spotlight: its cards lit across two people, the island counting them.
+await frameMap(1);
+await page.evaluate(() => {
+  [...document.querySelectorAll('aside[aria-label="Projects"] button')]
+    .find((b) => b.textContent.startsWith('Release 2.1'))
+    ?.click();
+});
+await sleep(700);
+await shot('map-projects');
+await page.evaluate(() => window.__dev.useUI.getState().focusProject(null));
+await sleep(400);
+
 // 2b. Closer still: the people past the edge become markers.
 await frameMap(3);
 await shot('map-edges');

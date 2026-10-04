@@ -328,6 +328,7 @@ function structuredData() {
         featureList: [
           'People Map: the team as hubs with their tasks and notes around them',
           '1:1 mode with an agenda built from open items',
+          'Projects: tag tasks and notes across people and spotlight one on the map',
           'Quick capture from anywhere',
           'Offline-first, synced through your own account',
           'Export to Markdown, JSON backup and restore',
@@ -498,6 +499,12 @@ const MAP_POINTS = [
     text: 'Open a card and the rest of the team steps back, so you can think about one person.',
     shot: 'map-focus',
     alt: 'One person’s cluster in focus with a card open; everyone else dimmed',
+  },
+  {
+    title: 'Projects across people',
+    text: 'Tag anything with a project. One click lights up everything in it, whoever it’s with.',
+    shot: 'map-projects',
+    alt: 'The map with one project in the spotlight: its cards lit across two people, the rest dimmed, and a Projects panel counting them',
   },
   {
     title: 'Nobody falls off the edge',

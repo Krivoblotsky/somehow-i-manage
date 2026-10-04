@@ -16,6 +16,10 @@ export const FAQ: readonly { q: string; a: string }[] = [
     a: 'Start a 1:1 from someone’s page and the agenda builds itself from their open items. Tick what got done, mark what you discussed, capture new things as they come up. Ending the meeting records it, and the next one shows what happened since.',
   },
   {
+    q: 'Can I group work by project?',
+    a: 'Yes. Tag any task or note with a project; people stay the way in, the project is the thread across them. Cards and rows show the tag, and the Projects panel on the map counts what hangs on each project and, with one click, lights up everything in it, whoever it is with.',
+  },
+  {
     q: 'Does it work offline?',
     a: 'Yes. Your data is stored on your device and the app works without a connection. When you are back online it syncs to your account, so your other devices catch up.',
   },
