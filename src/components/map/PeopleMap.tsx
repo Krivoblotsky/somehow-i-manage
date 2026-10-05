@@ -197,13 +197,16 @@ function Canvas({ people, items, projects = NO_PROJECTS, focusPersonId }: People
     });
   }, [graph.nodes, setNodes]);
 
-  // Bring a person's cluster into view when the header asks for it.
+  // Bring a person's cluster into view when asked (header, a marker, an @mention). Each request
+  // is answered once: the padding below changes whenever the side pane opens or closes, and
+  // re-running for an old request would drag the map back to someone looked at minutes ago.
   const itemsRef = useRef(items);
   useEffect(() => {
     itemsRef.current = items;
   }, [items]);
+  const answeredFocus = useRef<number | null>(null);
   useEffect(() => {
-    if (!focusRequest) return;
+    if (!focusRequest || answeredFocus.current === focusRequest.nonce) return;
     // A stale request (e.g. from the landing-page demo) names a person this map does not have.
     if (!getNodes().some((n) => n.id === focusRequest.personId)) return;
     const ids = [
@@ -211,6 +214,7 @@ function Canvas({ people, items, projects = NO_PROJECTS, focusPersonId }: People
       ...itemsRef.current.filter((i) => i.personId === focusRequest.personId).map((i) => i.id),
     ];
     const timer = window.setTimeout(() => {
+      answeredFocus.current = focusRequest.nonce;
       void fitView({
         nodes: ids.map((id) => ({ id })),
         duration: 400,
