@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '../data/db';
@@ -45,6 +45,60 @@ describe('Back in the side panels', () => {
       selectedItemId: null,
       personPanelOpen: false,
       projectFocusId: mipp.id,
+    });
+  });
+
+  it('goes back to the item a link was followed from, then on to where that one came from', async () => {
+    const user = userEvent.setup();
+    const vira = await createPerson({ name: 'Vira' });
+    const yana = await createPerson({ name: 'Yana' });
+    const trip = await createItem({ personId: vira.id, title: 'Business Trip' });
+    const suite = await createItem({ personId: yana.id, title: 'Regression suite' });
+    useUI.getState().selectPerson(vira.id);
+    useUI.getState().selectItem(trip.id, vira.id); // from Vira's panel
+    useUI.getState().selectItem(suite.id, undefined, 'item'); // a "#Regression suite" chip in its text
+    expect(useUI.getState()).toMatchObject({
+      selectedItemId: suite.id,
+      selectedPersonId: vira.id, // the spotlight stays where we were
+      paneFrom: { item: 'item' },
+      returnItem: { id: trip.id, personId: vira.id, from: 'person' },
+    });
+    const { unmount } = render(<ItemPanel itemId={suite.id} />);
+    await user.click(await screen.findByTitle('Back to Business Trip'));
+    expect(useUI.getState()).toMatchObject({
+      selectedItemId: trip.id,
+      paneFrom: { item: 'person' },
+      returnItem: null,
+    });
+    unmount();
+    render(<ItemPanel itemId={trip.id} />);
+    expect(await screen.findByTitle('Back to Vira')).toBeInTheDocument();
+  });
+
+  it('lists the tasks and notes that link here, and follows one as a link', async () => {
+    const user = userEvent.setup();
+    const vira = await createPerson({ name: 'Vira' });
+    const yana = await createPerson({ name: 'Yana' });
+    const suite = await createItem({ personId: yana.id, title: 'Regression suite' });
+    const trip = await createItem({
+      personId: vira.id,
+      title: 'Business Trip',
+      body: `<p>Depends on <span data-type="itemMention" data-id="${suite.id}" data-label="Regression suite">#Regression suite</span></p>`,
+    });
+    await createItem({ personId: vira.id, title: 'Unrelated', body: '<p>nothing</p>' });
+    useUI.getState().selectPerson(yana.id);
+    useUI.getState().selectItem(suite.id, yana.id);
+    render(<ItemPanel itemId={suite.id} />);
+    const section = await screen.findByRole('region', { name: 'Also mentioned in' });
+    expect(section).toHaveTextContent('Also mentioned in · 1');
+    expect(within(section).getByText('Business Trip')).toBeInTheDocument();
+    expect(within(section).getByText('Vira')).toBeInTheDocument(); // whose it is
+    expect(within(section).queryByText('Unrelated')).not.toBeInTheDocument();
+    await user.click(within(section).getByText('Business Trip'));
+    expect(useUI.getState()).toMatchObject({
+      selectedItemId: trip.id,
+      paneFrom: { item: 'item' },
+      returnItem: { id: suite.id },
     });
   });
 

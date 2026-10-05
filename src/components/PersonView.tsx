@@ -2,16 +2,18 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import type { CSSProperties, ReactNode } from 'react';
 import { db } from '../data/db';
 import { createItem, setItemCompleted } from '../data/repository';
-import { describeStats, groupItems, personStats, stripHtml } from '../model/derive';
+import { describeStats, groupItems, personStats } from '../model/derive';
 import { formatDateTime, formatDayLabel, formatRelativeDays } from '../model/format';
 import { lastMeeting } from '../model/oneOnOne';
 import { contrastText, personColor } from '../model/palette';
-import type { Item } from '../model/types';
+import type { Item, Person } from '../model/types';
 import { deleteItemWithUndo, startOneOnOne } from '../state/actions';
 import { useNow } from '../state/now';
+import { useMentionsOf } from '../state/mentions';
 import { useProjectOf } from '../state/projects';
 import { useUI } from '../state/ui';
 import { Avatar } from './Avatar';
+import { BodyPreview } from './BodyPreview';
 import { ContactLinks } from './ContactLinks';
 import { ItemContextMenu } from './ItemContextMenu';
 import { PersonMoreMenu } from './PersonMoreMenu';
@@ -29,6 +31,7 @@ export function PersonView({ personId }: { personId: string }) {
     () => db.items.where('personId').equals(personId).toArray(),
     [personId],
   );
+  const mentions = useMentionsOf(personId);
   const selectedItemId = useUI((s) => s.selectedItemId);
   const selectItem = useUI((s) => s.selectItem);
   const now = useNow();
@@ -103,6 +106,19 @@ export function PersonView({ personId }: { personId: string }) {
           {completed.map(row)}
         </Section>
       )}
+      {mentions.length > 0 && (
+        <Section title="Also mentioned in" count={mentions.length}>
+          {mentions.map(({ item, owner }) => (
+            <Row
+              key={item.id}
+              item={item}
+              owner={owner}
+              selected={item.id === selectedItemId}
+              onSelect={() => selectItem(item.id, personId)}
+            />
+          ))}
+        </Section>
+      )}
     </div>
   );
 }
@@ -150,12 +166,14 @@ function Row({
   item,
   selected,
   onSelect,
+  owner,
 }: {
   item: Item;
   selected: boolean;
   onSelect: () => void;
+  /** Shown when the row sits on someone else's page: whose task or note this is. */
+  owner?: Person;
 }) {
-  const preview = stripHtml(item.body);
   const now = useNow();
   const project = useProjectOf(item.projectId);
   const isTask = item.kind === 'task';
@@ -185,6 +203,12 @@ function Row({
         }}
       >
         <div className={styles.rowBody}>
+          {owner && (
+            <div className={styles.rowOwner}>
+              <Avatar person={owner} size={14} ring={0} />
+              {owner.name}
+            </div>
+          )}
           <div className={styles.rowTitle}>
             {item.isFlagged && !item.isCompleted && (
               <span className={styles.flag} title="Urgent" aria-label="Urgent">
@@ -200,7 +224,7 @@ function Row({
           <div className={styles.rowDate} title={formatDateTime(shownDate)}>
             {formatDayLabel(shownDate, now)}
           </div>
-          {preview && <div className={styles.rowPreview}>{preview}</div>}
+          <BodyPreview html={item.body} className={styles.rowPreview} />
         </div>
         {isTask && item.isCompleted && (
           <button

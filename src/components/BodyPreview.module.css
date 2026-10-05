@@ -1,0 +1,37 @@
+/* mention links inside a preview: inherit the line's size, sit on the baseline, read as links */
+.link {
+  display: inline;
+  padding: 0 3px;
+  margin: 0 -1px;
+  border-radius: 4px;
+  font: inherit;
+  font-weight: 600;
+  line-height: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+.person {
+  color: #2b4bb8;
+  background: rgba(60, 99, 234, 0.1);
+}
+.item {
+  color: #5a3ec8;
+  background: rgba(124, 92, 255, 0.12);
+}
+.link:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+/* a link to something that was deleted since */
+.gone {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+.dark .person {
+  color: #9db4ff;
+  background: rgba(60, 99, 234, 0.22);
+}
+.dark .item {
+  color: #c4b5ff;
+  background: rgba(124, 92, 255, 0.24);
+}

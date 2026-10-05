@@ -91,6 +91,20 @@
   font-size: 13px;
   line-height: 1.4;
 }
+/* what links here, under the text */
+.mentions {
+  margin-top: 18px;
+  padding-top: 4px;
+  border-top: 1px solid var(--divider);
+}
+.mentionsTitle {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--card-muted);
+  margin: 12px 0 2px;
+}
 .footer {
   display: flex;
   align-items: center;

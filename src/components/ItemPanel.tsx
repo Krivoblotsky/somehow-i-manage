@@ -9,7 +9,8 @@ import {
   type CSSProperties,
 } from 'react';
 import { db } from '../data/db';
-import { setItemCompleted, setItemKind, updateItem } from '../data/repository';
+import { createPerson, setItemCompleted, setItemKind, updateItem } from '../data/repository';
+import type { MentionSources } from '../editor/mentions';
 import {
   dateToMs,
   describeDue,
@@ -20,12 +21,14 @@ import {
 import { personColor } from '../model/palette';
 import type { Item, ItemKind, Person } from '../model/types';
 import { deleteItemWithUndo } from '../state/actions';
+import { useLinksTo } from '../state/mentions';
 import { useNow } from '../state/now';
 import { useProjectOf } from '../state/projects';
 import { useUI } from '../state/ui';
 import { Avatar } from './Avatar';
 import { CalendarIcon, ChevronLeftIcon, FlagIcon } from './icons';
 import styles from './ItemPanel.module.css';
+import { PanelItemRow } from './PersonPanel';
 import { ProjectPicker } from './ProjectPicker';
 import ui from './ui.module.css';
 
@@ -44,6 +47,9 @@ export function ItemPanel({ itemId }: { itemId: string }) {
   return <ItemEditor key={item.id} item={item} person={person} />;
 }
 
+const NO_PEOPLE: Person[] = [];
+const NO_ITEMS: Item[] = [];
+
 type TextPatch = Partial<Pick<Item, 'title' | 'body'>>;
 const SAVE_DELAY_MS = 400;
 
@@ -54,6 +60,47 @@ function ItemEditor({ item, person }: { item: Item; person: Person }) {
   const from = useUI((s) => s.paneFrom.item);
   const projectFocusId = useUI((s) => s.projectFocusId);
   const backProject = useProjectOf(from === 'project' ? (projectFocusId ?? undefined) : undefined);
+  // Opened from a link in another item's text: Back reopens that item.
+  const returnItem = useUI((s) => (s.paneFrom.item === 'item' ? s.returnItem : null));
+  const backItem = useLiveQuery(
+    () => (returnItem ? db.items.get(returnItem.id) : undefined),
+    [returnItem?.id],
+  );
+  // Opened from someone else's page (they are mentioned here): Back returns to them, not the owner.
+  const selectedPersonId = useUI((s) => s.selectedPersonId);
+  const people = useLiveQuery(() => db.people.toArray(), [], NO_PEOPLE);
+  const allItems = useLiveQuery(() => db.items.toArray(), [], NO_ITEMS);
+  const backPerson =
+    (selectedPersonId !== person.id && people.find((p) => p.id === selectedPersonId)) || person;
+  // Tasks and notes whose text links here with "#".
+  const linkedFrom = useLinksTo(item.id);
+  const focusPerson = useUI((s) => s.focusPerson);
+  const mentions: MentionSources = {
+    people,
+    items: allItems.map((i) => ({ item: i, owner: people.find((p) => p.id === i.personId) })),
+    currentItemId: item.id,
+    createPerson: (name) => createPerson({ name }),
+    openPerson: (id) => {
+      if (!people.some((p) => p.id === id)) return; // gone since the text was written
+      selectPerson(id);
+      focusPerson(id);
+    },
+    // the person showing stays where we came from; Back returns to this item
+    openItem: (id) => {
+      if (allItems.some((i) => i.id === id)) selectItem(id, undefined, 'item');
+    },
+  };
+  const backLabel = backProject
+    ? backProject.name
+    : backItem
+      ? backItem.title || 'Untitled'
+      : backPerson.name;
+  function goBack() {
+    if (backProject) selectItem(null);
+    else if (backItem && returnItem)
+      selectItem(backItem.id, returnItem.personId ?? undefined, returnItem.from);
+    else selectPerson(backPerson.id);
+  }
   const now = useNow();
   const [title, setTitle] = useState(item.title);
   const [synced, setSynced] = useState(item.title);
@@ -102,14 +149,9 @@ function ItemEditor({ item, person }: { item: Item; person: Person }) {
       aria-label={isTask ? 'Task details' : 'Note details'}
       style={{ '--accent': personColor(person.colorIndex) } as CSSProperties}
     >
-      <button
-        type="button"
-        className={styles.back}
-        onClick={() => (backProject ? selectItem(null) : selectPerson(person.id))}
-        title={`Back to ${backProject ? backProject.name : person.name}`}
-      >
+      <button type="button" className={styles.back} onClick={goBack} title={`Back to ${backLabel}`}>
         <ChevronLeftIcon size={12} />
-        {backProject ? backProject.name : person.name}
+        {backLabel}
       </button>
       <div className={styles.date} title={formatDateTime(item.createdAt)}>
         Created {formatDayLabel(item.createdAt, now)}
@@ -176,9 +218,28 @@ function ItemEditor({ item, person }: { item: Item; person: Person }) {
           <BodyEditor
             initialValue={item.body}
             onChange={(html) => queueSave({ body: html })}
-            placeholder={isTask ? 'Details, context, next steps…' : 'Write your note…'}
+            placeholder={
+              isTask
+                ? 'Details, context, next steps… @ people, # tasks and notes'
+                : 'Write your note…'
+            }
+            mentions={mentions}
           />
         </Suspense>
+        {linkedFrom.length > 0 && (
+          <section className={styles.mentions} aria-label="Also mentioned in">
+            <div className={styles.mentionsTitle}>Also mentioned in · {linkedFrom.length}</div>
+            {linkedFrom.map(({ item: other, owner }) => (
+              <PanelItemRow
+                key={other.id}
+                item={other}
+                owner={owner}
+                selected={false}
+                onSelect={() => selectItem(other.id, undefined, 'item')}
+              />
+            ))}
+          </section>
+        )}
       </div>
 
       <div className={styles.footer}>

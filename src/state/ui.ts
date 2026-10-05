@@ -15,14 +15,22 @@ export type ViewMode = 'map' | 'list' | 'meeting';
 
 /**
  * Where the open panel was opened from, so its Back goes there: the pane behaves like a stack.
- * `item`: the item panel came from the person's panel, from the project's page, or from
- * neither (then Back goes to the person). `person`: the person panel came from the project's page.
+ * `item`: the item panel came from the person's panel, from the project's page, from a link in
+ * another item's text, or from none of these (then Back goes to the person). `person`: the
+ * person panel came from the project's page.
  */
 export interface PaneFrom {
-  item: 'person' | 'project' | null;
+  item: 'person' | 'project' | 'item' | null;
   person: 'project' | null;
 }
 const NOWHERE: PaneFrom = { item: null, person: null };
+
+/** The item that was open when a link in its text opened the current one; Back reopens it. */
+export interface ReturnItem {
+  id: string;
+  personId: string | null;
+  from: PaneFrom['item'];
+}
 
 /** A 1:1 that is running right now. Survives reloads; only the user ends it. */
 export interface ActiveMeeting {
@@ -50,6 +58,8 @@ interface UIState {
   /** Map: spotlight one project; everything outside it steps back. null = show all. */
   projectFocusId: string | null;
   paneFrom: PaneFrom;
+  /** Set while `paneFrom.item` is 'item'. One level deep: a link from the reopened item starts over. */
+  returnItem: ReturnItem | null;
   dismissTips: () => void;
   focusProject: (id: string | null) => void;
   startEditing: (id: string, isNew: boolean) => void;
@@ -96,6 +106,7 @@ export const useUI = create<UIState>()(
       tipsDismissed: false,
       projectFocusId: null,
       paneFrom: NOWHERE,
+      returnItem: null,
       dismissTips: () => set({ tipsDismissed: true }),
       focusProject: (id) => set({ projectFocusId: id }),
       startEditing: (id, isNew) => set({ editingItem: { id, isNew } }),
@@ -113,6 +124,7 @@ export const useUI = create<UIState>()(
           selectedItemId: null,
           personPanelOpen: false,
           paneFrom: NOWHERE,
+          returnItem: null,
           search: '',
         })),
       endMeeting: () =>
@@ -126,6 +138,7 @@ export const useUI = create<UIState>()(
           selectedPersonId: id,
           selectedItemId: null,
           personPanelOpen: id !== null,
+          returnItem: null,
           paneFrom: {
             item: null,
             // opened over the project's page (no person panel yet): Back returns to it
@@ -136,19 +149,40 @@ export const useUI = create<UIState>()(
           },
         })),
       selectItem: (id, personId, from) =>
-        set((s) => ({
-          selectedItemId: id,
-          selectedPersonId: personId ?? s.selectedPersonId,
-          paneFrom: {
-            ...s.paneFrom,
-            item:
-              id === null
-                ? null
-                : (from ??
-                  (s.personPanelOpen ? 'person' : s.projectFocusId !== null ? 'project' : null)),
-          },
-        })),
-      closePanel: () => set({ selectedItemId: null, personPanelOpen: false, paneFrom: NOWHERE }),
+        set((s) => {
+          // from inside another item's text: remember that item, so Back reopens it
+          const previous = s.selectedItemId;
+          const fromItem = id !== null && from === 'item' && previous !== null && previous !== id;
+          const worked = s.personPanelOpen
+            ? 'person'
+            : s.projectFocusId !== null
+              ? 'project'
+              : null;
+          return {
+            selectedItemId: id,
+            selectedPersonId: personId ?? s.selectedPersonId,
+            paneFrom: {
+              ...s.paneFrom,
+              item:
+                id === null
+                  ? null
+                  : fromItem
+                    ? 'item'
+                    : from === 'item'
+                      ? worked
+                      : (from ?? worked),
+            },
+            returnItem: fromItem
+              ? {
+                  id: previous,
+                  personId: s.selectedPersonId,
+                  from: s.paneFrom.item === 'item' ? null : s.paneFrom.item,
+                }
+              : null,
+          };
+        }),
+      closePanel: () =>
+        set({ selectedItemId: null, personPanelOpen: false, paneFrom: NOWHERE, returnItem: null }),
       focusPerson: (personId) => set({ focusRequest: { personId, nonce: Date.now() } }),
       setSearch: (search) => set({ search }),
       openDialog: (dialog) => set({ dialog }),

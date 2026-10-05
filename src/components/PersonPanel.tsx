@@ -2,16 +2,18 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import type { CSSProperties, ReactNode } from 'react';
 import { db } from '../data/db';
 import { createItem } from '../data/repository';
-import { describeStats, groupItems, personStats, stripHtml } from '../model/derive';
+import { describeStats, groupItems, personStats } from '../model/derive';
 import { formatDateTime, formatDayLabel, formatRelativeDays } from '../model/format';
 import { lastMeeting } from '../model/oneOnOne';
 import { contrastText, personColor } from '../model/palette';
-import type { Item, ItemKind } from '../model/types';
+import type { Item, ItemKind, Person } from '../model/types';
 import { deleteItemWithUndo, startOneOnOne } from '../state/actions';
 import { useNow } from '../state/now';
+import { useMentionsOf } from '../state/mentions';
 import { useProjectOf } from '../state/projects';
 import { useUI } from '../state/ui';
 import { Avatar } from './Avatar';
+import { BodyPreview } from './BodyPreview';
 import { ContactLinks } from './ContactLinks';
 import { ItemContextMenu } from './ItemContextMenu';
 import { PersonMoreMenu } from './PersonMoreMenu';
@@ -29,6 +31,7 @@ export function PersonPanel({ personId }: { personId: string }) {
     () => db.items.where('personId').equals(personId).toArray(),
     [personId],
   );
+  const mentions = useMentionsOf(personId);
   const selectedItemId = useUI((s) => s.selectedItemId);
   const selectItem = useUI((s) => s.selectItem);
   const closePanel = useUI((s) => s.closePanel);
@@ -123,6 +126,19 @@ export function PersonPanel({ personId }: { personId: string }) {
             {completed.map(row)}
           </details>
         )}
+        {mentions.length > 0 && (
+          <Section title="Also mentioned in" count={mentions.length} empty="">
+            {mentions.map(({ item, owner }) => (
+              <PanelItemRow
+                key={item.id}
+                item={item}
+                owner={owner}
+                selected={item.id === selectedItemId}
+                onSelect={() => selectItem(item.id, personId)}
+              />
+            ))}
+          </Section>
+        )}
       </div>
 
       <button
@@ -165,16 +181,18 @@ export function PanelItemRow({
   selected,
   onSelect,
   showProject = true,
+  owner,
 }: {
   item: Item;
   selected: boolean;
   onSelect: () => void;
   /** Off where every row is the same project. */
   showProject?: boolean;
+  /** Shown when the row sits on someone else's page: whose task or note this is. */
+  owner?: Person;
 }) {
   const isTask = item.kind === 'task';
   const done = isTask && item.isCompleted;
-  const preview = stripHtml(item.body);
   const now = useNow();
   const project = useProjectOf(item.projectId);
   const shownDate = done && item.completedAt ? item.completedAt : item.updatedAt;
@@ -194,6 +212,12 @@ export function PanelItemRow({
         }}
       >
         <div className={styles.rowMain}>
+          {owner && (
+            <div className={styles.rowOwner}>
+              <Avatar person={owner} size={14} ring={0} />
+              {owner.name}
+            </div>
+          )}
           <div className={styles.rowTitle}>
             {item.isFlagged && !done && <FlagIcon className={styles.flag} />}
             {item.title || <span className={styles.untitled}>Untitled</span>}
@@ -205,7 +229,7 @@ export function PanelItemRow({
           <div className={styles.rowDate} title={formatDateTime(shownDate)}>
             {formatDayLabel(shownDate, now)}
           </div>
-          {preview && <div className={styles.rowPreview}>{preview}</div>}
+          <BodyPreview html={item.body} className={styles.rowPreview} />
         </div>
         {done && (
           <div className={styles.rowSide}>

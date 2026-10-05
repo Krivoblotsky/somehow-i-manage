@@ -337,6 +337,7 @@ function structuredData() {
           'People Map: the team as hubs with their tasks and notes around them',
           '1:1 mode with an agenda built from open items',
           'Projects: tag tasks and notes across people and spotlight one on the map',
+          "@people and #tasks in notes, linked and listed on each person's page",
           'MCP server: Claude, ChatGPT, Cursor and other AI assistants work with your people as you',
           'Quick capture from anywhere',
           'Offline-first, synced through your own account',

@@ -108,6 +108,15 @@ summary.sectionHead {
   flex: 1;
   min-width: 0;
 }
+.rowOwner {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--card-muted);
+}
 .rowTitle {
   font-weight: 700;
   font-size: 15px;

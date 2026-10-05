@@ -171,6 +171,12 @@
 .dimmed {
   opacity: 0.28;
 }
+/* lit from outside the spotlight because it mentions who or what is in it */
+.mentions {
+  box-shadow:
+    0 0 0 1.5px var(--card),
+    0 0 0 3px var(--accent);
+}
 .dimmed:hover {
   opacity: 0.9;
 }

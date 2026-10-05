@@ -58,6 +58,10 @@ team sits on one map.
 the offsite` adds a task), paste a whole list, or press the microphone and dictate.
 - **Projects.** An optional tag that cuts across people. Cards show it; the Projects island counts
   what hangs on each project and spotlights one on the map.
+- **@people and #tasks in the text.** Type `@` in a note to link a colleague (or add a new one on
+  the spot) and `#` to link another task or note. Mentions are clickable everywhere, a person's
+  page lists where else they come up, and the map keeps mentioning cards lit when you spotlight
+  someone.
 - **Due dates, urgent flags, rich notes, search, undo**, keyboard shortcuts, a Markdown export
   and JSON backups.
 - **Agentic AI friendly.** An MCP server lets Claude, ChatGPT, Cursor, VS Code or Claude Code

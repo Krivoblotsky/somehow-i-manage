@@ -86,3 +86,31 @@
   height: 0;
   pointer-events: none;
 }
+
+/* @people and #projects: small chips in the text that open what they name when clicked */
+.prose :global(.mention) {
+  display: inline;
+  padding: 1px 4px;
+  margin: 0 -1px;
+  border-radius: 5px;
+  font-weight: 600;
+  cursor: pointer;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+.prose :global(.mention-person) {
+  color: #2b4bb8;
+  background: rgba(60, 99, 234, 0.1);
+}
+.prose :global(.mention-item) {
+  color: #5a3ec8;
+  background: rgba(124, 92, 255, 0.12);
+}
+.prose :global(.mention:hover) {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.prose :global(.mention.ProseMirror-selectednode) {
+  outline: 2px solid var(--person-0);
+  outline-offset: 1px;
+}

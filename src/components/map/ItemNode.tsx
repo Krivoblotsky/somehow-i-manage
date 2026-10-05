@@ -12,10 +12,11 @@ import { deleteItem, setItemCompleted, updateItem } from '../../data/repository'
 import { markEnterPlayed, shouldPlayEnter } from '../../map/enterFx';
 import type { ItemNodeType } from '../../map/graph';
 import { CARD } from '../../map/layout';
-import { stripHtml } from '../../model/derive';
+import { cardSpotlight } from '../../map/spotlight';
 import { deleteItemWithUndo } from '../../state/actions';
 import { useNow } from '../../state/now';
 import { selectFocusPersonId, useUI } from '../../state/ui';
+import { BodyPreview } from '../BodyPreview';
 import { DueBadge } from '../DueBadge';
 import { FlagIcon, NoteIcon, TrashIcon } from '../icons';
 import { ProjectBadge } from '../ProjectBadge';
@@ -26,14 +27,16 @@ export function ItemNode({ data }: NodeProps<ItemNodeType>) {
   const { item, project, color, isSelected, hubOffset } = data;
   const isTask = item.kind === 'task';
   const done = isTask && item.isCompleted;
-  const preview = stripHtml(item.body);
   const now = useNow();
   const database = useDatabase();
   const focus = useUI(selectFocusPersonId);
   const projectFocus = useUI((s) => s.projectFocusId);
-  const dimmed =
-    (focus !== null && focus !== item.personId) ||
-    (projectFocus !== null && item.projectId !== projectFocus);
+  const openItemId = useUI((s) => s.selectedItemId);
+  // Someone else's card that @mentions the spotlit person, or #links the open task or note,
+  // stays lit with it: that is where the conversation about them continues.
+  const spotlight = cardSpotlight(item, focus, projectFocus, openItemId);
+  const dimmed = spotlight === 'out';
+  const mentionsFocus = spotlight === 'mentions';
   const editing = useUI((s) => (s.editingItem?.id === item.id ? s.editingItem : null));
   const startEditing = useUI((s) => s.startEditing);
 
@@ -54,6 +57,7 @@ export function ItemNode({ data }: NodeProps<ItemNodeType>) {
     entering && styles.enter,
     editing && styles.editing,
     dimmed && styles.dimmed,
+    mentionsFocus && styles.mentions,
   ]
     .filter(Boolean)
     .join(' ');
@@ -118,7 +122,7 @@ export function ItemNode({ data }: NodeProps<ItemNodeType>) {
           {project && <ProjectBadge project={project} />}
         </div>
       )}
-      {preview && <div className={styles.preview}>{preview}</div>}
+      <BodyPreview html={item.body} className={styles.preview} />
       {done && (
         <button
           type="button"

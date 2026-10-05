@@ -2,7 +2,6 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import type { CSSProperties, KeyboardEvent } from 'react';
 import { db } from '../data/db';
 import { setItemCompleted, setItemDiscussed } from '../data/repository';
-import { stripHtml } from '../model/derive';
 import { formatDuration, formatRelativeDays, formatTime } from '../model/format';
 import { buildMeetingView, isCoveredIn, lastMeeting } from '../model/oneOnOne';
 import { contrastText, personColor } from '../model/palette';
@@ -12,6 +11,7 @@ import { useNow } from '../state/now';
 import { useProjectOf } from '../state/projects';
 import { useUI, type ActiveMeeting } from '../state/ui';
 import { Avatar } from './Avatar';
+import { BodyPreview } from './BodyPreview';
 import { DueBadge } from './DueBadge';
 import { ItemContextMenu } from './ItemContextMenu';
 import { QuickAdd } from './QuickAdd';
@@ -204,7 +204,6 @@ function AgendaCard({
   const project = useProjectOf(item.projectId);
   const isTask = item.kind === 'task';
   const discussed = item.discussedAt !== undefined && item.discussedAt >= startedAt;
-  const preview = stripHtml(item.body);
   const className = [
     styles.card,
     selected && styles.cardSelected,
@@ -238,7 +237,7 @@ function AgendaCard({
             )}
             {project && <ProjectBadge project={project} tone="dark" />}
           </div>
-          {preview && <div className={styles.preview}>{preview}</div>}
+          <BodyPreview html={item.body} className={styles.preview} />
         </div>
         <div className={styles.controls}>
           {isTask ? (
