@@ -4,10 +4,12 @@ import {
   lazy,
   Suspense,
   useEffect,
+  useRef,
   useState,
   type CSSProperties,
   type KeyboardEvent,
   type ReactNode,
+  type RefObject,
 } from 'react';
 import { FAQ } from '../content/faq';
 import { countPageView } from '../marketing/send';
@@ -42,6 +44,8 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
   const [error, setError] = useState<string | null>(null);
   const passkeys = usePasskeysSupported(); // false until hydrated: the pre-render has no browser
   const hydrated = useHydrated(); // the live demo is browser-only; the pre-render shows the still
+  const pageRef = useRef<HTMLDivElement>(null);
+  const overDark = useOverDark(pageRef);
 
   // The browser leaves for the provider and comes back signed in; "busy" lasts until it leaves.
   async function signInWith(provider: Provider) {
@@ -72,8 +76,8 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
   const problem = error ?? authError;
 
   return (
-    <div className={styles.page}>
-      <header className={styles.nav}>
+    <div className={styles.page} ref={pageRef}>
+      <header className={styles.nav} data-over-dark={overDark}>
         <div className={styles.navInner}>
           <a className={styles.brand} href="#top">
             <span className={styles.mark} aria-hidden="true" />
@@ -216,7 +220,7 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
           </div>
         </section>
 
-        <section className={`${styles.band} ${styles.dark}`}>
+        <section className={`${styles.band} ${styles.dark}`} data-dark="">
           <div className={styles.inner}>
             <h2 className={`${styles.h2} ${styles.statement}`}>
               Managers don’t have tasks.
@@ -318,6 +322,33 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
 
 type Provider = 'google' | 'microsoft';
 
+/**
+ * Whether a black band sits under the floating nav right now, so its glass can turn dark. Watches
+ * the `data-dark` sections against the top strip of the page's own scroll box.
+ */
+function useOverDark(pageRef: RefObject<HTMLDivElement | null>): boolean {
+  const [overDark, setOverDark] = useState(false);
+  useEffect(() => {
+    const root = pageRef.current;
+    if (!root || typeof IntersectionObserver === 'undefined') return;
+    const under = new Set<Element>();
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) under.add(e.target);
+          else under.delete(e.target);
+        }
+        setOverDark(under.size > 0);
+      },
+      // only the top 8% of the scroll box counts: roughly the bar's own height
+      { root, rootMargin: '0px 0px -92% 0px' },
+    );
+    for (const el of root.querySelectorAll('[data-dark]')) observer.observe(el);
+    return () => observer.disconnect();
+  }, [pageRef]);
+  return overDark;
+}
+
 const SITE = 'https://somehowimanage.app';
 const DESCRIPTION =
   'A task manager for managers: every task, note and 1:1 lives with the person it’s about.';
@@ -400,7 +431,11 @@ function SignInMenu({
         </button>
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
-        <DropdownMenu.Content className={menu.menu} align="end" sideOffset={8}>
+        <DropdownMenu.Content
+          className={`${menu.menu} ${styles.navMenu}`}
+          align="end"
+          sideOffset={10}
+        >
           <DropdownMenu.Item className={menu.item} onSelect={() => onPick('google')}>
             <GoogleIcon size={16} />
             Continue with Google
@@ -499,7 +534,7 @@ function Step({ title, text }: { title: string; text: string }) {
  */
 function AgentSection() {
   return (
-    <section id="mcp" className={`${styles.band} ${styles.dark}`}>
+    <section id="mcp" className={`${styles.band} ${styles.dark}`} data-dark="">
       <div className={`${styles.inner} ${styles.agent}`}>
         <div>
           <h2 className={styles.h2}>

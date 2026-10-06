@@ -24,73 +24,96 @@
   padding: 0 24px;
 }
 
-/* ---- nav: Apple's thin dark bar ---- */
+/* ---- nav: floating glass islands, the app's own header language ---- */
 .nav {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: rgba(22, 22, 23, 0.82);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  color: #f5f5f7;
+  padding: 12px 0;
+  pointer-events: none; /* the bar is air; only the islands take clicks */
 }
 .navInner {
-  max-width: 1024px;
+  max-width: 1120px;
   margin: 0 auto;
-  padding: 0 22px;
-  height: 48px;
+  padding: 0 24px;
   display: flex;
   align-items: center;
-  gap: 28px;
+  justify-content: space-between;
+  gap: 12px;
 }
-.brand {
+.navInner > * {
+  pointer-events: auto;
+}
+/* one glass pill; reads as light glass over the page and over the black bands alike */
+.island {
   display: inline-flex;
   align-items: center;
+  height: 44px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  backdrop-filter: blur(22px) saturate(180%);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 10px 30px rgba(0, 0, 0, 0.1),
+    0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.brand {
+  composes: island;
   gap: 9px;
+  padding: 0 16px 0 8px;
   font-weight: 600;
   font-size: 14px;
   letter-spacing: -0.01em;
-  color: #f5f5f7;
+  color: var(--ink);
   text-decoration: none;
 }
 .mark {
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
   background: url(/icons/icon-192.png) center / cover no-repeat;
   flex: none;
 }
 .navLinks {
-  display: flex;
-  gap: 30px;
-  margin: 0 auto;
+  composes: island;
+  gap: 2px;
+  padding: 0 6px;
 }
 .navLinks a {
-  color: rgba(245, 245, 247, 0.82);
-  font-size: 12.5px;
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 13px;
+  border-radius: 999px;
+  color: var(--ink-2);
+  font-size: 13px;
   font-weight: 500;
   letter-spacing: -0.005em;
   text-decoration: none;
-  transition: color 120ms;
+  transition:
+    color 120ms,
+    background 120ms;
 }
 .navLinks a:hover {
-  color: #fff;
+  color: var(--ink);
+  background: rgba(0, 0, 0, 0.06);
 }
 .navActions {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  composes: island;
+  gap: 4px;
+  padding: 0 4px;
 }
 .navPill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 28px;
-  padding: 0 12px;
+  height: 36px;
+  padding: 0 16px;
   border-radius: 999px;
   font-weight: 500;
-  font-size: 12px;
+  font-size: 13px;
   background: var(--blue);
   color: #fff;
   transition: background 120ms;
@@ -109,6 +132,50 @@
   border-bottom: 1.6px solid currentColor;
   transform: translateY(-1.5px) rotate(45deg);
   opacity: 0.85;
+}
+/* over the black bands the glass turns dark, as the system's does (set from a scroll observer) */
+.island,
+.brand,
+.navLinks a {
+  transition:
+    background 220ms,
+    color 220ms,
+    border-color 220ms,
+    box-shadow 220ms;
+}
+.nav[data-over-dark='true'] .island {
+  background: rgba(28, 28, 30, 0.72);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 10px 30px rgba(0, 0, 0, 0.45);
+}
+.nav[data-over-dark='true'] .brand {
+  color: #f5f5f7;
+}
+.nav[data-over-dark='true'] .navLinks a {
+  color: #a1a1a6;
+}
+.nav[data-over-dark='true'] .navLinks a:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+/* the sign-in menu as light glass too, instead of the app's dark menu. It is portaled outside
+   the page, so the colours are literal, and the class is doubled to outrank the shared menu. */
+.navMenu.navMenu {
+  background: rgba(255, 255, 255, 0.86);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  backdrop-filter: blur(22px) saturate(180%);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.16);
+  color: #1d1d1f;
+  border-radius: 16px;
+}
+.navMenu.navMenu [role='separator'] {
+  background: rgba(0, 0, 0, 0.08);
+}
+.navMenu.navMenu [data-highlighted] {
+  color: #fff;
 }
 
 /* ---- type: one lit phrase per headline, grey intro copy ---- */
@@ -133,7 +200,7 @@
 /* ---- hero ---- */
 .hero {
   position: relative;
-  padding: 96px 0 0;
+  padding: 72px 0 0;
   text-align: center;
 }
 .hero::before {
@@ -1011,6 +1078,19 @@
 @media (max-width: 720px) {
   .navLinks {
     display: none;
+  }
+  .nav {
+    padding: 10px 0;
+  }
+  .navInner {
+    padding: 0 14px;
+  }
+  .island {
+    height: 40px;
+  }
+  .navPill {
+    height: 32px;
+    padding: 0 13px;
   }
   .cta .provider {
     width: 100%;
