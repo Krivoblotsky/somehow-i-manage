@@ -107,7 +107,10 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
               alt=""
               aria-hidden="true"
             />
-            <h1 className={styles.title}>Work with people, not&nbsp;tasks.</h1>
+            <p className={styles.eyebrow}>Somehow I Manage</p>
+            <h1 className={styles.title}>
+              Work with people, <span className={styles.hl}>not&nbsp;tasks.</span>
+            </h1>
             <p className={styles.lead}>
               Every task, note and 1:1 lives with the person it’s about. The map below is the real
               thing — go ahead and poke it.
@@ -133,15 +136,17 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
             )}
           </div>
           <div className={`${styles.inner} ${styles.demo}`} aria-label="Live demo">
-            {hydrated ? (
-              <DemoBoundary fallback={<StillDemo />}>
-                <Suspense fallback={<StillDemo />}>
-                  <LiveDemo />
-                </Suspense>
-              </DemoBoundary>
-            ) : (
-              <StillDemo />
-            )}
+            <div className={styles.device}>
+              {hydrated ? (
+                <DemoBoundary fallback={<StillDemo />}>
+                  <Suspense fallback={<StillDemo />}>
+                    <LiveDemo />
+                  </Suspense>
+                </DemoBoundary>
+              ) : (
+                <StillDemo />
+              )}
+            </div>
           </div>
           <ul className={`${styles.inner} ${styles.proof}`} aria-label="In short">
             <Proof title="Offline-first" text="Works on a plane. Syncs when you’re back." />
@@ -152,7 +157,9 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
 
         <section id="how" className={`${styles.band} ${styles.light}`}>
           <div className={styles.inner}>
-            <h2 className={styles.h2}>Three habits, one place.</h2>
+            <h2 className={styles.h2}>
+              Three habits, <span className={styles.hl}>one place.</span>
+            </h2>
             <ul className={styles.steps}>
               <Step
                 title="Add your people"
@@ -209,12 +216,12 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
           </div>
         </section>
 
-        <section className={styles.band}>
+        <section className={`${styles.band} ${styles.dark}`}>
           <div className={styles.inner}>
             <h2 className={`${styles.h2} ${styles.statement}`}>
               Managers don’t have tasks.
               <br />
-              They have people.
+              <span className={styles.hl}>They have people.</span>
             </h2>
             <div className={styles.principles}>
               <Principle
@@ -235,7 +242,9 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
 
         <section id="faq" className={`${styles.band} ${styles.light}`}>
           <div className={styles.inner}>
-            <h2 className={styles.h2}>Questions, answered.</h2>
+            <h2 className={styles.h2}>
+              Questions, <span className={styles.hl}>answered.</span>
+            </h2>
             <dl className={styles.faq}>
               {FAQ.map((item) => (
                 <div key={item.q} className={styles.faqItem}>
@@ -251,7 +260,9 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
 
         <section className={styles.band}>
           <div className={`${styles.inner} ${styles.final}`}>
-            <h2 className={styles.h2}>Start with your team.</h2>
+            <h2 className={styles.h2}>
+              Start with <span className={styles.hl}>your team.</span>
+            </h2>
             <p className={styles.lead}>It takes a minute.</p>
             <div className={styles.cta}>
               <ProviderButtons busy={busy} verb="Get started" onPick={(p) => void signInWith(p)} />
@@ -296,7 +307,7 @@ export function LandingPage({ actions = syncActions }: { actions?: SyncActions }
           </div>
           <div className={styles.footerCol}>
             <h3>Account</h3>
-            <a href="#signin">Sign in →</a>
+            <a href="#signin">Sign in ›</a>
           </div>
         </div>
         <div className={`${styles.inner} ${styles.footerLine}`}>© 2026 Somehow I Manage</div>
@@ -488,10 +499,12 @@ function Step({ title, text }: { title: string; text: string }) {
  */
 function AgentSection() {
   return (
-    <section id="mcp" className={styles.band}>
+    <section id="mcp" className={`${styles.band} ${styles.dark}`}>
       <div className={`${styles.inner} ${styles.agent}`}>
         <div>
-          <h2 className={styles.h2}>Agentic AI friendly.</h2>
+          <h2 className={styles.h2}>
+            Agentic AI <span className={styles.hl}>friendly.</span>
+          </h2>
           <p className={styles.lead}>
             Somehow I Manage speaks MCP, the open standard assistants use to work with your tools.
             Connect it to Claude, ChatGPT, Cursor or any agent, and it works with your people the
@@ -515,7 +528,7 @@ function AgentSection() {
             </li>
           </ul>
           <a className={styles.agentLink} href={`${import.meta.env.BASE_URL}mcp/`}>
-            Connect an assistant →
+            Connect an assistant ›
           </a>
         </div>
         <figure className={styles.chat} aria-label="An assistant preparing a 1:1">
@@ -599,7 +612,7 @@ const MAP_POINTS = [
   },
 ] as const;
 
-/** A row of captions that act as tabs: the chosen one is lit, and the picture below follows it. */
+/** Captions as a segmented control: the chosen one is lit, its text sits below, the picture follows. */
 function PointTabs({
   items,
   active,
@@ -631,30 +644,32 @@ function PointTabs({
     e.preventDefault();
   };
   return (
-    <div
-      className={styles.points}
-      role="tablist"
-      aria-label={label}
-      style={{ '--accent': accent } as CSSProperties}
-      onKeyDown={onKeyDown}
-    >
-      {items.map((item, i) => (
-        <button
-          key={item.title}
-          type="button"
-          role="tab"
-          id={`${prefix}-tab-${i}`}
-          aria-selected={i === active}
-          aria-controls={`${prefix}-panel`}
-          tabIndex={i === active ? 0 : -1}
-          className={styles.point}
-          onClick={() => onChange(i)}
-        >
-          <span className={styles.pointTitle}>{item.title}</span>
-          <span className={styles.pointText}>{item.text}</span>
-        </button>
-      ))}
-    </div>
+    <>
+      <div
+        className={styles.points}
+        role="tablist"
+        aria-label={label}
+        style={{ '--accent': accent } as CSSProperties}
+        onKeyDown={onKeyDown}
+      >
+        {items.map((item, i) => (
+          <button
+            key={item.title}
+            type="button"
+            role="tab"
+            id={`${prefix}-tab-${i}`}
+            aria-selected={i === active}
+            aria-controls={`${prefix}-panel`}
+            tabIndex={i === active ? 0 : -1}
+            className={styles.point}
+            onClick={() => onChange(i)}
+          >
+            {item.title}
+          </button>
+        ))}
+      </div>
+      <p className={styles.pointText}>{items[active]?.text}</p>
+    </>
   );
 }
 
@@ -665,7 +680,9 @@ function MapSection() {
   return (
     <section id="map" className={styles.band}>
       <div className={styles.inner}>
-        <h2 className={styles.h2}>Your whole team, at a glance.</h2>
+        <h2 className={styles.h2}>
+          Your whole team, <span className={styles.hl}>at a glance.</span>
+        </h2>
         <PointTabs
           items={MAP_POINTS}
           active={active}
@@ -726,7 +743,9 @@ function PersonSection() {
   return (
     <section id="person" className={styles.band}>
       <div className={styles.inner}>
-        <h2 className={styles.h2}>Everything about someone, when you need it.</h2>
+        <h2 className={styles.h2}>
+          Everything about someone, <span className={styles.hl}>when you need it.</span>
+        </h2>
         <PointTabs
           items={PERSON_TABS}
           active={active}
