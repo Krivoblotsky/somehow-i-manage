@@ -436,7 +436,7 @@
   font-size: clamp(40px, 6.4vw, 84px);
 }
 
-/* how it works: three tiles, numbered */
+/* how it works: three tiles */
 .steps {
   list-style: none;
   margin: 56px 0 0;
@@ -444,23 +444,12 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
-  counter-reset: step;
 }
 .step {
-  counter-increment: step;
   background: #fff;
   border-radius: var(--radius-l);
-  padding: 36px 32px 38px;
+  padding: 34px 32px 36px;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04);
-}
-.step::before {
-  content: counter(step, decimal-leading-zero);
-  display: block;
-  margin-bottom: 44px;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  color: var(--ink-3);
 }
 .step h3 {
   margin: 0 0 10px;
